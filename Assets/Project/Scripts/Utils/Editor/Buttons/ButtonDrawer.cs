@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace Project.Scripts.Utils.Editor.Buttons
 {
-    [CustomPropertyDrawer(typeof(MrButtonAttribute))]
-    public class MrButtonDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(ButtonAttribute))]
+    public class ButtonDrawer : PropertyDrawer
     {
         private const float ButtonHeight = 22f;
         private const float Spacing = 2f;
@@ -20,13 +20,13 @@ namespace Project.Scripts.Utils.Editor.Buttons
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var attr = (MrButtonAttribute)attribute;
+            var attr = (ButtonAttribute)attribute;
             var fieldHeight = EditorGUI.GetPropertyHeight(property, label, true);
 
             Rect fieldRect;
             Rect buttonRect;
 
-            if (attr.Position == MrButtonPosition.Above)
+            if (attr.Position == ButtonPosition.Above)
             {
                 buttonRect = new Rect(position.x, position.y, position.width, ButtonHeight);
                 fieldRect = new Rect(position.x, buttonRect.yMax + Spacing, position.width, fieldHeight);
@@ -38,7 +38,7 @@ namespace Project.Scripts.Utils.Editor.Buttons
             }
 
             EditorGUI.PropertyField(fieldRect, property, label, true);
-            MrButtonsRenderer.DrawButton(buttonRect, property.serializedObject.targetObjects, attr.MethodName);
+            ButtonsRenderer.DrawButton(buttonRect, property.serializedObject.targetObjects, attr.MethodName);
         }
     }
 }

@@ -6,24 +6,24 @@ namespace Project.Scripts.Utils.Editor.Buttons
 {
     [CustomEditor(typeof(ScriptableObject), true)]
     [CanEditMultipleObjects]
-    public class MrScriptableObjectButtonsEditor : UnityEditor.Editor
+    public class ScriptableObjectButtonsEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
-            MrButtonsRenderer.DrawBottomButtons(serializedObject);
+            ButtonsRenderer.DrawBottomButtons(serializedObject);
         }
     }
 
 
     [CustomEditor(typeof(MonoBehaviour), true)]
     [CanEditMultipleObjects]
-    public class MrMonoBehaviourButtonsEditor : UnityEditor.Editor
+    public class MonoBehaviourButtonsEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
-            MrButtonsRenderer.DrawBottomButtons(serializedObject);
+            ButtonsRenderer.DrawBottomButtons(serializedObject);
         }
     }
 }

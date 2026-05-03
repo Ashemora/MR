@@ -1,6 +1,6 @@
 namespace Project.Scripts.Utils.Buttons
 {
-    public enum MrButtonPosition
+    public enum ButtonPosition
     {
         Below,
         Above

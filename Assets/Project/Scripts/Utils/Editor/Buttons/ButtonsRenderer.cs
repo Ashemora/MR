@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Project.Scripts.Utils.Editor.Buttons
 {
-    public static class MrButtonsRenderer
+    public static class ButtonsRenderer
     {
         private const BindingFlags MemberFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
@@ -26,7 +26,7 @@ namespace Project.Scripts.Utils.Editor.Buttons
             var method = FindMethod(anchor.GetType(), methodName);
             if (null == method)
             {
-                EditorGUI.HelpBox(rect, $"MrButton: method '{methodName}' not found or has parameters", MessageType.Error);
+                EditorGUI.HelpBox(rect, $"Button: method '{methodName}' not found or has parameters", MessageType.Error);
                 return;
             }
 
@@ -86,7 +86,7 @@ namespace Project.Scripts.Utils.Editor.Buttons
                     var m = methods[i];
                     if (m.GetParameters().Length != 0)
                         continue;
-                    if (null == m.GetCustomAttribute<MrButtonAttribute>())
+                    if (null == m.GetCustomAttribute<ButtonAttribute>())
                         continue;
                     if (false == seen.Add(m.Name))
                         continue;
@@ -107,7 +107,7 @@ namespace Project.Scripts.Utils.Editor.Buttons
                 var fields = current.GetFields(MemberFlags | BindingFlags.DeclaredOnly);
                 for (var i = 0; i < fields.Length; i++)
                 {
-                    var attr = fields[i].GetCustomAttribute<MrButtonAttribute>();
+                    var attr = fields[i].GetCustomAttribute<ButtonAttribute>();
                     if (null != attr && false == string.IsNullOrEmpty(attr.MethodName))
                         result.Add(attr.MethodName);
                 }
