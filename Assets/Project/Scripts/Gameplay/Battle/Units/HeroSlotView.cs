@@ -168,6 +168,13 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             _glow.gameObject.SetActive(active);
         }
+
+        public void CaptureCurrentLayoutPose()
+        {
+            _knockbackTween?.Kill();
+            _knockbackTween = null;
+            _originalLocalPos = transform.localPosition;
+        }
         
 
         private void BindPortrait(HeroSlotViewModel viewModel)

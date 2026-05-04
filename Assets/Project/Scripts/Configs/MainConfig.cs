@@ -57,6 +57,9 @@ namespace Project.Scripts.Configs
         [Tooltip("Визуальные параметры боя: позиции и размеры слотов аватаров и героев")]
         [SerializeField] private BattleWorldLayoutConfig _battleWorldLayoutConfig;
 
+        [Tooltip("Фазовые профили боевого поля: compressed/full snapshots, переходы и смещение доски в Hero-фазе")]
+        [SerializeField] private BattleFieldLayoutConfig _battleFieldLayoutConfig;
+
         [Tooltip("Единые настройки экранной компоновки Gameplay: aspect, safe area, камера, зоны UI и world-content")]
         [SerializeField] private GameplayScreenLayoutConfig _gameplayScreenLayoutConfig;
 
@@ -103,6 +106,7 @@ namespace Project.Scripts.Configs
         public BoardAnnouncementConfig BoardAnnouncementConfig => _boardAnnouncementConfig;
         public MoveBarConfig MoveBarConfig => _moveBarConfig;
         public BattleWorldLayoutConfig BattleWorldLayoutConfig => _battleWorldLayoutConfig;
+        public BattleFieldLayoutConfig BattleFieldLayoutConfig => _battleFieldLayoutConfig;
         public GameplayScreenLayoutConfig GameplayScreenLayoutConfig => _gameplayScreenLayoutConfig;
         public TileKindPaletteConfig TileKindPaletteConfig => _tileKindPaletteConfig;
         public SlotLayoutConfig SlotLayoutConfig => _slotLayoutConfig;

@@ -1,4 +1,3 @@
-using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Project.Scripts.Services.Announcements;
@@ -51,12 +50,13 @@ namespace Project.Scripts.Gameplay.UI.Windows
             if (_textRect)
                 _textRect.localScale = Vector3.one * ViewModel.BaseScale;
 
-            var startPos = WorldYToAnchored(ViewModel.WorldY);
+            var startPos = WorldYToAnchored(ViewModel.CurrentWorldY);
 
             if (_textRect)
                 _textRect.anchoredPosition = startPos;
 
-            await UniTask.Delay(TimeSpan.FromSeconds(ViewModel.DisplayDuration));
+            await FollowAnchorDuringDisplay();
+            startPos = _textRect ? _textRect.anchoredPosition : WorldYToAnchored(ViewModel.CurrentWorldY);
 
             if (ViewModel.FadeOutDuration > 0f)
             {
@@ -102,6 +102,22 @@ namespace Project.Scripts.Gameplay.UI.Windows
                 _canvasRect, screenPoint, null, out var localPoint);
 
             return localPoint;
+        }
+
+        private async UniTask FollowAnchorDuringDisplay()
+        {
+            if (ViewModel.DisplayDuration <= 0f)
+                return;
+
+            var elapsed = 0f;
+            while (elapsed < ViewModel.DisplayDuration)
+            {
+                if (_textRect)
+                    _textRect.anchoredPosition = WorldYToAnchored(ViewModel.CurrentWorldY);
+
+                elapsed += Time.deltaTime;
+                await UniTask.Yield();
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Project.Scripts.Configs;
 using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Board;
@@ -57,6 +58,7 @@ namespace Project.Scripts.Gameplay
         private SpecialTileConfig _specialTileConfig;
         private UIConfig _uiConfig;
         private BattleWorldLayoutConfig _battleWorldLayoutConfig;
+        private BattleFieldLayoutConfig _battleFieldLayoutConfig;
         private GameplayScreenLayoutConfig _gameplayScreenLayoutConfig;
         private BattleFlowConfig _battleFlowConfig;
         private UIService _uiService;
@@ -91,6 +93,7 @@ namespace Project.Scripts.Gameplay
         private IDisposable _gameStateSubscription;
         private IDisposable _battleFlowPhaseSubscription;
         private IDisposable _burndownStartedSubscription;
+        private Tween _battleFieldLayoutTween;
 
 #if UNITY_EDITOR
         private GridManager _gridManager;
@@ -149,6 +152,8 @@ namespace Project.Scripts.Gameplay
         {
             _battleFieldView?.ReleaseSceneInstance();
             _battleWorldLayout?.EnergyView?.Cleanup();
+            _battleFieldLayoutTween?.Kill();
+            _battleFieldLayoutTween = null;
 
             if (_moveBarService?.IsEnabled == true)
                 _uiService?.Close<MoveBarView>();
@@ -191,6 +196,7 @@ namespace Project.Scripts.Gameplay
             SpecialTileConfig specialTileConfig,
             UIConfig uiConfig,
             BattleWorldLayoutConfig battleWorldLayoutConfig,
+            BattleFieldLayoutConfig battleFieldLayoutConfig,
             GameplayScreenLayoutConfig gameplayScreenLayoutConfig,
             BattleFlowConfig battleFlowConfig,
             UIService uiService,
@@ -225,6 +231,7 @@ namespace Project.Scripts.Gameplay
             _specialTileConfig = specialTileConfig;
             _uiConfig = uiConfig;
             _battleWorldLayoutConfig = battleWorldLayoutConfig;
+            _battleFieldLayoutConfig = battleFieldLayoutConfig;
             _gameplayScreenLayoutConfig = gameplayScreenLayoutConfig;
             _battleFlowConfig = battleFlowConfig;
             _uiService = uiService;
@@ -271,6 +278,7 @@ namespace Project.Scripts.Gameplay
             await _battleFieldView.InitializeAsync(_battleFieldViewModel);
             await _battleFieldView.ShowAsync();
             _battleWorldLayout.EnergyView?.Bind(_battleFieldViewModel, _boardAnnouncementService);
+            ApplyBattleFieldLayoutBlend(0f);
 
             var worldLayout = ComputeGameplayWorldLayout();
 #if UNITY_EDITOR
@@ -358,7 +366,7 @@ namespace Project.Scripts.Gameplay
             _gameStateSubscription?.Dispose();
             _gameStateSubscription = _gameStateService.State.Subscribe(_ => RefreshPhaseOverlays());
             _battleFlowPhaseSubscription?.Dispose();
-            _battleFlowPhaseSubscription = _eventBus.Subscribe<BattleFlowPhaseChangedEvent>(_ => RefreshPhaseOverlays());
+            _battleFlowPhaseSubscription = _eventBus.Subscribe<BattleFlowPhaseChangedEvent>(OnBattleFlowPhaseChanged);
             RefreshPhaseOverlays();
 
             _burndownStartedSubscription?.Dispose();
@@ -370,6 +378,7 @@ namespace Project.Scripts.Gameplay
             _gameResultPresenter.Initialize();
             _gameResultSequenceController.Initialize();
             _battleFlowService.Initialize();
+            ApplyBattleFieldLayoutForCurrentPhase(false);
 
 #if UNITY_EDITOR
             var editHandler = gameObject.AddComponent<BoardEditClickHandler>();
@@ -593,6 +602,110 @@ namespace Project.Scripts.Gameplay
         {
             var showOverlay = ShouldShowBoardOverlay();
             _battleWorldLayout?.BoardView?.SetInteractionOverlayActive(showOverlay);
+        }
+
+        private void OnBattleFlowPhaseChanged(BattleFlowPhaseChangedEvent e)
+        {
+            RefreshPhaseOverlays();
+            ApplyBattleFieldLayoutForPhase(e.Phase, true);
+        }
+
+        private void ApplyBattleFieldLayoutForCurrentPhase(bool animate)
+        {
+            if (_battleFlowService is not { IsInitialized: true })
+            {
+                ApplyBattleFieldLayoutBlend(0f);
+                return;
+            }
+
+            ApplyBattleFieldLayoutForPhase(_battleFlowService.Snapshot.Phase, animate);
+        }
+
+        private void ApplyBattleFieldLayoutForPhase(BattlePhaseKind phase, bool animate)
+        {
+            var target = ShouldUseFullBattleFieldLayout(phase) ? 1f : 0f;
+            if (animate)
+                AnimateBattleFieldLayoutBlend(target);
+            else
+                ApplyBattleFieldLayoutBlend(target);
+        }
+
+        private bool ShouldUseFullBattleFieldLayout(BattlePhaseKind phase)
+        {
+            return phase == BattlePhaseKind.Hero;
+        }
+
+        private void AnimateBattleFieldLayoutBlend(float target)
+        {
+            if (_battleFieldView == null || _battleFieldLayoutConfig == null)
+                return;
+
+            _battleFieldLayoutTween?.Kill();
+            var current = GetCurrentBattleFieldLayoutBlend();
+            if (Mathf.Approximately(current, target) || _battleFieldLayoutConfig.TransitionDuration <= 0f)
+            {
+                ApplyBattleFieldLayoutBlend(target);
+                return;
+            }
+
+            _battleFieldLayoutTween = DOTween.To(
+                    () => current,
+                    value =>
+                    {
+                        current = value;
+                        ApplyBattleFieldLayoutBlend(value);
+                    },
+                    target,
+                    _battleFieldLayoutConfig.TransitionDuration)
+                .SetEase(_battleFieldLayoutConfig.TransitionEase);
+        }
+
+        private float GetCurrentBattleFieldLayoutBlend()
+        {
+            if (_battleWorldLayout == null)
+                return 0f;
+
+            var fullOffset = CalculateHeroPhaseBoardOffset();
+            if (Mathf.Approximately(fullOffset, 0f))
+                return 0f;
+
+            return Mathf.Clamp01(GetBoardPreviewYOffset() / fullOffset);
+        }
+
+        private float GetBoardPreviewYOffset()
+        {
+            if (_battleWorldLayout == null)
+                return 0f;
+
+            return _battleWorldLayout.GetBoardAndEnergyPreviewYOffset();
+        }
+
+        private void ApplyBattleFieldLayoutBlend(float blend)
+        {
+            if (_battleFieldView == null || _battleFieldLayoutConfig == null)
+                return;
+
+            blend = Mathf.Clamp01(blend);
+            _battleFieldView.ApplyLayoutBlendPreservingTop(
+                _battleFieldLayoutConfig.CompressedProfile,
+                _battleFieldLayoutConfig.FullProfile,
+                blend);
+
+            var boardOffset = CalculateHeroPhaseBoardOffset() * blend;
+            _battleWorldLayout?.SetBoardAndEnergyPreviewYOffset(boardOffset);
+            _battleWorldLayout?.PublishAnnouncementAnchors(_boardBoundsProvider);
+            ApplyTopBarLayout("battlefield layout phase changed");
+        }
+
+        private float CalculateHeroPhaseBoardOffset()
+        {
+            if (_battleWorldLayout == null)
+                return 0f;
+
+            var heightDelta = Mathf.Max(0f,
+                _battleFieldLayoutConfig.FullProfile.LayoutHeight - _battleFieldLayoutConfig.CompressedProfile.LayoutHeight);
+            var extraOffset = _battleWorldLayout.GetBoardWorldHeight() * _battleFieldLayoutConfig.HeroPhaseBoardOffsetFrameHeight;
+            return -(heightDelta * _battleFieldView.LayoutScale + extraOffset);
         }
 
         private bool ShouldShowBoardOverlay()

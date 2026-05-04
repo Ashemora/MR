@@ -212,6 +212,16 @@ namespace Project.Scripts.Gameplay.Battle.Units
             _glow.gameObject.SetActive(active);
         }
 
+        public void CaptureCurrentLayoutPose()
+        {
+            _knockbackTween?.Kill();
+            _knockbackTween = null;
+            _resultPulseTween?.Kill();
+            _resultPulseTween = null;
+            _originalLocalPos = transform.localPosition;
+            _originalLocalScale = transform.localScale;
+        }
+
 
         private void BindPortrait(AvatarSlotViewModel viewModel)
         {

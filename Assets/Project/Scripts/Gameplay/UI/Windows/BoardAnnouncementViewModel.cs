@@ -1,3 +1,4 @@
+using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Project.Scripts.Services.Announcements;
@@ -18,9 +19,11 @@ namespace Project.Scripts.Gameplay.UI.Windows
         public float ScaleMultiplier { get; }
         public Ease FadeOutEase { get; }
         public float WorldY { get; }
+        public float CurrentWorldY => _worldYGetter?.Invoke() ?? WorldY;
 
 
         private readonly UniTaskCompletionSource _animationDone = new();
+        private readonly Func<float> _worldYGetter;
 
 
         public BoardAnnouncementViewModel(
@@ -33,7 +36,8 @@ namespace Project.Scripts.Gameplay.UI.Windows
             float baseScale,
             float scaleMultiplier,
             Ease fadeOutEase,
-            float worldY)
+            float worldY,
+            Func<float> worldYGetter = null)
         {
             Style = style;
             Text = text;
@@ -45,6 +49,7 @@ namespace Project.Scripts.Gameplay.UI.Windows
             ScaleMultiplier = scaleMultiplier;
             FadeOutEase = fadeOutEase;
             WorldY = worldY;
+            _worldYGetter = worldYGetter;
         }
 
 

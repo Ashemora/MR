@@ -25,6 +25,10 @@ namespace Project.Scripts.Gameplay.Battle.Layout
 
 
         private CompositeDisposable _disposables;
+        private bool _previewOffsetBaselineCaptured;
+        private Vector3 _playerBarBaseLocalPosition;
+        private Vector3 _enemyBarBaseLocalPosition;
+        private Vector3 _playerEnergyAbsorbTargetBaseLocalPosition;
 
 
         private void OnDestroy()
@@ -53,6 +57,20 @@ namespace Project.Scripts.Gameplay.Battle.Layout
         {
             _playerBar?.SetLayoutScale(scale);
             _enemyBar?.SetLayoutScale(scale);
+        }
+
+        public void SetPreviewLocalYOffset(float offset)
+        {
+            if (false == _previewOffsetBaselineCaptured && Mathf.Approximately(offset, 0f))
+                return;
+
+            CapturePreviewOffsetBaseline();
+
+            ApplyLocalYOffset(_playerBar ? _playerBar.transform : null, _playerBarBaseLocalPosition, offset);
+            ApplyLocalYOffset(_enemyBar ? _enemyBar.transform : null, _enemyBarBaseLocalPosition, offset);
+
+            if (_playerEnergyAbsorbTarget && (false == _playerBar || _playerEnergyAbsorbTarget.parent != _playerBar.transform))
+                ApplyLocalYOffset(_playerEnergyAbsorbTarget, _playerEnergyAbsorbTargetBaseLocalPosition, offset);
         }
 
         public void Bind(BattleFieldViewModel viewModel, IBoardAnnouncementService announcementService = null)
@@ -85,6 +103,30 @@ namespace Project.Scripts.Gameplay.Battle.Layout
         {
             _disposables?.Dispose();
             _disposables = null;
+        }
+
+        private void CapturePreviewOffsetBaseline()
+        {
+            if (_previewOffsetBaselineCaptured)
+                return;
+
+            _previewOffsetBaselineCaptured = true;
+            _playerBarBaseLocalPosition = _playerBar ? _playerBar.transform.localPosition : Vector3.zero;
+            _enemyBarBaseLocalPosition = _enemyBar ? _enemyBar.transform.localPosition : Vector3.zero;
+            _playerEnergyAbsorbTargetBaseLocalPosition = _playerEnergyAbsorbTarget
+                ? _playerEnergyAbsorbTarget.localPosition
+                : Vector3.zero;
+        }
+
+        private static void ApplyLocalYOffset(Transform target, Vector3 baseLocalPosition, float offset)
+        {
+            if (false == target)
+                return;
+
+            target.localPosition = new Vector3(
+                baseLocalPosition.x,
+                baseLocalPosition.y + offset,
+                baseLocalPosition.z);
         }
     }
 }

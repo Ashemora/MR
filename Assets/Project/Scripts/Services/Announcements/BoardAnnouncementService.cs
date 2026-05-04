@@ -14,28 +14,25 @@ namespace Project.Scripts.Services.Announcements
     {
         private const int InitialPoolSize = 2;
 
+        
+        public ReadOnlyReactiveProperty<bool> IsEnergyTextHidden => _isEnergyTextHidden;
+        
 
         private readonly BoardAnnouncementConfig _config;
         private readonly IBoardBoundsProvider _boardBounds;
         private readonly UIService _uiService;
-
         private readonly Queue<BoardAnnouncementView> _pool = new();
         private readonly List<BoardAnnouncementView> _all = new();
-
         private readonly ReactiveProperty<bool> _isEnergyTextHidden = new(false);
-        public ReadOnlyReactiveProperty<bool> IsEnergyTextHidden => _isEnergyTextHidden;
 
-
-        public BoardAnnouncementService(
-            BoardAnnouncementConfig config,
-            IBoardBoundsProvider boardBounds,
+        
+        public BoardAnnouncementService(BoardAnnouncementConfig config, IBoardBoundsProvider boardBounds,
             UIService uiService)
         {
             _config = config;
             _boardBounds = boardBounds;
             _uiService = uiService;
         }
-
 
         public void Start()
         {
@@ -96,6 +93,7 @@ namespace Project.Scripts.Services.Announcements
             var scaleMultiplier = @params?.ScaleMultiplier ?? _config.ScaleMultiplier;
             var fadeOutEase = @params?.FadeOutEase ?? _config.FadeOutEase;
             var worldY = GetAnchorWorldY(anchor) + _config.VerticalWorldOffset;
+            float WorldYGetter() => GetAnchorWorldY(anchor) + _config.VerticalWorldOffset;
 
             return new BoardAnnouncementViewModel(
                 style,
@@ -107,7 +105,8 @@ namespace Project.Scripts.Services.Announcements
                 baseScale,
                 scaleMultiplier,
                 fadeOutEase,
-                worldY);
+                worldY,
+                WorldYGetter);
         }
 
         private float GetAnchorWorldY(AnnouncementAnchorKind anchor)
@@ -115,8 +114,8 @@ namespace Project.Scripts.Services.Announcements
             return anchor switch
             {
                 AnnouncementAnchorKind.EnergyBars => _boardBounds.EnergyBarsAnchorWorldY,
-                AnnouncementAnchorKind.Board       => _boardBounds.BoardAnchorWorldY,
-                _                                  => _boardBounds.BattleFieldAnchorWorldY
+                AnnouncementAnchorKind.Board => _boardBounds.BoardAnchorWorldY,
+                _ => _boardBounds.BattleFieldAnchorWorldY
             };
         }
 

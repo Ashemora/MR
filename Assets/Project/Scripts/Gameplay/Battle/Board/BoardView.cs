@@ -65,5 +65,28 @@ namespace Project.Scripts.Gameplay.Battle.Board
             if (_phaseOverlay)
                 _phaseOverlay.enabled = active;
         }
+
+        public float GetWorldHeight()
+        {
+            if (_frame)
+                return _frame.bounds.size.y;
+
+            var renderers = GetComponentsInChildren<SpriteRenderer>(false);
+            if (renderers.Length == 0)
+                return 0f;
+
+            var minY = float.PositiveInfinity;
+            var maxY = float.NegativeInfinity;
+            for (var i = 0; i < renderers.Length; i++)
+            {
+                if (false == renderers[i].sprite)
+                    continue;
+
+                minY = Mathf.Min(minY, renderers[i].bounds.min.y);
+                maxY = Mathf.Max(maxY, renderers[i].bounds.max.y);
+            }
+
+            return float.IsInfinity(minY) || float.IsInfinity(maxY) ? 0f : maxY - minY;
+        }
     }
 }

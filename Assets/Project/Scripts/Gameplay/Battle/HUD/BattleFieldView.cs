@@ -1,25 +1,21 @@
 using Cysharp.Threading.Tasks;
+using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Gameplay.Results;
 using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.Battle.Units;
-using Project.Scripts.Gameplay.UI;
 using Project.Scripts.Services.Input;
 using Project.Scripts.Services.UISystem;
 using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Utils.Buttons;
 using R3;
 using UnityEngine;
-using UnityEngine.Pool;
 
 namespace Project.Scripts.Gameplay.Battle.HUD
 {
     public class BattleFieldView : BaseView<BattleFieldViewModel>, IGameResultVisuals
     {
-        private const int FloatingNumberDefaultPoolCapacity = 4;
-        private const int FloatingNumberMaxPoolSize = 16;
-        
-        
         [Tooltip("Четыре вида слота героя для стороны игрока, упорядочены слева направо (индексы 0-3)")]
         [SerializeField] private HeroSlotView[] _playerHeroSlots;
 
@@ -35,48 +31,16 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         [Tooltip("Обрабатывает жесты перетаскивания к цели в мировом пространстве")]
         [SerializeField] private TargetingInputHandler _targetingInputHandler;
 
-        [Tooltip("Префаб с компонентом FloatingDamageNumber")]
-        [SerializeField] private FloatingDamageNumber _floatingDamagePrefab;
-
         [Tooltip("Optional HUD-side energy orb FX view")]
         [SerializeField] private BattleEnergyFXView _energyFXView;
 
-        [Tooltip("Опциональный SpriteRenderer затемнения боевого поля; включается, когда боевые действия недоступны")]
-        [SerializeField] private SpriteRenderer _phaseOverlay;
+        [Tooltip("Управляет геометрией, snapshot-позами и фазовым blend боевого поля.")]
+        [SerializeField] private BattleFieldLayoutController _layoutController;
 
-        [Header("Layout Geometry")]
-        [Tooltip("Высота визуальной области боевого поля в world units. Управляет Background, Floor, layout anchors и позициями panel rows.")]
-        [Min(0.01f)]
-        [SerializeField] private float _layoutHeight = 4.2f;
-
-        [Tooltip("Sliced SpriteRenderer фоновой рамки боевого поля.")]
-        [SerializeField] private SpriteRenderer _backgroundRenderer;
-
-        [Tooltip("Внутренняя подложка поля, масштабируется по Y пропорционально Layout Height.")]
-        [SerializeField] private Transform _floorTransform;
-
-        [Tooltip("Панель героев игрока, позиционируется от нижней границы Layout Height.")]
-        [SerializeField] private Transform _playerPanel;
-
-        [Tooltip("Панель героев врага, позиционируется от верхней границы Layout Height.")]
-        [SerializeField] private Transform _enemyPanel;
-
-        [Tooltip("Floor.localScale.y на одну единицу Layout Height.")]
-        [SerializeField] private float _floorScaleYPerLayoutHeight = 89.50952f;
-
-        [Tooltip("Отступ PlayerPanel от нижней границы Layout Height.")]
-        [SerializeField] private float _playerPanelBottomPadding = 1.11f;
-
-        [Tooltip("Отступ EnemyPanel от верхней границы Layout Height.")]
-        [SerializeField] private float _enemyPanelTopPadding = 1.09f;
-
-        [Tooltip("Маркер нижнего края визуальной области боевого поля; используется для вертикального автостекинга блоков над доской матчинга")]
-        [SerializeField] private Transform _layoutBottomAnchor;
-
-        [SerializeField] private Transform _layoutTopAnchor;
+        [Tooltip("Управляет пулом и подписками всплывающих чисел урона/лечения.")]
+        [SerializeField] private BattleFieldFloatingNumbers _floatingNumbers;
 
         [Space(10)]
-        
         [Tooltip("Щит первой группы героев врага - скрывается, когда первая группа уничтожена")]
         [SerializeField] private GroupShieldView _enemyGroup1Shield;
 
@@ -91,27 +55,68 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
 
         private IInputService _inputService;
-        private ObjectPool<FloatingDamageNumber> _floatingPool;
         private TileKindPaletteConfig _tileKindPalette;
         private Transform _playerEnergyAbsorbTarget;
-        private float _layoutScale = 1f;
 
 
-        public float BaseLayoutHeight => Mathf.Max(0.01f, _layoutHeight);
+        public float BaseLayoutHeight => _layoutController ? _layoutController.BaseLayoutHeight : 0f;
+        public float LayoutScale => _layoutController ? _layoutController.LayoutScale : 1f;
+        public float LayoutTopWorldY => _layoutController ? _layoutController.LayoutTopWorldY : transform.position.y;
 
-        public float LayoutTopWorldY
+
+        public BattleFieldLayoutSnapshot CaptureLayoutSnapshot()
         {
-            get
-            {
-                ApplyBattleFieldGeometry();
-                return _layoutTopAnchor ? _layoutTopAnchor.position.y : transform.position.y + GetLayoutHeight() * 0.5f;
-            }
+            return _layoutController
+                ? _layoutController.CaptureLayoutSnapshot(CreateLayoutTargets())
+                : BattleFieldLayoutSnapshot.CreateDefault();
         }
 
+        public bool HasCompatibleLayoutStructure(BattleFieldView other, out string error)
+        {
+            if (false == other)
+            {
+                error = "Other BattleFieldView is not assigned.";
+                return false;
+            }
+
+            if (false == HasRequiredLayoutReferences(out error))
+                return false;
+
+            if (false == other.HasRequiredLayoutReferences(out error))
+            {
+                error = $"Other BattleFieldView is invalid: {error}";
+                return false;
+            }
+
+            if (GetLength(_playerHeroSlots) != GetLength(other._playerHeroSlots))
+            {
+                error = "Player hero slot counts do not match.";
+                return false;
+            }
+
+            if (GetLength(_enemyHeroSlots) != GetLength(other._enemyHeroSlots))
+            {
+                error = "Enemy hero slot counts do not match.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
+        public void ApplyLayoutSnapshotPreservingTop(BattleFieldLayoutSnapshot snapshot)
+        {
+            _layoutController?.ApplyLayoutSnapshotPreservingTop(snapshot, CreateLayoutTargets());
+        }
+
+        public void ApplyLayoutBlendPreservingTop(BattleFieldLayoutSnapshot compressed, BattleFieldLayoutSnapshot full, float t)
+        {
+            _layoutController?.ApplyLayoutBlendPreservingTop(compressed, full, t, CreateLayoutTargets());
+        }
 
         protected override UniTask OnBindViewModel()
         {
-            ApplyBattleFieldGeometry();
+            _layoutController?.RefreshPosition();
             BindSlots();
             BindGroupShields();
             SetupTargeting();
@@ -155,150 +160,129 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
         public void RefreshPosition()
         {
-            ApplyBattleFieldGeometry();
+            _layoutController?.RefreshPosition();
         }
 
         public void SetLayoutBottomWorldY(float worldY)
         {
-            ApplyBattleFieldGeometry();
-            float pivotToBottom;
-
-            if (_layoutBottomAnchor)
-            {
-                pivotToBottom = transform.position.y - _layoutBottomAnchor.position.y;
-            }
-            else
-            {
-                var renderers = GetComponentsInChildren<SpriteRenderer>(false);
-                var minY = transform.position.y;
-                for (var i = 0; i < renderers.Length; i++)
-                {
-                    if (renderers[i].sprite)
-                        minY = Mathf.Min(minY, renderers[i].bounds.min.y);
-                }
-                pivotToBottom = transform.position.y - minY;
-            }
-
-            var pos = transform.position;
-            transform.position = new Vector3(pos.x, worldY + pivotToBottom, pos.z);
-        }
-
-        public float GetLayoutHeight()
-        {
-            ApplyBattleFieldGeometry();
-
-            if (_layoutHeight > 0f)
-                return _layoutHeight * _layoutScale;
-
-            var renderers = GetComponentsInChildren<SpriteRenderer>(false);
-            if (renderers.Length == 0)
-                return 0f;
-
-            var minY = float.PositiveInfinity;
-            var maxY = float.NegativeInfinity;
-            for (var i = 0; i < renderers.Length; i++)
-            {
-                if (false == renderers[i].sprite)
-                    continue;
-
-                minY = Mathf.Min(minY, renderers[i].bounds.min.y);
-                maxY = Mathf.Max(maxY, renderers[i].bounds.max.y);
-            }
-
-            return float.IsInfinity(minY) || float.IsInfinity(maxY) ? 0f : maxY - minY;
+            _layoutController?.SetLayoutBottomWorldY(worldY);
         }
 
         public void SetLayoutScale(float scale)
         {
-            _layoutScale = Mathf.Max(0.01f, scale);
-            ApplyBattleFieldGeometry();
+            _layoutController?.SetLayoutScale(scale);
+        }
+
+        [Button]
+        private void SaveToConfig()
+        {
+#if UNITY_EDITOR
+            var guids = UnityEditor.AssetDatabase.FindAssets("t:BattleFieldLayoutConfig");
+            if (guids == null || guids.Length == 0)
+            {
+                Debug.LogError("BattleFieldView SaveToConfig failed: BattleFieldLayoutConfig asset was not found.", this);
+                return;
+            }
+
+            if (guids.Length > 1)
+                Debug.LogWarning("BattleFieldView SaveToConfig found multiple BattleFieldLayoutConfig assets. Using the first one.", this);
+
+            var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+            var config = UnityEditor.AssetDatabase.LoadAssetAtPath<BattleFieldLayoutConfig>(path);
+            if (false == config)
+            {
+                Debug.LogError($"BattleFieldView SaveToConfig failed: could not load BattleFieldLayoutConfig at '{path}'.", this);
+                return;
+            }
+
+            config.CaptureFromPrefabs();
+#else
+            Debug.LogWarning("BattleFieldView SaveToConfig is only available in the Unity Editor.", this);
+#endif
         }
 
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            ApplyBattleFieldGeometry();
+            if (!_layoutController)
+                _layoutController = GetComponent<BattleFieldLayoutController>();
+
+            if (!_floatingNumbers)
+                _floatingNumbers = GetComponent<BattleFieldFloatingNumbers>();
         }
 #endif
 
-        private void ApplyBattleFieldGeometry()
+        private bool HasRequiredLayoutReferences(out string error)
         {
-            var baseHeight = Mathf.Max(0.01f, _layoutHeight);
-            if (false == Mathf.Approximately(_layoutHeight, baseHeight))
-                _layoutHeight = baseHeight;
-
-            var safeHeight = baseHeight * _layoutScale;
-
-            if (_backgroundRenderer)
+            if (false == _layoutController)
             {
-                var size = _backgroundRenderer.size;
-                if (false == Mathf.Approximately(size.y, safeHeight))
-                    _backgroundRenderer.size = new Vector2(size.x, safeHeight);
+                error = "BattleFieldLayoutController is not assigned.";
+                return false;
             }
 
-            if (_floorTransform)
+            if (false == _layoutController.HasRequiredLayoutReferences(out error))
+                return false;
+
+            if (false == _playerAvatarSlot)
             {
-                var scale = _floorTransform.localScale;
-                var floorScaleY = safeHeight * _floorScaleYPerLayoutHeight;
-                if (false == Mathf.Approximately(scale.y, floorScaleY))
-                    _floorTransform.localScale = new Vector3(scale.x, floorScaleY, scale.z);
+                error = "Player avatar slot is not assigned.";
+                return false;
             }
 
-            if (_phaseOverlay)
+            if (false == _enemyAvatarSlot)
             {
-                var overlayTransform = _phaseOverlay.transform;
-                var overlayScale = overlayTransform.localScale;
-                var overlayScaleX = CalculateRendererScaleX(_phaseOverlay, _backgroundRenderer);
-                var overlayScaleY = CalculateRendererScaleY(_phaseOverlay, safeHeight);
-
-                if (false == Mathf.Approximately(overlayScale.x, overlayScaleX)
-                    || false == Mathf.Approximately(overlayScale.y, overlayScaleY))
-                {
-                    overlayTransform.localScale = new Vector3(overlayScaleX, overlayScaleY, overlayScale.z);
-                }
+                error = "Enemy avatar slot is not assigned.";
+                return false;
             }
 
-            var halfHeight = safeHeight * 0.5f;
+            if (false == HasAllHeroSlots(_playerHeroSlots))
+            {
+                error = "Player hero slots are missing or contain null references.";
+                return false;
+            }
 
-            if (_layoutBottomAnchor)
-                SetLocalY(_layoutBottomAnchor, -halfHeight);
+            if (false == HasAllHeroSlots(_enemyHeroSlots))
+            {
+                error = "Enemy hero slots are missing or contain null references.";
+                return false;
+            }
 
-            if (_layoutTopAnchor)
-                SetLocalY(_layoutTopAnchor, halfHeight);
+            if (false == _enemyGroup1Shield || false == _enemyGroup2Shield
+                || false == _playerGroup1Shield || false == _playerGroup2Shield)
+            {
+                error = "One or more group shield references are missing.";
+                return false;
+            }
 
-            if (_playerPanel)
-                SetLocalY(_playerPanel, -halfHeight + _playerPanelBottomPadding * _layoutScale);
-
-            if (_enemyPanel)
-                SetLocalY(_enemyPanel, halfHeight - _enemyPanelTopPadding * _layoutScale);
+            error = string.Empty;
+            return true;
         }
 
-        private static void SetLocalY(Transform target, float y)
+        private static bool HasAllHeroSlots(HeroSlotView[] slots)
         {
-            var localPosition = target.localPosition;
-            if (Mathf.Approximately(localPosition.y, y))
-                return;
+            if (slots == null || slots.Length == 0)
+                return false;
 
-            target.localPosition = new Vector3(localPosition.x, y, localPosition.z);
+            for (var i = 0; i < slots.Length; i++)
+                if (false == slots[i])
+                    return false;
+
+            return true;
         }
 
-        private static float CalculateRendererScaleX(SpriteRenderer targetRenderer, SpriteRenderer sourceRenderer)
+        private static int GetLength(HeroSlotView[] slots) => slots?.Length ?? 0;
+
+        private BattleFieldLayoutTargets CreateLayoutTargets()
         {
-            if (false == targetRenderer || false == targetRenderer.sprite)
-                return 1f;
-
-            var width = sourceRenderer ? sourceRenderer.size.x : targetRenderer.size.x;
-            var spriteWidth = targetRenderer.sprite.bounds.size.x;
-            return spriteWidth > 0f ? width / spriteWidth : 1f;
-        }
-
-        private static float CalculateRendererScaleY(SpriteRenderer targetRenderer, float height)
-        {
-            if (false == targetRenderer || false == targetRenderer.sprite)
-                return 1f;
-
-            var spriteHeight = targetRenderer.sprite.bounds.size.y;
-            return spriteHeight > 0f ? height / spriteHeight : 1f;
+            return new BattleFieldLayoutTargets(
+                _playerAvatarSlot,
+                _enemyAvatarSlot,
+                _playerHeroSlots,
+                _enemyHeroSlots,
+                _enemyGroup1Shield,
+                _enemyGroup2Shield,
+                _playerGroup1Shield,
+                _playerGroup2Shield);
         }
 
         private void BindSlots()
@@ -404,87 +388,30 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
         private void BindInteractionOverlay()
         {
-            if (false == _phaseOverlay)
+            if (false == _layoutController)
                 return;
 
-            _phaseOverlay.enabled = ViewModel.IsInteractionOverlayVisible.CurrentValue;
+            _layoutController.SetInteractionOverlayActive(ViewModel.IsInteractionOverlayVisible.CurrentValue);
             ViewModel.IsInteractionOverlayVisible
-                .Subscribe(active => _phaseOverlay.enabled = active)
+                .Subscribe(_layoutController.SetInteractionOverlayActive)
                 .AddTo(Disposables);
         }
 
         private void SetupFloatingNumbers()
         {
-            if (false == _floatingDamagePrefab)
-                return;
-
-            _floatingPool = new ObjectPool<FloatingDamageNumber>(
-                createFunc: () => Instantiate(_floatingDamagePrefab, transform),
-                actionOnGet: c => c.gameObject.SetActive(true),
-                actionOnRelease: c => { c.Kill(); c.gameObject.SetActive(false); },
-                actionOnDestroy: c => { if (c) Destroy(c.gameObject); },
-                defaultCapacity: FloatingNumberDefaultPoolCapacity,
-                maxSize: FloatingNumberMaxPoolSize);
-
-            ViewModel.EnemyAvatar.Hit
-                .Subscribe(dmg => SpawnFloatingNumber(dmg, FloatingNumberType.Damage, _enemyAvatarSlot.HitAnchor))
-                .AddTo(Disposables);
-
-            ViewModel.PlayerAvatar.Hit
-                .Subscribe(dmg => SpawnFloatingNumber(dmg, FloatingNumberType.Damage, _playerAvatarSlot.HitAnchor))
-                .AddTo(Disposables);
-
-            ViewModel.EnemyAvatar.Heal
-                .Subscribe(amt => SpawnFloatingNumber(amt, FloatingNumberType.Heal, _enemyAvatarSlot.HitAnchor))
-                .AddTo(Disposables);
-
-            ViewModel.PlayerAvatar.Heal
-                .Subscribe(amt => SpawnFloatingNumber(amt, FloatingNumberType.Heal, _playerAvatarSlot.HitAnchor))
-                .AddTo(Disposables);
-
-            BindHeroFloatingNumbers(_playerHeroSlots, ViewModel.PlayerHeroSlots);
-            BindHeroFloatingNumbers(_enemyHeroSlots, ViewModel.EnemyHeroSlots);
-        }
-
-        private void BindHeroFloatingNumbers(HeroSlotView[] views, HeroSlotViewModel[] viewModels)
-        {
-            if (null == views || null == viewModels)
-                return;
-
-            var count = Mathf.Min(views.Length, viewModels.Length);
-            for (var i = 0; i < count; i++)
-            {
-                if (false == views[i] || false == viewModels[i].IsAssigned)
-                    continue;
-
-                var anchor = views[i].HitAnchor;
-                var vm = viewModels[i];
-
-                vm.Hit
-                    .Subscribe(dmg => SpawnFloatingNumber(dmg, FloatingNumberType.Damage, anchor))
-                    .AddTo(Disposables);
-
-                vm.Heal
-                    .Subscribe(amt => SpawnFloatingNumber(amt, FloatingNumberType.Heal, anchor))
-                    .AddTo(Disposables);
-            }
-        }
-
-        private void SpawnFloatingNumber(int value, FloatingNumberType type, Transform anchor)
-        {
-            if (null == _floatingPool || false == anchor)
-                return;
-
-            var item = _floatingPool.Get();
-            item.Play(value, type, anchor, ViewModel.BattleAnimConfig,
-                () => _floatingPool.Release(item));
+            _floatingNumbers?.Setup(
+                ViewModel,
+                _playerAvatarSlot,
+                _enemyAvatarSlot,
+                _playerHeroSlots,
+                _enemyHeroSlots,
+                Disposables);
         }
 
         private void CleanupRuntimeResources()
         {
             _energyFXView?.Cleanup();
-            _floatingPool?.Dispose();
-            _floatingPool = null;
+            _floatingNumbers?.Cleanup();
         }
     }
 }

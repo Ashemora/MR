@@ -35,6 +35,12 @@ namespace Project.Scripts.Gameplay.Battle.Layout
         public BattleFieldView BattleFieldView => _battleFieldView;
         public BattleWorldEnergyView EnergyView => _energyView;
 
+        
+        private bool _previewOffsetBaselineCaptured;
+        private Vector3 _boardBaseLocalPosition;
+        private Vector3 _tileContainerBaseLocalPosition;
+        private float _boardAndEnergyPreviewYOffset;
+
 
         public void SetBoardWorldCenter(Vector3 boardWorldCenter)
         {
@@ -44,8 +50,8 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             transform.position = boardWorldCenter - _boardView.transform.localPosition;
         }
 
-        public void SetVerticalLayout(float boardTopWorldY, float cellSize,
-            float gapBoardToPlayerEnergy, float gapPlayerEnergyToEnemyEnergy, float gapEnemyEnergyToBattleField)
+        public void SetVerticalLayout(float boardTopWorldY, float cellSize, float gapBoardToPlayerEnergy,
+            float gapPlayerEnergyToEnemyEnergy, float gapEnemyEnergyToBattleField)
         {
             var cursor = boardTopWorldY + gapBoardToPlayerEnergy * cellSize;
 
@@ -69,6 +75,33 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             _battleFieldView?.RefreshPosition();
         }
 
+        public float GetBoardWorldHeight()
+        {
+            return _boardView ? _boardView.GetWorldHeight() : 0f;
+        }
+
+        public void SetBoardAndEnergyPreviewYOffset(float offset)
+        {
+            _boardAndEnergyPreviewYOffset = offset;
+            if (false == _previewOffsetBaselineCaptured && Mathf.Approximately(offset, 0f))
+                return;
+
+            CapturePreviewOffsetBaseline();
+
+            if (_boardView)
+                _boardView.transform.localPosition = WithYOffset(_boardBaseLocalPosition, offset);
+
+            if (_tileContainer && _boardView && false == _tileContainer.IsChildOf(_boardView.transform))
+                _tileContainer.localPosition = WithYOffset(_tileContainerBaseLocalPosition, offset);
+
+            _energyView?.SetPreviewLocalYOffset(offset);
+        }
+
+        public float GetBoardAndEnergyPreviewYOffset()
+        {
+            return _boardAndEnergyPreviewYOffset;
+        }
+
         public void PublishAnnouncementAnchors(IBoardBoundsProvider boardBounds)
         {
             if (boardBounds == null)
@@ -82,6 +115,21 @@ namespace Project.Scripts.Gameplay.Battle.Layout
 
             if (_boardAnnouncementAnchor)
                 boardBounds.SetBoardAnchorY(_boardAnnouncementAnchor.position.y);
+        }
+
+        private void CapturePreviewOffsetBaseline()
+        {
+            if (_previewOffsetBaselineCaptured)
+                return;
+
+            _previewOffsetBaselineCaptured = true;
+            _boardBaseLocalPosition = _boardView ? _boardView.transform.localPosition : Vector3.zero;
+            _tileContainerBaseLocalPosition = _tileContainer ? _tileContainer.localPosition : Vector3.zero;
+        }
+
+        private static Vector3 WithYOffset(Vector3 baseLocalPosition, float offset)
+        {
+            return new Vector3(baseLocalPosition.x, baseLocalPosition.y + offset, baseLocalPosition.z);
         }
     }
 }

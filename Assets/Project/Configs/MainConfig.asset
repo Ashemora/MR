@@ -27,6 +27,7 @@ MonoBehaviour:
   _boardAnnouncementConfig: {fileID: 11400000, guid: 4f4cc5986c0342a4bb2b96d23c8d67a1, type: 2}
   _moveBarConfig: {fileID: 11400000, guid: 1d120bb07ff23a948a01c2604afe52b3, type: 2}
   _battleWorldLayoutConfig: {fileID: 11400000, guid: 0d769511b02f54e4a8d7f8b556769b48, type: 2}
+  _battleFieldLayoutConfig: {fileID: 11400000, guid: 7d5d1fa7c2c94d83880b72d36d79a7cf, type: 2}
   _gameplayScreenLayoutConfig: {fileID: 11400000, guid: 9cc56ddf724448ee90f369e1bb8f4308, type: 2}
   _tileKindPaletteConfig: {fileID: 11400000, guid: d100b8948d0a59f4cbe9d90dd813cb63, type: 2}
   _slotLayoutConfig: {fileID: 11400000, guid: 930f2ff79998a144c9415e78b34f4409, type: 2}
