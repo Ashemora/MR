@@ -458,7 +458,7 @@ namespace Project.Scripts.Services.Board
                 var cascadeLevel = waves.Count + 1;
                 _eventBus.Publish(new MatchPlayedEvent(cascadeLevel));
                 if (publishMatchesCollected)
-                    _eventBus.Publish(new BattleSideMatchesCollectedEvent(BattleSide.Player, matches.Count));
+                    PublishMatchesCollected(matches);
 
                 waves.Add(new List<MatchResult>(matches));
 
@@ -484,6 +484,23 @@ namespace Project.Scripts.Services.Board
 
             if (CanContinueFlow(runtimeVersion))
                 await EnsureMovesAvailable(runtimeVersion);
+        }
+
+        private void PublishMatchesCollected(List<MatchResult> matches)
+        {
+            var countsByKind = new Dictionary<TileKind, int>();
+            for (var i = 0; i < matches.Count; i++)
+            {
+                var kind = matches[i].TileKind;
+                if (kind == TileKind.None)
+                    continue;
+
+                countsByKind.TryGetValue(kind, out var current);
+                countsByKind[kind] = current + 1;
+            }
+
+            foreach (var pair in countsByKind)
+                _eventBus.Publish(new BattleSideMatchesCollectedEvent(BattleSide.Player, pair.Key, pair.Value));
         }
 
         private async UniTask EnsureMovesAvailable(int runtimeVersion)

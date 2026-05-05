@@ -66,13 +66,13 @@ namespace Project.Scripts.Configs.Battle
     [Serializable]
     public class ActivationConditionConfig
     {
-        [Tooltip("Условие активации: AbilityActivated = владелец активировал способность; MatchEnergyCollected = сторона владельца набрала новую энергию за текущую Match phase; MatchesCollected = сторона владельца собрала реальные матчи за текущую Match phase; LineRuneUsed/BombUsed/StormUsed = сторона владельца использовала соответствующий спецтайл за бой")]
+        [Tooltip("Условие активации: AbilityActivated = владелец активировал способность; MatchEnergyCollected = сторона владельца набрала новую энергию за текущую Match phase; MatchesCollected = сторона владельца собрала реальные матчи за текущую Match phase; SlotKindMatchesCollected = сторона владельца собрала матчи цвета ячейки героя за текущую Match phase; LineRuneUsed/BombUsed/StormUsed = сторона владельца использовала соответствующий спецтайл за бой")]
         [SerializeField] private ActivationConditionKind _kind = ActivationConditionKind.AbilityActivated;
 
-        [Tooltip("Кто должен вызвать условие: Owner для AbilityActivated; OwnerSide для MatchEnergyCollected, MatchesCollected, LineRuneUsed, BombUsed и StormUsed")]
+        [Tooltip("Кто должен вызвать условие: Owner для AbilityActivated; OwnerSide для MatchEnergyCollected, MatchesCollected, LineRuneUsed, BombUsed и StormUsed; OwnerSlotKind для SlotKindMatchesCollected")]
         [SerializeField] private ActivationConditionSubject _subject = ActivationConditionSubject.Owner;
 
-        [Tooltip("Порог условия: для AbilityActivated = количество активаций; для MatchEnergyCollected = сколько новой энергии реально добавилось в общий пул; для MatchesCollected = количество MatchResult за текущую Match phase; для LineRuneUsed/BombUsed/StormUsed = количество срабатываний спецтайла за бой")]
+        [Tooltip("Порог условия: для AbilityActivated = количество активаций; для MatchEnergyCollected = сколько новой энергии реально добавилось в общий пул; для MatchesCollected = количество MatchResult за текущую Match phase; для SlotKindMatchesCollected = количество MatchResult цвета ячейки героя за текущую Match phase; для LineRuneUsed/BombUsed/StormUsed = количество срабатываний спецтайла за бой")]
         [SerializeField] private int _requiredCount = 1;
 
 
@@ -84,6 +84,9 @@ namespace Project.Scripts.Configs.Battle
         private static ActivationConditionSubject NormalizeSubject(ActivationConditionKind kind,
             ActivationConditionSubject subject)
         {
+            if (kind == ActivationConditionKind.SlotKindMatchesCollected)
+                return ActivationConditionSubject.OwnerSlotKind;
+
             return kind is ActivationConditionKind.MatchEnergyCollected
                     or ActivationConditionKind.MatchesCollected
                     or ActivationConditionKind.LineRuneUsed

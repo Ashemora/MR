@@ -213,6 +213,11 @@ namespace Project.Scripts.Services.Combat
                 ActivationConditionKind.MatchesCollected,
                 e.Side,
                 e.Count));
+            AddProgressAndQueueActivations(new ActivationConditionEvent(
+                ActivationConditionKind.SlotKindMatchesCollected,
+                e.Side,
+                e.Count,
+                e.TileKind));
         }
 
         private void OnBattleSideSpecialTileUsed(BattleSideSpecialTileUsedEvent e)
@@ -245,6 +250,8 @@ namespace Project.Scripts.Services.Combat
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.MatchEnergyCollected, BattleSide.Enemy);
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.MatchesCollected, BattleSide.Player);
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.MatchesCollected, BattleSide.Enemy);
+                _engine.ResetActivationConditionProgress(ActivationConditionKind.SlotKindMatchesCollected, BattleSide.Player);
+                _engine.ResetActivationConditionProgress(ActivationConditionKind.SlotKindMatchesCollected, BattleSide.Enemy);
                 return;
             }
 

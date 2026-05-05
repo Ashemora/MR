@@ -106,7 +106,8 @@ namespace Project.Scripts.Shared.Passives
             for (var conditionIndex = 0; conditionIndex < conditions.Count; conditionIndex++)
             {
                 var condition = conditions[conditionIndex];
-                if (false == ActivationConditionRules.Matches(condition, e, state.Side, state.SlotIndex))
+                if (false == ActivationConditionRules.Matches(condition, e, state.Side, state.SlotIndex,
+                        state.SlotKind))
                     continue;
 
                 nextState = nextState.WithConditionProgress(conditionIndex,

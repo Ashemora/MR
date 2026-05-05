@@ -1,11 +1,12 @@
 using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Tiles;
 
 namespace Project.Scripts.Shared.Passives
 {
     public static class ActivationConditionRules
     {
         public static bool Matches(ActivationConditionDefinition condition, ActivationConditionEvent e,
-            BattleSide ownerSide, int ownerSlotIndex)
+            BattleSide ownerSide, int ownerSlotIndex, TileKind ownerSlotKind)
         {
             if (false == condition.IsConfigured || condition.Kind != e.Kind)
                 return false;
@@ -14,6 +15,7 @@ namespace Project.Scripts.Shared.Passives
             {
                 ActivationConditionSubject.Owner => IsOwner(e.Source, ownerSide, ownerSlotIndex),
                 ActivationConditionSubject.OwnerSide => e.Side == ownerSide,
+                ActivationConditionSubject.OwnerSlotKind => e.Side == ownerSide && e.TileKind == ownerSlotKind,
                 _ => false
             };
         }

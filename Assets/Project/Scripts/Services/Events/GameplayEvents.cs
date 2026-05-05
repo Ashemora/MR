@@ -66,12 +66,14 @@ namespace Project.Scripts.Services.Events
     public readonly struct BattleSideMatchesCollectedEvent
     {
         public BattleSide Side { get; }
+        public TileKind TileKind { get; }
         public int Count { get; }
 
 
-        public BattleSideMatchesCollectedEvent(BattleSide side, int count)
+        public BattleSideMatchesCollectedEvent(BattleSide side, TileKind tileKind, int count)
         {
             Side = side;
+            TileKind = tileKind;
             Count = count < 0 ? 0 : count;
         }
     }

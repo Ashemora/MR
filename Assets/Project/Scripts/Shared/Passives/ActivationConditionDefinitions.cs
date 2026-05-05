@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Tiles;
 
 namespace Project.Scripts.Shared.Passives
 {
@@ -62,6 +63,7 @@ namespace Project.Scripts.Shared.Passives
         public ActivationConditionKind Kind { get; }
         public UnitDescriptor Source { get; }
         public BattleSide Side { get; }
+        public TileKind TileKind { get; }
         public float Amount { get; }
 
 
@@ -70,14 +72,17 @@ namespace Project.Scripts.Shared.Passives
             Kind = kind;
             Source = source;
             Side = source.Side;
+            TileKind = TileKind.None;
             Amount = amount <= 0f ? 0f : amount;
         }
 
-        public ActivationConditionEvent(ActivationConditionKind kind, BattleSide side, float amount)
+        public ActivationConditionEvent(ActivationConditionKind kind, BattleSide side, float amount,
+            TileKind tileKind = TileKind.None)
         {
             Kind = kind;
             Source = default;
             Side = side;
+            TileKind = tileKind;
             Amount = amount <= 0f ? 0f : amount;
         }
     }
@@ -91,13 +96,15 @@ namespace Project.Scripts.Shared.Passives
         MatchesCollected,
         LineRuneUsed,
         BombUsed,
-        StormUsed
+        StormUsed,
+        SlotKindMatchesCollected
     }
 
     public enum ActivationConditionSubject
     {
         Owner,
-        OwnerSide
+        OwnerSide,
+        OwnerSlotKind
     }
 
     public enum ActivationConditionGroupOperator
