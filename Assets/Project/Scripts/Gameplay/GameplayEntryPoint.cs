@@ -307,7 +307,8 @@ namespace Project.Scripts.Gameplay
 
             var pool = new TilePool(_boardConfig.TilePrefab, _battleWorldLayout.TileContainer, _animConfig, worldLayout.TileCellSize, _boardConfig.TileFillPercent);
             var matchFinder = new MatchFinder(MatchRules.MinMatchLength);
-            var gridManager = new GridManager(_levelConfig, _gridConfig, _animConfig, pool, worldLayout.TileCellSize, _boardRuntimeService);
+            var gridManager = new GridManager(_levelConfig, _gridConfig, _animConfig, pool, worldLayout.TileCellSize,
+                _boardRuntimeService, _eventBus);
             gridManager.SetOrigin(ComputeGridOrigin(boardCenter, worldLayout.TileCellSize));
 
 #if UNITY_EDITOR

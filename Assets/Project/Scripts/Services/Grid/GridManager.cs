@@ -5,8 +5,10 @@ using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Grid;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Board;
+using Project.Scripts.Services.Events;
 using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
+using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
 using Project.Scripts.Tiles;
 using UnityEngine;
@@ -25,12 +27,13 @@ namespace Project.Scripts.Services.Grid
         private readonly Tile[,] _tiles;
         private readonly GridState _state;
         private readonly IBoardRuntimeService _boardRuntimeService;
+        private readonly EventBus _eventBus;
         private float _cellSize;
         private Vector3 _origin;
        
 
         public GridManager(LevelConfig levelConfig, GridConfig gridConfig, BoardAnimationConfig animConfig,
-            TilePool pool, float cellSize, IBoardRuntimeService boardRuntimeService)
+            TilePool pool, float cellSize, IBoardRuntimeService boardRuntimeService, EventBus eventBus)
         {
             _levelConfig = levelConfig;
             _gridConfig = gridConfig;
@@ -40,6 +43,7 @@ namespace Project.Scripts.Services.Grid
             _tiles = new Tile[gridConfig.Width, gridConfig.Height];
             _state = new GridState(gridConfig.Width, gridConfig.Height);
             _boardRuntimeService = boardRuntimeService;
+            _eventBus = eventBus;
         }
 
         // IGridView
@@ -539,12 +543,23 @@ namespace Project.Scripts.Services.Grid
                     continue;
 
                 if (invokeBehaviours)
+                {
                     tile.Config.Behaviour.OnTileDestroyed(pos, _state, tile.PayloadKind);
+                    PublishSpecialTileUsed(tile.Kind);
+                }
 
                 _tiles[pos.X, pos.Y] = null;
                 _state.ClearCell(pos);
                 _pool.Release(tile);
             }
+        }
+
+        private void PublishSpecialTileUsed(TileKind kind)
+        {
+            if (false == kind.IsSpecial())
+                return;
+
+            _eventBus.Publish(new BattleSideSpecialTileUsedEvent(BattleSide.Player, kind));
         }
 
         private void ReInitTileAt(int x, int y, TileConfig config)

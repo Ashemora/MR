@@ -88,7 +88,10 @@ namespace Project.Scripts.Shared.Passives
         None,
         AbilityActivated,
         MatchEnergyCollected,
-        MatchesCollected
+        MatchesCollected,
+        LineRuneUsed,
+        BombUsed,
+        StormUsed
     }
 
     public enum ActivationConditionSubject

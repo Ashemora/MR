@@ -32,6 +32,7 @@ namespace Project.Scripts.Services.Combat
         private IDisposable _abilityExecutedSubscription;
         private IDisposable _energyAddedSubscription;
         private IDisposable _matchesCollectedSubscription;
+        private IDisposable _specialTileUsedSubscription;
         private IDisposable _phaseChangedSubscription;
         private IDisposable _roundChangedSubscription;
         private IDisposable _playerDefeatedSubscription;
@@ -63,6 +64,7 @@ namespace Project.Scripts.Services.Combat
             _abilityExecutedSubscription = _eventBus.Subscribe<AbilityExecutedEvent>(OnAbilityExecuted);
             _energyAddedSubscription = _eventBus.Subscribe<BattleSideEnergyAddedEvent>(OnBattleSideEnergyAdded);
             _matchesCollectedSubscription = _eventBus.Subscribe<BattleSideMatchesCollectedEvent>(OnBattleSideMatchesCollected);
+            _specialTileUsedSubscription = _eventBus.Subscribe<BattleSideSpecialTileUsedEvent>(OnBattleSideSpecialTileUsed);
             _phaseChangedSubscription = _eventBus.Subscribe<BattleFlowPhaseChangedEvent>(OnBattleFlowPhaseChanged);
             _roundChangedSubscription = _eventBus.Subscribe<BattleFlowRoundChangedEvent>(OnBattleFlowRoundChanged);
             _playerDefeatedSubscription = _eventBus.Subscribe<PlayerDefeatedEvent>(_ => RemoveBuffsForUnit(GetAvatarUnit(BattleSide.Player)));
@@ -81,6 +83,8 @@ namespace Project.Scripts.Services.Combat
             _energyAddedSubscription = null;
             _matchesCollectedSubscription?.Dispose();
             _matchesCollectedSubscription = null;
+            _specialTileUsedSubscription?.Dispose();
+            _specialTileUsedSubscription = null;
             _phaseChangedSubscription?.Dispose();
             _phaseChangedSubscription = null;
             _roundChangedSubscription?.Dispose();
@@ -207,6 +211,25 @@ namespace Project.Scripts.Services.Combat
 
             AddProgressAndQueueActivations(new ActivationConditionEvent(
                 ActivationConditionKind.MatchesCollected,
+                e.Side,
+                e.Count));
+        }
+
+        private void OnBattleSideSpecialTileUsed(BattleSideSpecialTileUsedEvent e)
+        {
+            var conditionKind = e.TileKind switch
+            {
+                TileKind.LineRuneH or TileKind.LineRuneV => ActivationConditionKind.LineRuneUsed,
+                TileKind.Bomb => ActivationConditionKind.BombUsed,
+                TileKind.Storm => ActivationConditionKind.StormUsed,
+                _ => ActivationConditionKind.None
+            };
+
+            if (conditionKind == ActivationConditionKind.None)
+                return;
+
+            AddProgressAndQueueActivations(new ActivationConditionEvent(
+                conditionKind,
                 e.Side,
                 e.Count));
         }

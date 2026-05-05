@@ -76,6 +76,21 @@ namespace Project.Scripts.Services.Events
         }
     }
 
+    public readonly struct BattleSideSpecialTileUsedEvent
+    {
+        public BattleSide Side { get; }
+        public TileKind TileKind { get; }
+        public int Count { get; }
+
+
+        public BattleSideSpecialTileUsedEvent(BattleSide side, TileKind tileKind, int count = 1)
+        {
+            Side = side;
+            TileKind = tileKind;
+            Count = count < 0 ? 0 : count;
+        }
+    }
+
     public readonly struct PlayerHPChangedEvent
     {
         public int Current { get; }
