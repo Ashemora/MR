@@ -66,13 +66,13 @@ namespace Project.Scripts.Configs.Battle
     [Serializable]
     public class ActivationConditionConfig
     {
-        [Tooltip("Условие активации: AbilityActivated = владелец активировал способность; MatchEnergyCollected = сторона владельца набрала новую энергию за текущую Match phase")]
+        [Tooltip("Условие активации: AbilityActivated = владелец активировал способность; MatchEnergyCollected = сторона владельца набрала новую энергию за текущую Match phase; MatchesCollected = сторона владельца собрала реальные матчи за текущую Match phase")]
         [SerializeField] private ActivationConditionKind _kind = ActivationConditionKind.AbilityActivated;
 
-        [Tooltip("Кто должен вызвать условие: Owner для AbilityActivated; OwnerSide для MatchEnergyCollected")]
+        [Tooltip("Кто должен вызвать условие: Owner для AbilityActivated; OwnerSide для MatchEnergyCollected и MatchesCollected")]
         [SerializeField] private ActivationConditionSubject _subject = ActivationConditionSubject.Owner;
 
-        [Tooltip("Порог условия: для AbilityActivated = количество активаций; для MatchEnergyCollected = сколько новой энергии реально добавилось в общий пул за текущую Match phase")]
+        [Tooltip("Порог условия: для AbilityActivated = количество активаций; для MatchEnergyCollected = сколько новой энергии реально добавилось в общий пул; для MatchesCollected = количество MatchResult за текущую Match phase")]
         [SerializeField] private int _requiredCount = 1;
 
 
@@ -84,7 +84,7 @@ namespace Project.Scripts.Configs.Battle
         private static ActivationConditionSubject NormalizeSubject(ActivationConditionKind kind,
             ActivationConditionSubject subject)
         {
-            return kind == ActivationConditionKind.MatchEnergyCollected
+            return kind is ActivationConditionKind.MatchEnergyCollected or ActivationConditionKind.MatchesCollected
                 ? ActivationConditionSubject.OwnerSide
                 : subject;
         }

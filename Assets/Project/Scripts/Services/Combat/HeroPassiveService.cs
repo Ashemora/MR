@@ -31,6 +31,7 @@ namespace Project.Scripts.Services.Combat
         private IDisposable _heroActivatedSubscription;
         private IDisposable _abilityExecutedSubscription;
         private IDisposable _energyAddedSubscription;
+        private IDisposable _matchesCollectedSubscription;
         private IDisposable _phaseChangedSubscription;
         private IDisposable _roundChangedSubscription;
         private IDisposable _playerDefeatedSubscription;
@@ -61,6 +62,7 @@ namespace Project.Scripts.Services.Combat
             _heroActivatedSubscription = _eventBus.Subscribe<HeroActivatedEvent>(OnHeroActivated);
             _abilityExecutedSubscription = _eventBus.Subscribe<AbilityExecutedEvent>(OnAbilityExecuted);
             _energyAddedSubscription = _eventBus.Subscribe<BattleSideEnergyAddedEvent>(OnBattleSideEnergyAdded);
+            _matchesCollectedSubscription = _eventBus.Subscribe<BattleSideMatchesCollectedEvent>(OnBattleSideMatchesCollected);
             _phaseChangedSubscription = _eventBus.Subscribe<BattleFlowPhaseChangedEvent>(OnBattleFlowPhaseChanged);
             _roundChangedSubscription = _eventBus.Subscribe<BattleFlowRoundChangedEvent>(OnBattleFlowRoundChanged);
             _playerDefeatedSubscription = _eventBus.Subscribe<PlayerDefeatedEvent>(_ => RemoveBuffsForUnit(GetAvatarUnit(BattleSide.Player)));
@@ -77,6 +79,8 @@ namespace Project.Scripts.Services.Combat
             _abilityExecutedSubscription = null;
             _energyAddedSubscription?.Dispose();
             _energyAddedSubscription = null;
+            _matchesCollectedSubscription?.Dispose();
+            _matchesCollectedSubscription = null;
             _phaseChangedSubscription?.Dispose();
             _phaseChangedSubscription = null;
             _roundChangedSubscription?.Dispose();
@@ -196,6 +200,17 @@ namespace Project.Scripts.Services.Combat
                 e.Amount));
         }
 
+        private void OnBattleSideMatchesCollected(BattleSideMatchesCollectedEvent e)
+        {
+            if (_currentPhase is not (BattlePhaseKind.Match or BattlePhaseKind.PendingHero))
+                return;
+
+            AddProgressAndQueueActivations(new ActivationConditionEvent(
+                ActivationConditionKind.MatchesCollected,
+                e.Side,
+                e.Count));
+        }
+
         private void OnBattleFlowPhaseChanged(BattleFlowPhaseChangedEvent e)
         {
             _currentPhase = e.Phase;
@@ -205,6 +220,8 @@ namespace Project.Scripts.Services.Combat
                 ClearPendingActivations();
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.MatchEnergyCollected, BattleSide.Player);
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.MatchEnergyCollected, BattleSide.Enemy);
+                _engine.ResetActivationConditionProgress(ActivationConditionKind.MatchesCollected, BattleSide.Player);
+                _engine.ResetActivationConditionProgress(ActivationConditionKind.MatchesCollected, BattleSide.Enemy);
                 return;
             }
 

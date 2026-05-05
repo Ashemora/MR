@@ -63,6 +63,19 @@ namespace Project.Scripts.Services.Events
         }
     }
 
+    public readonly struct BattleSideMatchesCollectedEvent
+    {
+        public BattleSide Side { get; }
+        public int Count { get; }
+
+
+        public BattleSideMatchesCollectedEvent(BattleSide side, int count)
+        {
+            Side = side;
+            Count = count < 0 ? 0 : count;
+        }
+    }
+
     public readonly struct PlayerHPChangedEvent
     {
         public int Current { get; }

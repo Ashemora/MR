@@ -11,6 +11,7 @@ using Project.Scripts.Services.Combat;
 using Project.Scripts.Services.Input;
 using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
+using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Input;
 using Project.Scripts.Shared.Rules;
 using Project.Scripts.Shared.Tiles;
@@ -222,7 +223,7 @@ namespace Project.Scripts.Services.Board
                             return;
 
                         _moveBarService.TryConsume();
-                        await ProcessMatchChain(matches, waves, request.PivotPosition, true, runtimeVersion);
+                        await ProcessMatchChain(matches, waves, request.PivotPosition, true, runtimeVersion, true);
 
                         if (false == CanContinueFlow(runtimeVersion))
                             return;
@@ -440,14 +441,14 @@ namespace Project.Scripts.Services.Board
 
             var chainMatches = _matchFinder.FindMatches(_state.GetGridState());
             if (chainMatches.Count > 0 && CanContinueFlow(runtimeVersion))
-                await ProcessMatchChain(chainMatches, waves, pivotPosition, false, runtimeVersion);
+                await ProcessMatchChain(chainMatches, waves, pivotPosition, false, runtimeVersion, true);
 
             if (CanContinueFlow(runtimeVersion))
                 await EnsureMovesAvailable(runtimeVersion);
         }
 
         private async UniTask ProcessMatchChain(List<MatchResult> matches, List<List<MatchResult>> waves, GridPoint pivotPosition, bool spawnSpecials,
-            int runtimeVersion)
+            int runtimeVersion, bool publishMatchesCollected)
         {
             while (matches.Count > 0)
             {
@@ -456,6 +457,9 @@ namespace Project.Scripts.Services.Board
 
                 var cascadeLevel = waves.Count + 1;
                 _eventBus.Publish(new MatchPlayedEvent(cascadeLevel));
+                if (publishMatchesCollected)
+                    _eventBus.Publish(new BattleSideMatchesCollectedEvent(BattleSide.Player, matches.Count));
+
                 waves.Add(new List<MatchResult>(matches));
 
                 var specialPlacements = spawnSpecials && cascadeLevel == 1
@@ -508,7 +512,7 @@ namespace Project.Scripts.Services.Board
 
             var immediateMatches = _matchFinder.FindMatches(_state.GetGridState());
             if (immediateMatches.Count > 0 && CanContinueFlow(runtimeVersion))
-                await ProcessMatchChain(immediateMatches, new List<List<MatchResult>>(), GridPoint.Zero, false, runtimeVersion);
+                await ProcessMatchChain(immediateMatches, new List<List<MatchResult>>(), GridPoint.Zero, false, runtimeVersion, false);
         }
 
         private bool CanAcceptInput()
