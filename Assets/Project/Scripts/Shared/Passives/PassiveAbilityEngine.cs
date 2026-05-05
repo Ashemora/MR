@@ -56,7 +56,13 @@ namespace Project.Scripts.Shared.Passives
                 if (false == TryAddConditionProgress(state, e, out var nextState))
                     continue;
 
-                _states[i] = IsConditionGroupSatisfied(nextState) ? nextState.WithActivated() : nextState;
+                while (nextState.CanActivateAgain && IsConditionGroupSatisfied(nextState))
+                {
+                    nextState = ConsumeSatisfiedConditionProgress(nextState);
+                    nextState = nextState.WithActivatedAndProgress(CopyConditionProgress(nextState));
+                }
+
+                _states[i] = nextState;
                 changed = true;
             }
 
@@ -78,10 +84,10 @@ namespace Project.Scripts.Shared.Passives
                 var conditions = state.Definition.ActivationConditions.Conditions;
                 for (var conditionIndex = 0; conditionIndex < conditions.Count; conditionIndex++)
                 {
-                    if (conditions[conditionIndex].Kind != kind || state.GetConditionProgress(conditionIndex) == 0)
+                    if (conditions[conditionIndex].Kind != kind || state.GetConditionProgress(conditionIndex) == 0f)
                         continue;
 
-                    state = state.WithConditionProgress(conditionIndex, 0);
+                    state = state.WithConditionProgress(conditionIndex, 0f);
                     changed = true;
                 }
 
@@ -131,6 +137,46 @@ namespace Project.Scripts.Shared.Passives
             return group.Operator == ActivationConditionGroupOperator.All;
         }
 
+        private static HeroPassiveRuntimeState ConsumeSatisfiedConditionProgress(HeroPassiveRuntimeState state)
+        {
+            var group = state.Definition.ActivationConditions;
+            var conditions = group.Conditions;
+
+            if (group.Operator == ActivationConditionGroupOperator.All)
+            {
+                for (var i = 0; i < conditions.Count; i++)
+                    state = ConsumeConditionProgress(state, i, conditions[i].RequiredCount);
+
+                return state;
+            }
+
+            for (var i = 0; i < conditions.Count; i++)
+            {
+                if (state.GetConditionProgress(i) < conditions[i].RequiredCount)
+                    continue;
+
+                return ConsumeConditionProgress(state, i, conditions[i].RequiredCount);
+            }
+
+            return state;
+        }
+
+        private static HeroPassiveRuntimeState ConsumeConditionProgress(HeroPassiveRuntimeState state,
+            int conditionIndex, int amount)
+        {
+            return state.WithConditionProgress(conditionIndex,
+                state.GetConditionProgress(conditionIndex) - amount);
+        }
+
+        private static float[] CopyConditionProgress(HeroPassiveRuntimeState state)
+        {
+            var result = new float[state.ConditionCount];
+            for (var i = 0; i < result.Length; i++)
+                result[i] = state.GetConditionProgress(i);
+
+            return result;
+        }
+
         public bool DisableOwner(BattleSide side, int slotIndex)
         {
             var changed = false;
@@ -146,6 +192,5 @@ namespace Project.Scripts.Shared.Passives
 
             return changed;
         }
-
     }
 }

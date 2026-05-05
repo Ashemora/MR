@@ -50,6 +50,19 @@ namespace Project.Scripts.Services.Events
         }
     }
 
+    public readonly struct BattleSideEnergyAddedEvent
+    {
+        public BattleSide Side { get; }
+        public float Amount { get; }
+
+
+        public BattleSideEnergyAddedEvent(BattleSide side, float amount)
+        {
+            Side = side;
+            Amount = amount < 0f ? 0f : amount;
+        }
+    }
+
     public readonly struct PlayerHPChangedEvent
     {
         public int Current { get; }

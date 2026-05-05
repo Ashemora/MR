@@ -61,14 +61,24 @@ namespace Project.Scripts.Shared.Passives
     {
         public ActivationConditionKind Kind { get; }
         public UnitDescriptor Source { get; }
-        public int Amount { get; }
+        public BattleSide Side { get; }
+        public float Amount { get; }
 
 
-        public ActivationConditionEvent(ActivationConditionKind kind, UnitDescriptor source, int amount = 1)
+        public ActivationConditionEvent(ActivationConditionKind kind, UnitDescriptor source, float amount = 1f)
         {
             Kind = kind;
             Source = source;
-            Amount = amount < 1 ? 1 : amount;
+            Side = source.Side;
+            Amount = amount <= 0f ? 0f : amount;
+        }
+
+        public ActivationConditionEvent(ActivationConditionKind kind, BattleSide side, float amount)
+        {
+            Kind = kind;
+            Source = default;
+            Side = side;
+            Amount = amount <= 0f ? 0f : amount;
         }
     }
     
@@ -76,12 +86,14 @@ namespace Project.Scripts.Shared.Passives
     public enum ActivationConditionKind
     {
         None,
-        AbilityActivated
+        AbilityActivated,
+        MatchEnergyCollected
     }
 
     public enum ActivationConditionSubject
     {
-        Owner
+        Owner,
+        OwnerSide
     }
 
     public enum ActivationConditionGroupOperator

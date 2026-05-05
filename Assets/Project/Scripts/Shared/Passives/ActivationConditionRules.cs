@@ -13,6 +13,7 @@ namespace Project.Scripts.Shared.Passives
             return condition.Subject switch
             {
                 ActivationConditionSubject.Owner => IsOwner(e.Source, ownerSide, ownerSlotIndex),
+                ActivationConditionSubject.OwnerSide => e.Side == ownerSide,
                 _ => false
             };
         }

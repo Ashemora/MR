@@ -25,12 +25,8 @@ namespace Project.Scripts.Services.Combat
         public int EnergyCap => _battleFlowConfig.EnergyCap;
 
 
-        public BattleSideEnergyService(
-            EventBus eventBus,
-            DebugConfig debugConfig,
-            BattleFlowConfig battleFlowConfig,
-            IBattleEconomyModifierService battleEconomyModifier,
-            IEnergyGainModifierService energyGainModifier)
+        public BattleSideEnergyService(EventBus eventBus, DebugConfig debugConfig, BattleFlowConfig battleFlowConfig,
+            IBattleEconomyModifierService battleEconomyModifier, IEnergyGainModifierService energyGainModifier)
         {
             _eventBus = eventBus;
             _debugConfig = debugConfig;
@@ -76,6 +72,7 @@ namespace Project.Scripts.Services.Combat
                 return false;
 
             PublishEnergyChanged(side);
+            
             return true;
         }
 
@@ -85,6 +82,7 @@ namespace Project.Scripts.Services.Combat
             if (added <= 0f)
                 return;
 
+            _eventBus.Publish(new BattleSideEnergyAddedEvent(side, added));
             PublishEnergyChanged(side);
         }
 
