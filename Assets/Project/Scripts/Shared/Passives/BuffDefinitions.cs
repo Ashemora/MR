@@ -64,6 +64,7 @@ namespace Project.Scripts.Shared.Passives
         ModifyActivationEnergyCost,
         ModifyMatchEnergyBySlotKind,
         ModifySpecialTileActivationEnergy,
+        ModifyBombRadius,
         NextAttackDamage
     }
 

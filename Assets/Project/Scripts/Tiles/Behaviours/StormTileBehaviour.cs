@@ -10,7 +10,8 @@ namespace Project.Scripts.Tiles.Behaviours
         public override bool IsActivatedBySwap => true;
 
 
-        public override void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind)
+        public override void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind,
+            TileDestructionContext context)
         {
             var targetKind = payloadKind.IsColor()
                 ? payloadKind

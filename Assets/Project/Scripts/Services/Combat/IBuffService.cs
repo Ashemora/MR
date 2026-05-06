@@ -15,4 +15,9 @@ namespace Project.Scripts.Services.Combat
         bool HasMatchEnergyBuff(BattleSide side, TileKind tileKind);
         bool HasBuffFromSource(UnitDescriptor source);
     }
+
+    public interface IBombRadiusModifierService
+    {
+        int GetBombRadiusBonus(BattleSide side);
+    }
 }

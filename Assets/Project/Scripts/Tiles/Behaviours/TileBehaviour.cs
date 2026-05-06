@@ -9,6 +9,7 @@ namespace Project.Scripts.Tiles.Behaviours
         public virtual bool IsActivatedBySwap => false;
 
 
-        public abstract void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind);
+        public abstract void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind,
+            TileDestructionContext context);
     }
 }

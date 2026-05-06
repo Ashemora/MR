@@ -85,6 +85,7 @@ namespace Project.Scripts.Gameplay
         private TileKindPaletteConfig _palette;
         private IHeroPassiveService _heroPassiveService;
         private IBuffService _buffService;
+        private IBombRadiusModifierService _bombRadiusModifierService;
         private HintService _hintService;
         private PassiveTileGlowService _passiveTileGlowService;
         private DebugConfig _debugConfig;
@@ -217,6 +218,7 @@ namespace Project.Scripts.Gameplay
             TileKindPaletteConfig palette,
             IHeroPassiveService heroPassiveService,
             IBuffService buffService,
+            IBombRadiusModifierService bombRadiusModifierService,
             DebugConfig debugConfig,
             IBoardAnnouncementService boardAnnouncementService)
         {
@@ -252,6 +254,7 @@ namespace Project.Scripts.Gameplay
             _palette = palette;
             _heroPassiveService = heroPassiveService;
             _buffService = buffService;
+            _bombRadiusModifierService = bombRadiusModifierService;
             _debugConfig = debugConfig;
             _boardAnnouncementService = boardAnnouncementService;
         }
@@ -308,7 +311,7 @@ namespace Project.Scripts.Gameplay
             var pool = new TilePool(_boardConfig.TilePrefab, _battleWorldLayout.TileContainer, _animConfig, worldLayout.TileCellSize, _boardConfig.TileFillPercent);
             var matchFinder = new MatchFinder(MatchRules.MinMatchLength);
             var gridManager = new GridManager(_levelConfig, _gridConfig, _animConfig, pool, worldLayout.TileCellSize,
-                _boardRuntimeService, _eventBus);
+                _boardRuntimeService, _eventBus, _bombRadiusModifierService);
             gridManager.SetOrigin(ComputeGridOrigin(boardCenter, worldLayout.TileCellSize));
 
 #if UNITY_EDITOR
@@ -351,6 +354,7 @@ namespace Project.Scripts.Gameplay
                 _moveBarService,
                 specialTileResolver,
                 swapComboResolver,
+                _bombRadiusModifierService,
                 _debugConfig);
 
             _hintService = new HintService(_hintConfig, gridManager.State, gridManager, matchFinder,

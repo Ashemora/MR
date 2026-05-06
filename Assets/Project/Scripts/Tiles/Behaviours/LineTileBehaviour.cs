@@ -15,7 +15,8 @@ namespace Project.Scripts.Tiles.Behaviours
         public bool IsHorizontal => _isHorizontal;
 
 
-        public override void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind)
+        public override void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind,
+            TileDestructionContext context)
         {
             var positions = _isHorizontal ? state.GetAllInRow(gridPos.Y) : state.GetAllInColumn(gridPos.X);
             state.ScheduleRemove(positions);

@@ -40,6 +40,7 @@ namespace Project.Scripts.Services.Board
         private readonly EventBus _eventBus;
         private readonly SpecialTileResolver _specialTileResolver;
         private readonly SwapComboResolver _swapComboResolver;
+        private readonly IBombRadiusModifierService _bombRadiusModifierService;
         private readonly DebugConfig _debugConfig;
         private bool _isProcessing;
 
@@ -49,7 +50,7 @@ namespace Project.Scripts.Services.Board
             IMoveChecker moveChecker, CascadeEnergyConfig cascadeEnergyConfig,
             IGameStateService gameStateService, IBoardRuntimeService boardRuntimeService, IMoveBarService moveBarService,
             SpecialTileResolver specialTileResolver, SwapComboResolver swapComboResolver,
-            DebugConfig debugConfig)
+            IBombRadiusModifierService bombRadiusModifierService, DebugConfig debugConfig)
         {
             _eventBus = eventBus;
             _state = state;
@@ -65,6 +66,7 @@ namespace Project.Scripts.Services.Board
             _moveBarService = moveBarService;
             _specialTileResolver = specialTileResolver;
             _swapComboResolver = swapComboResolver;
+            _bombRadiusModifierService = bombRadiusModifierService;
             _debugConfig = debugConfig;
         }
 
@@ -299,7 +301,7 @@ namespace Project.Scripts.Services.Board
 
                 case SwapComboType.BombBomb:
                 {
-                    var doubleRadius = GetBombDoubleRadius(tileA, tileB);
+                    var doubleRadius = GetBombDoubleRadius(tileA, tileB, BattleSide.Player);
                     await ExecuteBombBombCombo(posA, posB, doubleRadius, runtimeVersion);
                     break;
                 }
@@ -308,7 +310,7 @@ namespace Project.Scripts.Services.Board
                 {
                     var bombPos = kindA == TileKind.Bomb ? posA : posB;
                     var bombTile = kindA == TileKind.Bomb ? tileA : tileB;
-                    var radius = GetBombRadius(bombTile);
+                    var radius = GetBombRadius(bombTile, BattleSide.Player);
                     await ExecuteBombLineCombo(posA, posB, bombPos, radius, runtimeVersion);
                     break;
                 }
@@ -551,17 +553,19 @@ namespace Project.Scripts.Services.Board
             return _boardRuntimeService.IsCurrent(runtimeVersion);
         }
 
-        private static int GetBombRadius(Tile tile)
+        private int GetBombRadius(Tile tile, BattleSide side)
         {
-            return (tile.Config.Behaviour as BombTileBehaviour)?.Radius ?? 1;
+            var baseRadius = (tile.Config.Behaviour as BombTileBehaviour)?.Radius ?? 1;
+            return BombRadiusRules.GetEffectiveRadius(baseRadius, _bombRadiusModifierService.GetBombRadiusBonus(side));
         }
 
-        private static int GetBombDoubleRadius(Tile tileA, Tile tileB)
+        private int GetBombDoubleRadius(Tile tileA, Tile tileB, BattleSide side)
         {
             var bomb = tileA.Config.Behaviour as BombTileBehaviour
                     ?? tileB.Config.Behaviour as BombTileBehaviour;
 
-            return bomb?.DoubleRadius ?? 2;
+            var baseRadius = bomb?.DoubleRadius ?? 2;
+            return BombRadiusRules.GetEffectiveRadius(baseRadius, _bombRadiusModifierService.GetBombRadiusBonus(side));
         }
 
         private void EnsureBoardStableAfterResolution()

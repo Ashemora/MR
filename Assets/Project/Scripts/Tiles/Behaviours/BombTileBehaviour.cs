@@ -1,4 +1,5 @@
 using Project.Scripts.Shared;
+using Project.Scripts.Shared.Rules;
 using Project.Scripts.Shared.Tiles;
 using UnityEngine;
 
@@ -19,9 +20,11 @@ namespace Project.Scripts.Tiles.Behaviours
         public int DoubleRadius => _doubleRadius;
 
 
-        public override void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind)
+        public override void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind,
+            TileDestructionContext context)
         {
-            var neighbours = state.GetNeighboursInRadius(gridPos, _radius);
+            var radius = BombRadiusRules.GetEffectiveRadius(_radius, context.BombRadiusBonus);
+            var neighbours = state.GetNeighboursInRadius(gridPos, radius);
             state.ScheduleRemove(neighbours);
         }
     }

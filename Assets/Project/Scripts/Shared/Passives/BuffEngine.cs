@@ -121,6 +121,24 @@ namespace Project.Scripts.Shared.Passives
             return result < 0f ? 0f : result;
         }
 
+        public int GetBombRadiusBonus(BattleSide side)
+        {
+            var result = 0f;
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.Kind != BuffKind.ModifyBombRadius)
+                    continue;
+
+                if (buff.Target.Side != side)
+                    continue;
+
+                result = BuffRules.Apply(result, buff.Definition, buff.StackCount);
+            }
+
+            return BuffRules.ToDisplayInt(result);
+        }
+
         public int GetNextAttackDamage(UnitDescriptor source)
         {
             var total = 0f;

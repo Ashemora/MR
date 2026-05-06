@@ -5,6 +5,7 @@ using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Grid;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Board;
+using Project.Scripts.Services.Combat;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
@@ -28,12 +29,14 @@ namespace Project.Scripts.Services.Grid
         private readonly GridState _state;
         private readonly IBoardRuntimeService _boardRuntimeService;
         private readonly EventBus _eventBus;
+        private readonly IBombRadiusModifierService _bombRadiusModifierService;
         private float _cellSize;
         private Vector3 _origin;
        
 
         public GridManager(LevelConfig levelConfig, GridConfig gridConfig, BoardAnimationConfig animConfig,
-            TilePool pool, float cellSize, IBoardRuntimeService boardRuntimeService, EventBus eventBus)
+            TilePool pool, float cellSize, IBoardRuntimeService boardRuntimeService, EventBus eventBus,
+            IBombRadiusModifierService bombRadiusModifierService)
         {
             _levelConfig = levelConfig;
             _gridConfig = gridConfig;
@@ -44,6 +47,7 @@ namespace Project.Scripts.Services.Grid
             _state = new GridState(gridConfig.Width, gridConfig.Height);
             _boardRuntimeService = boardRuntimeService;
             _eventBus = eventBus;
+            _bombRadiusModifierService = bombRadiusModifierService;
         }
 
         // IGridView
@@ -544,7 +548,8 @@ namespace Project.Scripts.Services.Grid
 
                 if (invokeBehaviours)
                 {
-                    tile.Config.Behaviour.OnTileDestroyed(pos, _state, tile.PayloadKind);
+                    tile.Config.Behaviour.OnTileDestroyed(pos, _state, tile.PayloadKind,
+                        CreateTileDestructionContext(BattleSide.Player));
                     PublishSpecialTileUsed(tile.Kind);
                 }
 
@@ -560,6 +565,11 @@ namespace Project.Scripts.Services.Grid
                 return;
 
             _eventBus.Publish(new BattleSideSpecialTileUsedEvent(BattleSide.Player, kind));
+        }
+
+        private TileDestructionContext CreateTileDestructionContext(BattleSide side)
+        {
+            return new TileDestructionContext(side, _bombRadiusModifierService.GetBombRadiusBonus(side));
         }
 
         private void ReInitTileAt(int x, int y, TileConfig config)
