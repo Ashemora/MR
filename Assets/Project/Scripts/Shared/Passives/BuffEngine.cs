@@ -85,6 +85,11 @@ namespace Project.Scripts.Shared.Passives
             return GetModifiedHeroValue(baseCost, side, slotIndex, BuffKind.ModifyActivationEnergyCost);
         }
 
+        public float GetModifiedActivationCooldown(float baseCooldown, BattleSide side, int slotIndex)
+        {
+            return GetModifiedHeroValue(baseCooldown, side, slotIndex, BuffKind.ModifyActivationCooldown);
+        }
+
         public float GetModifiedMatchEnergy(float baseEnergy, BattleSide side, TileKind tileKind)
         {
             var result = baseEnergy;

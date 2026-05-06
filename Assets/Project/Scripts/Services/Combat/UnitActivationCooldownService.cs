@@ -12,8 +12,11 @@ namespace Project.Scripts.Services.Combat
 
 
         private readonly EventBus _eventBus;
+        private readonly IHeroCooldownModifierService _heroCooldownModifierService;
         private readonly float[] _playerHeroDurations = new float[SlotCount];
         private readonly float[] _enemyHeroDurations = new float[SlotCount];
+        private readonly float[] _playerHeroActiveDurations = new float[SlotCount];
+        private readonly float[] _enemyHeroActiveDurations = new float[SlotCount];
         private readonly float[] _playerHeroRemaining = new float[SlotCount];
         private readonly float[] _enemyHeroRemaining = new float[SlotCount];
         private readonly float[] _playerHeroLastPublished = new float[SlotCount];
@@ -29,9 +32,11 @@ namespace Project.Scripts.Services.Combat
         private IDisposable _enemyDefeatedSubscription;
 
 
-        public UnitActivationCooldownService(EventBus eventBus, LevelConfig levelConfig)
+        public UnitActivationCooldownService(EventBus eventBus, LevelConfig levelConfig,
+            IHeroCooldownModifierService heroCooldownModifierService)
         {
             _eventBus = eventBus;
+            _heroCooldownModifierService = heroCooldownModifierService;
             FillHeroDurations(_playerHeroDurations, levelConfig.PlayerHeroes);
             FillHeroDurations(_enemyHeroDurations, levelConfig.EnemyHeroes);
             _playerAvatarDuration = levelConfig.PlayerAvatarConfig ? levelConfig.PlayerAvatarConfig.ActivationCooldownSeconds : 0f;
@@ -48,8 +53,10 @@ namespace Project.Scripts.Services.Combat
             if (deltaTime <= 0f)
                 return;
 
-            TickHeroSide(BattleSide.Player, _playerHeroRemaining, _playerHeroDurations, _playerHeroLastPublished, deltaTime);
-            TickHeroSide(BattleSide.Enemy, _enemyHeroRemaining, _enemyHeroDurations, _enemyHeroLastPublished, deltaTime);
+            TickHeroSide(BattleSide.Player, _playerHeroRemaining, _playerHeroActiveDurations,
+                _playerHeroLastPublished, deltaTime);
+            TickHeroSide(BattleSide.Enemy, _enemyHeroRemaining, _enemyHeroActiveDurations,
+                _enemyHeroLastPublished, deltaTime);
             TickAvatar(BattleSide.Player, _playerAvatarDuration, ref _playerAvatarRemaining, ref _playerAvatarLastPublished, deltaTime);
             TickAvatar(BattleSide.Enemy, _enemyAvatarDuration, ref _enemyAvatarRemaining, ref _enemyAvatarLastPublished, deltaTime);
         }
@@ -73,11 +80,13 @@ namespace Project.Scripts.Services.Combat
                 return;
 
             var durations = GetHeroDurations(side);
+            var activeDurations = GetHeroActiveDurations(side);
             var remaining = GetHeroRemaining(side);
-            var duration = durations[slotIndex];
+            var duration = GetModifiedHeroDuration(side, slotIndex, durations[slotIndex]);
             if (duration <= 0f)
                 return;
 
+            activeDurations[slotIndex] = duration;
             remaining[slotIndex] = duration;
             PublishHeroCooldown(side, slotIndex, duration, duration);
         }
@@ -163,7 +172,7 @@ namespace Project.Scripts.Services.Combat
 
             remaining[slotIndex] = 0f;
             GetHeroLastPublished(side)[slotIndex] = 0f;
-            PublishHeroCooldown(side, slotIndex, 0f, GetHeroDurations(side)[slotIndex]);
+            PublishHeroCooldown(side, slotIndex, 0f, GetHeroActiveDurations(side)[slotIndex]);
         }
 
         private void ResetAvatarCooldown(BattleSide side)
@@ -207,9 +216,19 @@ namespace Project.Scripts.Services.Combat
             return side == BattleSide.Player ? _playerHeroDurations : _enemyHeroDurations;
         }
 
+        private float[] GetHeroActiveDurations(BattleSide side)
+        {
+            return side == BattleSide.Player ? _playerHeroActiveDurations : _enemyHeroActiveDurations;
+        }
+
         private float[] GetHeroLastPublished(BattleSide side)
         {
             return side == BattleSide.Player ? _playerHeroLastPublished : _enemyHeroLastPublished;
+        }
+
+        private float GetModifiedHeroDuration(BattleSide side, int slotIndex, float baseDuration)
+        {
+            return _heroCooldownModifierService.GetActivationCooldown(side, slotIndex, baseDuration);
         }
 
         private static void FillHeroDurations(float[] target, Project.Scripts.Configs.Battle.HeroConfig[] configs)

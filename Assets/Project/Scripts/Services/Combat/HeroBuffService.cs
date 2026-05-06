@@ -7,7 +7,8 @@ using Project.Scripts.Shared.Tiles;
 namespace Project.Scripts.Services.Combat
 {
     public class HeroBuffService : IBuffService, IEnergyGainModifierService, IHeroAbilityModifierService,
-        IAbilityPowerModifierService, INextAttackBuffService, IBombRadiusModifierService
+        IAbilityPowerModifierService, INextAttackBuffService, IBombRadiusModifierService,
+        IHeroCooldownModifierService
     {
         public IReadOnlyList<BuffRuntimeState> Buffs => _engine.Buffs;
 
@@ -81,6 +82,16 @@ namespace Project.Scripts.Services.Combat
         public int GetAbilityPower(UnitDescriptor target, int basePower)
         {
             return BuffRules.ToDisplayInt(_engine.GetModifiedAbilityPower(basePower, target));
+        }
+
+        public float GetActivationCooldown(BattleSide side, int slotIndex, float baseCooldown)
+        {
+            if (baseCooldown <= 0f)
+                return 0f;
+
+            var cooldown = _engine.GetModifiedActivationCooldown(baseCooldown, side, slotIndex);
+            
+            return cooldown < 0f ? 0f : cooldown;
         }
 
         public int GetBombRadiusBonus(BattleSide side)

@@ -49,7 +49,8 @@ namespace Project.Scripts.DI
                 .As<IHeroAbilityModifierService>()
                 .As<IAbilityPowerModifierService>()
                 .As<INextAttackBuffService>()
-                .As<IBombRadiusModifierService>();
+                .As<IBombRadiusModifierService>()
+                .As<IHeroCooldownModifierService>();
             builder.RegisterEntryPoint<HeroPassiveService>().As<IHeroPassiveService>();
             builder.RegisterEntryPoint<BattleSideEnergyService>().As<IBattleSideEnergyService>();
             builder.Register<IUnitActivationCooldownService, UnitActivationCooldownService>(Lifetime.Singleton);
