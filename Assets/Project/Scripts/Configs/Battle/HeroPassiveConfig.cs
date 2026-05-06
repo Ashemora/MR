@@ -44,9 +44,7 @@ namespace Project.Scripts.Configs.Battle
 
         private ActivationConditionGroupDefinition ToActivationConditionGroupDefinition()
         {
-            return null != _activationConditionGroup
-                ? _activationConditionGroup.ToDefinition()
-                : default;
+            return null != _activationConditionGroup ? _activationConditionGroup.ToDefinition() : default;
         }
 
         private PassiveEffectEntryDefinition[] ToEffectEntryDefinitions()
@@ -66,28 +64,37 @@ namespace Project.Scripts.Configs.Battle
     [Serializable]
     public class ActivationConditionConfig
     {
-        [Tooltip("Условие активации: AbilityActivated = владелец активировал способность; MatchEnergyCollected = сторона владельца набрала новую энергию за текущую Match phase; MatchesCollected = сторона владельца собрала реальные матчи за текущую Match phase; SlotKindMatchesCollected = сторона владельца собрала матчи цвета ячейки героя за текущую Match phase; LineRuneUsed/BombUsed/StormUsed = сторона владельца использовала соответствующий спецтайл за бой")]
+        [Tooltip("Условие активации: AbilityActivated = владелец активировал способность; HeroActivationsInTimeWindow = сторона владельца активировала героев за WindowSeconds; EnemyHeroDefeatsInTimeWindow = герои противника умирали за WindowSeconds; MatchEnergyCollected = сторона владельца набрала новую энергию за текущую Match phase; MatchesCollected = сторона владельца собрала реальные матчи за текущую Match phase; SlotKindMatchesCollected = сторона владельца собрала матчи цвета ячейки героя за текущую Match phase; SlotKindMatchesInTimeWindow = сторона владельца собрала матчи цвета ячейки героя за WindowSeconds; LineRuneUsed/BombUsed/StormUsed = сторона владельца использовала соответствующий спецтайл за бой")]
         [SerializeField] private ActivationConditionKind _kind = ActivationConditionKind.AbilityActivated;
 
-        [Tooltip("Кто должен вызвать условие: Owner для AbilityActivated; OwnerSide для MatchEnergyCollected, MatchesCollected, LineRuneUsed, BombUsed и StormUsed; OwnerSlotKind для SlotKindMatchesCollected")]
+        [Tooltip("Кто должен вызвать условие: Owner для AbilityActivated; OwnerSide для HeroActivationsInTimeWindow, MatchEnergyCollected, MatchesCollected, LineRuneUsed, BombUsed и StormUsed; OwnerSlotKind для SlotKindMatchesCollected и SlotKindMatchesInTimeWindow; OpponentSide для EnemyHeroDefeatsInTimeWindow")]
         [SerializeField] private ActivationConditionSubject _subject = ActivationConditionSubject.Owner;
 
-        [Tooltip("Порог условия: для AbilityActivated = количество активаций; для MatchEnergyCollected = сколько новой энергии реально добавилось в общий пул; для MatchesCollected = количество MatchResult за текущую Match phase; для SlotKindMatchesCollected = количество MatchResult цвета ячейки героя за текущую Match phase; для LineRuneUsed/BombUsed/StormUsed = количество срабатываний спецтайла за бой")]
+        [Tooltip("Порог условия: для AbilityActivated = количество активаций; для HeroActivationsInTimeWindow = сколько героев нужно активировать в окне; для EnemyHeroDefeatsInTimeWindow = сколько героев противника должно умереть в окне; для MatchEnergyCollected = сколько новой энергии реально добавилось в общий пул; для MatchesCollected = количество MatchResult за текущую Match phase; для SlotKindMatchesCollected = количество MatchResult цвета ячейки героя за текущую Match phase; для SlotKindMatchesInTimeWindow = сколько MatchResult цвета ячейки героя нужно собрать в окне; для LineRuneUsed/BombUsed/StormUsed = количество срабатываний спецтайла за бой")]
         [SerializeField] private int _requiredCount = 1;
+
+        [Tooltip("Временное окно в секундах для условий, которым нужно значение времени. Для InTimeWindow условий должно быть больше 0, иначе условие считается невалидным")]
+        [SerializeField] private float _windowSeconds;
 
 
         public ActivationConditionDefinition ToDefinition()
         {
-            return new ActivationConditionDefinition(_kind, NormalizeSubject(_kind, _subject), _requiredCount);
+            return new ActivationConditionDefinition(_kind, NormalizeSubject(_kind, _subject), _requiredCount,
+                _windowSeconds);
         }
 
         private static ActivationConditionSubject NormalizeSubject(ActivationConditionKind kind,
             ActivationConditionSubject subject)
         {
-            if (kind == ActivationConditionKind.SlotKindMatchesCollected)
+            if (kind is ActivationConditionKind.SlotKindMatchesCollected
+                or ActivationConditionKind.SlotKindMatchesInTimeWindow)
                 return ActivationConditionSubject.OwnerSlotKind;
 
-            return kind is ActivationConditionKind.MatchEnergyCollected
+            if (kind == ActivationConditionKind.EnemyHeroDefeatsInTimeWindow)
+                return ActivationConditionSubject.OpponentSide;
+
+            return kind is ActivationConditionKind.HeroActivationsInTimeWindow
+                    or ActivationConditionKind.MatchEnergyCollected
                     or ActivationConditionKind.MatchesCollected
                     or ActivationConditionKind.LineRuneUsed
                     or ActivationConditionKind.BombUsed

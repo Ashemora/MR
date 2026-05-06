@@ -7,6 +7,7 @@ using Project.Scripts.Services.BattleFlow;
 using Project.Scripts.Services.Combat;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
+using Project.Scripts.Services.Clock;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Bot;
 using Project.Scripts.Shared.Heroes;
@@ -28,6 +29,7 @@ namespace Project.Scripts.Services.Bot
         private readonly IAvatarGroupDefenseService _groupDefense;
         private readonly IBattleEconomyModifierService _battleEconomyModifier;
         private readonly INextAttackBuffService _nextAttackBuffService;
+        private readonly IBattleClock _battleClock;
         private readonly BotConfig _botConfig;
         private readonly SlotLayoutConfig _slotLayoutConfig;
 
@@ -50,6 +52,7 @@ namespace Project.Scripts.Services.Bot
             IAvatarGroupDefenseService groupDefense,
             IBattleEconomyModifierService battleEconomyModifier,
             INextAttackBuffService nextAttackBuffService,
+            IBattleClock battleClock,
             BotConfig botConfig,
             SlotLayoutConfig slotLayoutConfig)
         {
@@ -63,6 +66,7 @@ namespace Project.Scripts.Services.Bot
             _groupDefense = groupDefense;
             _battleEconomyModifier = battleEconomyModifier;
             _nextAttackBuffService = nextAttackBuffService;
+            _battleClock = battleClock;
             _botConfig = botConfig;
             _slotLayoutConfig = slotLayoutConfig;
         }
@@ -184,7 +188,7 @@ namespace Project.Scripts.Services.Bot
 
                     var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.DealDamage);
                     var target = UnitDescriptor.Hero(BattleSide.Player, targetIdx, HeroActionType.DealDamage);
-                    _eventBus.Publish(new AbilityExecutedEvent(source, target, HeroActionType.DealDamage, abilityPower));
+                    PublishAbilityExecuted(source, target, HeroActionType.DealDamage, abilityPower);
                 }
                 else
                 {
@@ -215,7 +219,7 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
-                _eventBus.Publish(new AbilityExecutedEvent(source, target, HeroActionType.HealAlly, abilityPower));
+                PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
             else if (_enemyState.CurrentHP < _enemyState.MaxHP)
             {
@@ -226,7 +230,7 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
-                _eventBus.Publish(new AbilityExecutedEvent(source, target, HeroActionType.HealAlly, abilityPower));
+                PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
             else
             {
@@ -242,7 +246,7 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
-                _eventBus.Publish(new AbilityExecutedEvent(source, target, HeroActionType.HealAlly, abilityPower));
+                PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
         }
 
@@ -351,7 +355,7 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.DealDamage);
                 var target = UnitDescriptor.Hero(BattleSide.Player, targetIdx, HeroActionType.DealDamage);
-                _eventBus.Publish(new AbilityExecutedEvent(source, target, HeroActionType.DealDamage, damageValue));
+                PublishAbilityExecuted(source, target, HeroActionType.DealDamage, damageValue);
             }
             else
                 _heroService.TryActivate(BattleSide.Enemy, slotIndex);
@@ -376,7 +380,7 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
-                _eventBus.Publish(new AbilityExecutedEvent(source, target, HeroActionType.HealAlly, healValue));
+                PublishAbilityExecuted(source, target, HeroActionType.HealAlly, healValue);
             }
             else if (_enemyState.CurrentHP < _enemyState.MaxHP)
             {
@@ -387,7 +391,7 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
-                _eventBus.Publish(new AbilityExecutedEvent(source, target, HeroActionType.HealAlly, healValue));
+                PublishAbilityExecuted(source, target, HeroActionType.HealAlly, healValue);
             }
             else
             {
@@ -402,8 +406,14 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
-                _eventBus.Publish(new AbilityExecutedEvent(source, target, HeroActionType.HealAlly, healValue));
+                PublishAbilityExecuted(source, target, HeroActionType.HealAlly, healValue);
             }
+        }
+
+        private void PublishAbilityExecuted(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType,
+            int value)
+        {
+            _eventBus.Publish(new AbilityExecutedEvent(source, target, actionType, value, _battleClock.CurrentTick));
         }
 
         private void StopLoops()

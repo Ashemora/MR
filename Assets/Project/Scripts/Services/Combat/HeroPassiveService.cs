@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Events;
+using Project.Scripts.Services.Clock;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Passives;
@@ -26,6 +27,7 @@ namespace Project.Scripts.Services.Combat
         private readonly IHeroService _heroService;
         private readonly IPlayerStateService _playerState;
         private readonly IEnemyStateService _enemyState;
+        private readonly IBattleClock _battleClock;
         private readonly PassiveAbilityEngine _engine = new();
         private IDisposable _heroDefeatedSubscription;
         private IDisposable _heroActivatedSubscription;
@@ -44,7 +46,8 @@ namespace Project.Scripts.Services.Combat
 
 
         public HeroPassiveService(EventBus eventBus, LevelConfig levelConfig, SlotLayoutConfig slotLayoutConfig,
-            IBuffService buffService, IHeroService heroService, IPlayerStateService playerState, IEnemyStateService enemyState)
+            IBuffService buffService, IHeroService heroService, IPlayerStateService playerState, IEnemyStateService enemyState,
+            IBattleClock battleClock)
         {
             _eventBus = eventBus;
             _levelConfig = levelConfig;
@@ -53,6 +56,7 @@ namespace Project.Scripts.Services.Combat
             _heroService = heroService;
             _playerState = playerState;
             _enemyState = enemyState;
+            _battleClock = battleClock;
         }
 
 
@@ -100,7 +104,7 @@ namespace Project.Scripts.Services.Combat
             var setups = new List<HeroPassiveSetup>();
             AddSidePassives(setups, BattleSide.Player, _levelConfig.PlayerHeroes);
             AddSidePassives(setups, BattleSide.Enemy, _levelConfig.EnemyHeroes);
-            _engine.Initialize(setups);
+            _engine.Initialize(setups, _battleClock.TickRate);
             _pendingActivationCounts = new int[_engine.States.Count];
         }
 
@@ -145,6 +149,11 @@ namespace Project.Scripts.Services.Combat
 
         private void OnHeroDefeated(HeroDefeatedEvent e)
         {
+            AddProgressAndPublishActivations(new ActivationConditionEvent(
+                ActivationConditionKind.EnemyHeroDefeatsInTimeWindow,
+                UnitDescriptor.Hero(e.Side, e.SlotIndex, GetSourceActionType(e.Side, e.SlotIndex)),
+                occurredAtTick: ResolveOccurredAtTick(e.OccurredAtTick)));
+
             var owner = UnitDescriptor.Hero(e.Side, e.SlotIndex, GetSourceActionType(e.Side, e.SlotIndex));
             var passiveDisabled = _engine.DisableOwner(e.Side, e.SlotIndex);
             var buffsChanged = _buffService.RemoveByUnit(owner);
@@ -182,7 +191,7 @@ namespace Project.Scripts.Services.Combat
             if (_currentPhase != BattlePhaseKind.Hero)
                 return;
 
-            AddProgressAndPublishActivations(CreateAbilityActivatedEvent(e.Side, e.SlotIndex));
+            AddHeroAbilityActivationProgressAndPublish(e.Side, e.SlotIndex, e.OccurredAtTick);
         }
 
         private void OnAbilityExecuted(AbilityExecutedEvent e)
@@ -190,7 +199,7 @@ namespace Project.Scripts.Services.Combat
             if (_currentPhase != BattlePhaseKind.Hero || e.Source.Kind != UnitKind.Hero)
                 return;
 
-            AddProgressAndPublishActivations(CreateAbilityActivatedEvent(e.Source.Side, e.Source.SlotIndex));
+            AddHeroAbilityActivationProgressAndPublish(e.Source.Side, e.Source.SlotIndex, e.OccurredAtTick);
         }
 
         private void OnBattleSideEnergyAdded(BattleSideEnergyAddedEvent e)
@@ -209,6 +218,7 @@ namespace Project.Scripts.Services.Combat
             if (_currentPhase is not (BattlePhaseKind.Match or BattlePhaseKind.PendingHero))
                 return;
 
+            var occurredAtTick = ResolveOccurredAtTick(e.OccurredAtTick);
             AddProgressAndQueueActivations(new ActivationConditionEvent(
                 ActivationConditionKind.MatchesCollected,
                 e.Side,
@@ -218,6 +228,12 @@ namespace Project.Scripts.Services.Combat
                 e.Side,
                 e.Count,
                 e.TileKind));
+            AddProgressAndQueueActivations(new ActivationConditionEvent(
+                ActivationConditionKind.SlotKindMatchesInTimeWindow,
+                e.Side,
+                e.Count,
+                e.TileKind,
+                occurredAtTick));
         }
 
         private void OnBattleSideSpecialTileUsed(BattleSideSpecialTileUsedEvent e)
@@ -242,6 +258,7 @@ namespace Project.Scripts.Services.Combat
         private void OnBattleFlowPhaseChanged(BattleFlowPhaseChangedEvent e)
         {
             _currentPhase = e.Phase;
+            ResetTimeWindowProgress();
 
             if (e.Phase == BattlePhaseKind.Match)
             {
@@ -252,6 +269,7 @@ namespace Project.Scripts.Services.Combat
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.MatchesCollected, BattleSide.Enemy);
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.SlotKindMatchesCollected, BattleSide.Player);
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.SlotKindMatchesCollected, BattleSide.Enemy);
+                
                 return;
             }
 
@@ -261,6 +279,22 @@ namespace Project.Scripts.Services.Combat
                 _engine.ResetActivationConditionProgress(ActivationConditionKind.AbilityActivated, BattleSide.Enemy);
                 PublishPendingActivations();
             }
+        }
+
+        private void ResetTimeWindowProgress()
+        {
+            _engine.ResetActivationConditionProgress(ActivationConditionKind.HeroActivationsInTimeWindow,
+                BattleSide.Player);
+            _engine.ResetActivationConditionProgress(ActivationConditionKind.HeroActivationsInTimeWindow,
+                BattleSide.Enemy);
+            _engine.ResetActivationConditionProgress(ActivationConditionKind.SlotKindMatchesInTimeWindow,
+                BattleSide.Player);
+            _engine.ResetActivationConditionProgress(ActivationConditionKind.SlotKindMatchesInTimeWindow,
+                BattleSide.Enemy);
+            _engine.ResetActivationConditionProgress(ActivationConditionKind.EnemyHeroDefeatsInTimeWindow,
+                BattleSide.Player);
+            _engine.ResetActivationConditionProgress(ActivationConditionKind.EnemyHeroDefeatsInTimeWindow,
+                BattleSide.Enemy);
         }
 
         private void OnBattleFlowRoundChanged(BattleFlowRoundChangedEvent e)
@@ -274,20 +308,48 @@ namespace Project.Scripts.Services.Combat
             RefreshAllSlotKindPassiveStates();
         }
 
-        private ActivationConditionEvent CreateAbilityActivatedEvent(BattleSide side, int slotIndex)
+        private ActivationConditionEvent CreateAbilityActivatedEvent(ActivationConditionKind kind, BattleSide side,
+            int slotIndex, long occurredAtTick)
         {
-            return new ActivationConditionEvent(ActivationConditionKind.AbilityActivated,
-                UnitDescriptor.Hero(side, slotIndex, GetSourceActionType(side, slotIndex)));
+            return new ActivationConditionEvent(kind,
+                UnitDescriptor.Hero(side, slotIndex, GetSourceActionType(side, slotIndex)),
+                occurredAtTick: ResolveOccurredAtTick(occurredAtTick));
+        }
+
+        private void AddHeroAbilityActivationProgressAndPublish(BattleSide side, int slotIndex, long occurredAtTick)
+        {
+            var activationCounts = CaptureActivationCounts();
+            var resolvedTick = ResolveOccurredAtTick(occurredAtTick);
+            var changed = _engine.ProcessActivationConditionEvent(
+                CreateAbilityActivatedEvent(ActivationConditionKind.AbilityActivated, side, slotIndex, resolvedTick),
+                HasActiveBuffForPassiveOwner);
+
+            changed |= _engine.ProcessActivationConditionEvent(
+                CreateAbilityActivatedEvent(ActivationConditionKind.HeroActivationsInTimeWindow, side,
+                    slotIndex, resolvedTick),
+                HasActiveBuffForPassiveOwner);
+
+            if (changed)
+                PublishNewActivations(activationCounts);
         }
 
         private void AddProgressAndPublishActivations(ActivationConditionEvent e)
         {
             var activationCounts = CaptureActivationCounts();
-            var sourceHasActiveBuff = _buffService.HasBuffFromSource(e.Source);
-            if (false == _engine.ProcessActivationConditionEvent(e, sourceHasActiveBuff))
+            if (false == _engine.ProcessActivationConditionEvent(e, HasActiveBuffForPassiveOwner))
                 return;
 
             PublishNewActivations(activationCounts);
+        }
+
+        private bool HasActiveBuffForPassiveOwner(HeroPassiveRuntimeState state)
+        {
+            return _buffService.HasBuffFromSource(UnitDescriptor.Hero(state.Side, state.SlotIndex, GetSourceActionType(state.Side, state.SlotIndex)));
+        }
+
+        private long ResolveOccurredAtTick(long occurredAtTick)
+        {
+            return occurredAtTick > 0 ? occurredAtTick : _battleClock.CurrentTick;
         }
 
         private void AddProgressAndQueueActivations(ActivationConditionEvent e)

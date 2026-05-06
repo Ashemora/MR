@@ -68,13 +68,16 @@ namespace Project.Scripts.Services.Events
         public BattleSide Side { get; }
         public TileKind TileKind { get; }
         public int Count { get; }
+        public long OccurredAtTick { get; }
 
 
-        public BattleSideMatchesCollectedEvent(BattleSide side, TileKind tileKind, int count)
+        public BattleSideMatchesCollectedEvent(BattleSide side, TileKind tileKind, int count,
+            long occurredAtTick = 0)
         {
             Side = side;
             TileKind = tileKind;
             Count = count < 0 ? 0 : count;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
         }
     }
 
@@ -132,13 +135,15 @@ namespace Project.Scripts.Services.Events
         public BattleSide Side { get; }
         public int SlotIndex { get; }
         public TileKind SlotKind { get; }
+        public long OccurredAtTick { get; }
 
 
-        public HeroDefeatedEvent(BattleSide side, int slotIndex, TileKind slotKind)
+        public HeroDefeatedEvent(BattleSide side, int slotIndex, TileKind slotKind, long occurredAtTick = 0)
         {
             Side = side;
             SlotIndex = slotIndex;
             SlotKind = slotKind;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
         }
     }
 
@@ -148,14 +153,17 @@ namespace Project.Scripts.Services.Events
         public int SlotIndex { get; }
         public HeroActionType ActionType { get; }
         public int ActionValue { get; }
+        public long OccurredAtTick { get; }
 
 
-        public HeroActivatedEvent(BattleSide side, int slotIndex, HeroActionType actionType, int actionValue)
+        public HeroActivatedEvent(BattleSide side, int slotIndex, HeroActionType actionType, int actionValue,
+            long occurredAtTick = 0)
         {
             Side = side;
             SlotIndex = slotIndex;
             ActionType = actionType;
             ActionValue = actionValue;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
         }
     }
 
@@ -314,14 +322,17 @@ namespace Project.Scripts.Services.Events
         public UnitDescriptor Target { get; }
         public HeroActionType ActionType { get; }
         public int Value { get; }
+        public long OccurredAtTick { get; }
 
 
-        public AbilityExecutedEvent(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType, int value)
+        public AbilityExecutedEvent(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType, int value,
+            long occurredAtTick = 0)
         {
             Source = source;
             Target = target;
             ActionType = actionType;
             Value = value;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
         }
     }
 

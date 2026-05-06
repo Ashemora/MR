@@ -1,20 +1,24 @@
 using System;
 using System.Collections.Generic;
 using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Tiles;
 
 namespace Project.Scripts.Shared.Passives
 {
     public class PassiveAbilityEngine
     {
+        private const int DefaultTickRate = 30;
+
+
         public IReadOnlyList<HeroPassiveRuntimeState> States => _states;
 
 
         private HeroPassiveRuntimeState[] _states = Array.Empty<HeroPassiveRuntimeState>();
+        private int _tickRate = DefaultTickRate;
 
         
-        public void Initialize(IReadOnlyList<HeroPassiveSetup> setups)
+        public void Initialize(IReadOnlyList<HeroPassiveSetup> setups, int tickRate = DefaultTickRate)
         {
+            _tickRate = tickRate < 1 ? DefaultTickRate : tickRate;
             if (null == setups || setups.Count == 0)
             {
                 _states = Array.Empty<HeroPassiveRuntimeState>();
@@ -40,6 +44,12 @@ namespace Project.Scripts.Shared.Passives
 
         public bool ProcessActivationConditionEvent(ActivationConditionEvent e, bool sourceHasActiveBuff = false)
         {
+            Func<HeroPassiveRuntimeState, bool> hasActiveBuff = sourceHasActiveBuff ? _ => true : null;
+            return ProcessActivationConditionEvent(e, hasActiveBuff);
+        }
+
+        public bool ProcessActivationConditionEvent(ActivationConditionEvent e, Func<HeroPassiveRuntimeState, bool> hasActiveBuff)
+        {
             if (e.Kind == ActivationConditionKind.None || e.Amount <= 0)
                 return false;
 
@@ -50,10 +60,10 @@ namespace Project.Scripts.Shared.Passives
                 if (false == state.CanActivateAgain)
                     continue;
 
-                if (sourceHasActiveBuff && false == state.Definition.CanActivateWhileActive)
+                if (hasActiveBuff?.Invoke(state) == true && false == state.Definition.CanActivateWhileActive)
                     continue;
 
-                if (false == TryAddConditionProgress(state, e, out var nextState))
+                if (false == TryAddConditionProgress(state, e, _tickRate, out var nextState))
                     continue;
 
                 while (nextState.CanActivateAgain && IsConditionGroupSatisfied(nextState))
@@ -87,7 +97,8 @@ namespace Project.Scripts.Shared.Passives
                     if (conditions[conditionIndex].Kind != kind || state.GetConditionProgress(conditionIndex) == 0f)
                         continue;
 
-                    state = state.WithConditionProgress(conditionIndex, 0f);
+                    state = state.WithConditionProgress(conditionIndex, 0f)
+                        .WithConditionOccurrenceTicksConsumed(conditionIndex, int.MaxValue);
                     changed = true;
                 }
 
@@ -98,7 +109,7 @@ namespace Project.Scripts.Shared.Passives
         }
 
         private static bool TryAddConditionProgress(HeroPassiveRuntimeState state, ActivationConditionEvent e,
-            out HeroPassiveRuntimeState nextState)
+            int tickRate, out HeroPassiveRuntimeState nextState)
         {
             nextState = state;
             var changed = false;
@@ -110,8 +121,11 @@ namespace Project.Scripts.Shared.Passives
                         state.SlotKind))
                     continue;
 
-                nextState = nextState.WithConditionProgress(conditionIndex,
-                    nextState.GetConditionProgress(conditionIndex) + e.Amount);
+                nextState = UsesTickWindow(condition)
+                    ? nextState.WithConditionOccurrenceTicksAdded(conditionIndex, e.OccurredAtTick,
+                        ToWindowTicks(condition.WindowSeconds, tickRate), ToOccurrenceCount(e.Amount))
+                    : nextState.WithConditionProgress(conditionIndex,
+                        nextState.GetConditionProgress(conditionIndex) + e.Amount);
                 changed = true;
             }
 
@@ -165,8 +179,30 @@ namespace Project.Scripts.Shared.Passives
         private static HeroPassiveRuntimeState ConsumeConditionProgress(HeroPassiveRuntimeState state,
             int conditionIndex, int amount)
         {
+            if (UsesTickWindow(state.Definition.ActivationConditions.Conditions[conditionIndex]))
+                return state.WithConditionProgress(conditionIndex, 0f)
+                    .WithConditionOccurrenceTicksConsumed(conditionIndex, int.MaxValue);
+
             return state.WithConditionProgress(conditionIndex,
                 state.GetConditionProgress(conditionIndex) - amount);
+        }
+
+        private static bool UsesTickWindow(ActivationConditionDefinition condition)
+        {
+            return condition.WindowSeconds > 0f;
+        }
+
+        private static int ToWindowTicks(float windowSeconds, int tickRate)
+        {
+            if (windowSeconds <= 0f || tickRate <= 0)
+                return 0;
+
+            return (int)Math.Ceiling(windowSeconds * tickRate);
+        }
+
+        private static int ToOccurrenceCount(float amount)
+        {
+            return amount <= 0f ? 0 : (int)Math.Floor(amount);
         }
 
         private static float[] CopyConditionProgress(HeroPassiveRuntimeState state)

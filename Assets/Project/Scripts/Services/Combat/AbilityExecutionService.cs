@@ -1,5 +1,6 @@
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
+using Project.Scripts.Services.Clock;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Rules;
 
@@ -17,6 +18,7 @@ namespace Project.Scripts.Services.Combat
         private readonly IHeroAbilityModifierService _heroAbilityModifierService;
         private readonly INextAttackBuffService _nextAttackBuffService;
         private readonly EventBus _eventBus;
+        private readonly IBattleClock _battleClock;
 
 
         public AbilityExecutionService(
@@ -29,7 +31,8 @@ namespace Project.Scripts.Services.Combat
             IBattleActionRuntimeService battleActionRuntimeService,
             IHeroAbilityModifierService heroAbilityModifierService,
             INextAttackBuffService nextAttackBuffService,
-            EventBus eventBus)
+            EventBus eventBus,
+            IBattleClock battleClock)
         {
             _playerAvatarCharge = playerAvatarCharge;
             _heroService = heroService;
@@ -41,8 +44,8 @@ namespace Project.Scripts.Services.Combat
             _heroAbilityModifierService = heroAbilityModifierService;
             _nextAttackBuffService = nextAttackBuffService;
             _eventBus = eventBus;
+            _battleClock = battleClock;
         }
-
 
         public void Execute(UnitDescriptor source, UnitDescriptor target)
         {
@@ -64,14 +67,8 @@ namespace Project.Scripts.Services.Combat
             if (false == TryGetTargetState(target, out var isTargetAlive, out var isTargetHpFull, out var isTargetExposed))
                 return;
 
-            if (false == AbilityTargetRules.IsTargetValid(
-                    source,
-                    target,
-                    sourceActionType,
-                    isSourceAlive,
-                    isTargetAlive,
-                    isTargetHpFull,
-                    isTargetExposed))
+            if (false == AbilityTargetRules.IsTargetValid(source, target, sourceActionType, isSourceAlive,
+                    isTargetAlive, isTargetHpFull, isTargetExposed))
                 return;
 
             if (false == TryCommitSource(source, out var actionType, out var actionValue))
@@ -80,9 +77,9 @@ namespace Project.Scripts.Services.Combat
             if (actionType != sourceActionType || actionValue != sourceActionValue)
                 return;
 
-
             ApplyToTarget(target, actionType, actionValue);
-            _eventBus.Publish(new AbilityExecutedEvent(source, target, actionType, actionValue));
+            _eventBus.Publish(new AbilityExecutedEvent(source, target, actionType, actionValue,
+                _battleClock.CurrentTick));
         }
 
 
@@ -144,9 +141,7 @@ namespace Project.Scripts.Services.Combat
                 return false;
 
             actionType = slot.ActionType;
-            actionValue = GetActionValueWithNextAttackBuffPreview(
-                source,
-                actionType,
+            actionValue = GetActionValueWithNextAttackBuffPreview(source, actionType,
                 _heroAbilityModifierService.GetAbilityPower(source.Side, source.SlotIndex, slot.ActionValue));
             
             return true;
@@ -208,10 +203,7 @@ namespace Project.Scripts.Services.Combat
             return _heroService.TryDischargeHero(source.Side, source.SlotIndex, out actionType, out actionValue);
         }
 
-        private int GetActionValueWithNextAttackBuffPreview(
-            UnitDescriptor source,
-            HeroActionType actionType,
-            int baseActionValue)
+        private int GetActionValueWithNextAttackBuffPreview(UnitDescriptor source, HeroActionType actionType, int baseActionValue)
         {
             if (actionType != HeroActionType.DealDamage)
                 return baseActionValue;
@@ -219,10 +211,7 @@ namespace Project.Scripts.Services.Combat
             return baseActionValue + _nextAttackBuffService.Get(source);
         }
 
-        private int GetActionValueWithNextAttackBuff(
-            UnitDescriptor source,
-            HeroActionType actionType,
-            int baseActionValue)
+        private int GetActionValueWithNextAttackBuff(UnitDescriptor source, HeroActionType actionType, int baseActionValue)
         {
             if (actionType != HeroActionType.DealDamage)
                 return baseActionValue;

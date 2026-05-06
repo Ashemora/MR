@@ -11,11 +11,18 @@ namespace Project.Scripts.Shared.Passives
             if (false == condition.IsConfigured || condition.Kind != e.Kind)
                 return false;
 
+            if (condition.Kind == ActivationConditionKind.HeroActivationsInTimeWindow && e.Source.Kind != UnitKind.Hero)
+                return false;
+
+            if (condition.Kind == ActivationConditionKind.EnemyHeroDefeatsInTimeWindow && e.Source.Kind != UnitKind.Hero)
+                return false;
+
             return condition.Subject switch
             {
                 ActivationConditionSubject.Owner => IsOwner(e.Source, ownerSide, ownerSlotIndex),
                 ActivationConditionSubject.OwnerSide => e.Side == ownerSide,
                 ActivationConditionSubject.OwnerSlotKind => e.Side == ownerSide && e.TileKind == ownerSlotKind,
+                ActivationConditionSubject.OpponentSide => e.Side != ownerSide,
                 _ => false
             };
         }

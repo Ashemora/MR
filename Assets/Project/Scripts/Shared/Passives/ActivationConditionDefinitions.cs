@@ -10,23 +10,32 @@ namespace Project.Scripts.Shared.Passives
         public ActivationConditionKind Kind { get; }
         public ActivationConditionSubject Subject { get; }
         public int RequiredCount { get; }
-        public bool IsConfigured => Kind != ActivationConditionKind.None;
+        public float WindowSeconds { get; }
+        public bool IsConfigured => Kind != ActivationConditionKind.None
+                                    && (RequiresWindow(Kind) == false || WindowSeconds > 0f);
 
 
         public ActivationConditionDefinition(ActivationConditionKind kind, ActivationConditionSubject subject,
-            int requiredCount)
+            int requiredCount, float windowSeconds = 0f)
         {
             Kind = kind;
             Subject = subject;
             RequiredCount = requiredCount < 1 ? 1 : requiredCount;
+            WindowSeconds = windowSeconds < 0f ? 0f : windowSeconds;
+        }
+
+        private static bool RequiresWindow(ActivationConditionKind kind)
+        {
+            return kind is ActivationConditionKind.HeroActivationsInTimeWindow
+                or ActivationConditionKind.SlotKindMatchesInTimeWindow
+                or ActivationConditionKind.EnemyHeroDefeatsInTimeWindow;
         }
     }
 
     public readonly struct ActivationConditionGroupDefinition
     {
         public ActivationConditionGroupOperator Operator { get; }
-        public IReadOnlyList<ActivationConditionDefinition> Conditions =>
-            _conditions ?? Array.Empty<ActivationConditionDefinition>();
+        public IReadOnlyList<ActivationConditionDefinition> Conditions => _conditions ?? Array.Empty<ActivationConditionDefinition>();
         public bool IsConfigured => Conditions.Count > 0;
 
 
@@ -40,8 +49,7 @@ namespace Project.Scripts.Shared.Passives
             _conditions = CopyConfiguredConditions(conditions);
         }
 
-        private static ActivationConditionDefinition[] CopyConfiguredConditions(
-            IReadOnlyList<ActivationConditionDefinition> conditions)
+        private static ActivationConditionDefinition[] CopyConfiguredConditions(IReadOnlyList<ActivationConditionDefinition> conditions)
         {
             if (null == conditions || conditions.Count == 0)
                 return Array.Empty<ActivationConditionDefinition>();
@@ -65,25 +73,29 @@ namespace Project.Scripts.Shared.Passives
         public BattleSide Side { get; }
         public TileKind TileKind { get; }
         public float Amount { get; }
+        public long OccurredAtTick { get; }
 
 
-        public ActivationConditionEvent(ActivationConditionKind kind, UnitDescriptor source, float amount = 1f)
+        public ActivationConditionEvent(ActivationConditionKind kind, UnitDescriptor source, float amount = 1f,
+            long occurredAtTick = 0)
         {
             Kind = kind;
             Source = source;
             Side = source.Side;
             TileKind = TileKind.None;
             Amount = amount <= 0f ? 0f : amount;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
         }
 
         public ActivationConditionEvent(ActivationConditionKind kind, BattleSide side, float amount,
-            TileKind tileKind = TileKind.None)
+            TileKind tileKind = TileKind.None, long occurredAtTick = 0)
         {
             Kind = kind;
             Source = default;
             Side = side;
             TileKind = tileKind;
             Amount = amount <= 0f ? 0f : amount;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
         }
     }
     
@@ -97,14 +109,18 @@ namespace Project.Scripts.Shared.Passives
         LineRuneUsed,
         BombUsed,
         StormUsed,
-        SlotKindMatchesCollected
+        SlotKindMatchesCollected,
+        HeroActivationsInTimeWindow,
+        SlotKindMatchesInTimeWindow,
+        EnemyHeroDefeatsInTimeWindow
     }
 
     public enum ActivationConditionSubject
     {
         Owner,
         OwnerSide,
-        OwnerSlotKind
+        OwnerSlotKind,
+        OpponentSide
     }
 
     public enum ActivationConditionGroupOperator

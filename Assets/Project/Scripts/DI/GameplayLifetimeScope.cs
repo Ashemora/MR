@@ -13,6 +13,7 @@ using Project.Scripts.Services.Layout;
 using Project.Scripts.Services.Progression;
 using Project.Scripts.Services.Combat;
 using Project.Scripts.Services.Timer;
+using Project.Scripts.Services.Clock;
 using VContainer;
 using VContainer.Unity;
 
@@ -33,6 +34,7 @@ namespace Project.Scripts.DI
             builder.RegisterComponentInHierarchy<GameplayEntryPoint>();
 
             builder.Register<IGameStateService, GameStateService>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<BattleClockService>().As<IBattleClock>();
             builder.Register<IBattleActionRuntimeService, BattleActionRuntimeService>(Lifetime.Singleton);
             builder.Register<IMoveCounterService, MoveCounterService>(Lifetime.Singleton);
             builder.Register<IAvatarGroupDefenseService, AvatarGroupDefenseService>(Lifetime.Singleton);

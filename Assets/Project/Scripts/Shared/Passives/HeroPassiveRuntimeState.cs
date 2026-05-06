@@ -19,11 +19,12 @@ namespace Project.Scripts.Shared.Passives
 
 
         private readonly float[] _conditionProgress;
+        private readonly long[][] _conditionOccurrenceTicks;
 
 
         public HeroPassiveRuntimeState(BattleSide side, int slotIndex, TileKind slotKind, 
             HeroPassiveDefinition definition, bool isDisabled = false, int totalActivationCount = 0, 
-            float[] conditionProgress = null)
+            float[] conditionProgress = null, long[][] conditionOccurrenceTicks = null)
         {
             Side = side;
             SlotIndex = slotIndex;
@@ -32,6 +33,7 @@ namespace Project.Scripts.Shared.Passives
             IsDisabled = isDisabled;
             TotalActivationCount = totalActivationCount < 0 ? 0 : totalActivationCount;
             _conditionProgress = CopyConditionProgress(definition, conditionProgress);
+            _conditionOccurrenceTicks = CopyConditionOccurrenceTicks(definition, conditionOccurrenceTicks);
         }
 
         public float GetConditionProgress(int conditionIndex)
@@ -50,25 +52,88 @@ namespace Project.Scripts.Shared.Passives
             nextProgress[conditionIndex] = progress < 0 ? 0 : progress;
 
             return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
-                TotalActivationCount, nextProgress);
+                TotalActivationCount, nextProgress, _conditionOccurrenceTicks);
+        }
+
+        public HeroPassiveRuntimeState WithConditionOccurrenceTicksAdded(int conditionIndex, long occurredAtTick,
+            int windowTicks, int occurrenceCount)
+        {
+            if (null == _conditionOccurrenceTicks || conditionIndex < 0 ||
+                conditionIndex >= _conditionOccurrenceTicks.Length || windowTicks <= 0 || occurrenceCount <= 0)
+                return this;
+
+            var nextOccurrences = CopyConditionOccurrenceTicks(Definition, _conditionOccurrenceTicks);
+            var existing = nextOccurrences[conditionIndex] ?? System.Array.Empty<long>();
+            var minTick = occurredAtTick - windowTicks;
+            var keptCount = 0;
+            for (var i = 0; i < existing.Length; i++)
+                if (existing[i] >= minTick)
+                    keptCount++;
+
+            var ticks = new long[keptCount + occurrenceCount];
+            var targetIndex = 0;
+            for (var i = 0; i < existing.Length; i++)
+            {
+                if (existing[i] < minTick)
+                    continue;
+
+                ticks[targetIndex] = existing[i];
+                targetIndex++;
+            }
+
+            var nextTick = occurredAtTick < 0 ? 0 : occurredAtTick;
+            for (var i = 0; i < occurrenceCount; i++)
+                ticks[targetIndex + i] = nextTick;
+            nextOccurrences[conditionIndex] = ticks;
+
+            var nextProgress = CopyConditionProgress(Definition, _conditionProgress);
+            nextProgress[conditionIndex] = ticks.Length;
+
+            return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+                TotalActivationCount, nextProgress, nextOccurrences);
+        }
+
+        public HeroPassiveRuntimeState WithConditionOccurrenceTicksConsumed(int conditionIndex, int amount)
+        {
+            if (null == _conditionOccurrenceTicks || conditionIndex < 0 ||
+                conditionIndex >= _conditionOccurrenceTicks.Length || amount <= 0)
+                return this;
+
+            var existing = _conditionOccurrenceTicks[conditionIndex] ?? System.Array.Empty<long>();
+            var remainingCount = existing.Length - amount;
+            if (remainingCount < 0)
+                remainingCount = 0;
+
+            var ticks = new long[remainingCount];
+            for (var i = 0; i < remainingCount; i++)
+                ticks[i] = existing[i + amount];
+
+            var nextOccurrences = CopyConditionOccurrenceTicks(Definition, _conditionOccurrenceTicks);
+            nextOccurrences[conditionIndex] = ticks;
+
+            var nextProgress = CopyConditionProgress(Definition, _conditionProgress);
+            nextProgress[conditionIndex] = ticks.Length;
+
+            return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+                TotalActivationCount, nextProgress, nextOccurrences);
         }
 
         public HeroPassiveRuntimeState WithActivated()
         {
             return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
-                TotalActivationCount + 1);
+                TotalActivationCount + 1, _conditionProgress, _conditionOccurrenceTicks);
         }
 
         public HeroPassiveRuntimeState WithActivatedAndProgress(float[] conditionProgress)
         {
             return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
-                TotalActivationCount + 1, conditionProgress);
+                TotalActivationCount + 1, conditionProgress, _conditionOccurrenceTicks);
         }
 
         public HeroPassiveRuntimeState WithDisabled()
         {
             return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, true,
-                TotalActivationCount, _conditionProgress);
+                TotalActivationCount, _conditionProgress, _conditionOccurrenceTicks);
         }
 
         private static float[] CopyConditionProgress(HeroPassiveDefinition definition, float[] source)
@@ -83,6 +148,29 @@ namespace Project.Scripts.Shared.Passives
 
             for (var i = 0; i < result.Length && i < source.Length; i++)
                 result[i] = source[i] < 0f ? 0f : source[i];
+
+            return result;
+        }
+
+        private static long[][] CopyConditionOccurrenceTicks(HeroPassiveDefinition definition, long[][] source)
+        {
+            var conditions = definition.ActivationConditions.Conditions;
+            if (conditions.Count == 0)
+                return System.Array.Empty<long[]>();
+
+            var result = new long[conditions.Count][];
+            for (var i = 0; i < result.Length; i++)
+            {
+                if (source == null || i >= source.Length || source[i] == null || source[i].Length == 0)
+                {
+                    result[i] = System.Array.Empty<long>();
+                    continue;
+                }
+
+                result[i] = new long[source[i].Length];
+                for (var j = 0; j < result[i].Length; j++)
+                    result[i][j] = source[i][j] < 0 ? 0 : source[i][j];
+            }
 
             return result;
         }

@@ -4,6 +4,7 @@ using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
+using Project.Scripts.Services.Clock;
 using Project.Scripts.Shared.Rules;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
@@ -23,6 +24,7 @@ namespace Project.Scripts.Services.Combat
         private readonly IUnitActivationCooldownService _unitActivationCooldownService;
         private readonly IHeroAbilityModifierService _heroAbilityModifierService;
         private readonly INextAttackBuffService _nextAttackBuffService;
+        private readonly IBattleClock _battleClock;
         private readonly HeroSlotState[] _playerSlots = new HeroSlotState[SlotCount];
         private readonly HeroSlotState[] _enemySlots = new HeroSlotState[SlotCount];
 
@@ -30,7 +32,8 @@ namespace Project.Scripts.Services.Combat
         public HeroService(EventBus eventBus, LevelConfig levelConfig, SlotLayoutConfig slotLayoutConfig,
             IPlayerStateService playerState, IEnemyStateService enemyState, IBattleSideEnergyService battleSideEnergyService,
             IBattleActionRuntimeService battleActionRuntimeService, IUnitActivationCooldownService unitActivationCooldownService,
-            IHeroAbilityModifierService heroAbilityModifierService, INextAttackBuffService nextAttackBuffService)
+            IHeroAbilityModifierService heroAbilityModifierService, INextAttackBuffService nextAttackBuffService,
+            IBattleClock battleClock)
         {
             _eventBus = eventBus;
             _playerState = playerState;
@@ -40,6 +43,7 @@ namespace Project.Scripts.Services.Combat
             _unitActivationCooldownService = unitActivationCooldownService;
             _heroAbilityModifierService = heroAbilityModifierService;
             _nextAttackBuffService = nextAttackBuffService;
+            _battleClock = battleClock;
 
             InitSlots(_playerSlots, levelConfig.PlayerHeroes, slotLayoutConfig.HeroSlotKinds);
             InitSlots(_enemySlots, levelConfig.EnemyHeroes, slotLayoutConfig.HeroSlotKinds);
@@ -178,12 +182,9 @@ namespace Project.Scripts.Services.Combat
                 return;
 
             _unitActivationCooldownService.StartHeroCooldown(side, slotIndex);
-            var actionValue = GetActionValueWithNextAttackBuff(
-                side,
-                slotIndex,
-                slot.ActionType,
-                GetAbilityPower(side, slotIndex, slot));
-            _eventBus.Publish(new HeroActivatedEvent(side, slotIndex, slot.ActionType, actionValue));
+            var actionValue = GetActionValueWithNextAttackBuff(side, slotIndex, slot.ActionType, GetAbilityPower(side, slotIndex, slot));
+            _eventBus.Publish(new HeroActivatedEvent(side, slotIndex, slot.ActionType, actionValue,
+                _battleClock.CurrentTick));
         }
 
         private int GetActivationEnergyCost(BattleSide side, int slotIndex, HeroSlotState slot)
@@ -196,10 +197,7 @@ namespace Project.Scripts.Services.Combat
             return _heroAbilityModifierService.GetAbilityPower(side, slotIndex, slot.ActionValue);
         }
 
-        private int GetActionValueWithNextAttackBuff(
-            BattleSide side,
-            int slotIndex,
-            HeroActionType actionType,
+        private int GetActionValueWithNextAttackBuff(BattleSide side, int slotIndex, HeroActionType actionType,
             int baseActionValue)
         {
             if (actionType != HeroActionType.DealDamage)
@@ -224,7 +222,7 @@ namespace Project.Scripts.Services.Combat
             if (false == result.BecameDefeated)
                 return;
 
-            _eventBus.Publish(new HeroDefeatedEvent(side, slotIndex, slot.SlotKind));
+            _eventBus.Publish(new HeroDefeatedEvent(side, slotIndex, slot.SlotKind, _battleClock.CurrentTick));
         }
 
         private ref HeroSlotState GetSlotRef(BattleSide side, int slotIndex)
