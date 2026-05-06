@@ -11,7 +11,7 @@ namespace Project.Scripts.Shared.Passives
             if (false == condition.IsConfigured || condition.Kind != e.Kind)
                 return false;
 
-            if (condition.Kind == ActivationConditionKind.HeroActivationsInTimeWindow && e.Source.Kind != UnitKind.Hero)
+            if (condition.Kind == ActivationConditionKind.UnitActivationsInTimeWindow && false == IsActivatableUnit(e.Source))
                 return false;
 
             if (condition.Kind == ActivationConditionKind.EnemyHeroDefeatsInTimeWindow && e.Source.Kind != UnitKind.Hero)
@@ -32,6 +32,11 @@ namespace Project.Scripts.Shared.Passives
             return source.Kind == UnitKind.Hero
                    && source.Side == ownerSide
                    && source.SlotIndex == ownerSlotIndex;
+        }
+
+        private static bool IsActivatableUnit(UnitDescriptor source)
+        {
+            return source.Kind is UnitKind.Hero or UnitKind.Avatar;
         }
     }
 }

@@ -10,6 +10,7 @@ using Project.Scripts.Services.Grid;
 using Project.Scripts.Services.Combat;
 using Project.Scripts.Services.Input;
 using Project.Scripts.Shared;
+using Project.Scripts.Shared.Energy;
 using Project.Scripts.Shared.Grid;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Input;
@@ -131,7 +132,8 @@ namespace Project.Scripts.Services.Board
                     return;
 
                 var waves = new List<List<MatchResult>>();
-                var energyByKind = new Dictionary<TileKind, float>();
+                var matchEnergyByKind = new Dictionary<TileKind, float>();
+                var specialActivationEnergyByKind = new Dictionary<TileKind, float>();
                 var moveUsed = false;
 
                 if (fromIsSpecial && toIsSpecial)
@@ -152,7 +154,7 @@ namespace Project.Scripts.Services.Board
                     _eventBus.Publish(new BombActivatedEvent());
                     var comboMultiplier = _cascadeEnergyConfig.GetSpecialTileMultiplier(fromKind)
                                          * _cascadeEnergyConfig.GetSpecialTileMultiplier(toKind);
-                    AccumulateGridDiffEnergy(stateBefore, stateAfter, energyByKind, comboMultiplier);
+                    AccumulateGridDiffEnergy(stateBefore, stateAfter, specialActivationEnergyByKind, comboMultiplier);
                     energySourcePositions.CollectFromGridDiff(stateBefore, stateAfter, _view);
 
                     await RunPostActivationFlow(waves, request.PivotPosition, runtimeVersion);
@@ -195,7 +197,7 @@ namespace Project.Scripts.Services.Board
 
                     _eventBus.Publish(new BombActivatedEvent());
                     var specialMultiplier = _cascadeEnergyConfig.GetSpecialTileMultiplier(specialTile.Config.Kind);
-                    AccumulateGridDiffEnergy(stateBefore, stateAfter, energyByKind, specialMultiplier);
+                    AccumulateGridDiffEnergy(stateBefore, stateAfter, specialActivationEnergyByKind, specialMultiplier);
                     energySourcePositions.CollectFromGridDiff(stateBefore, stateAfter, _view);
 
                     await RunPostActivationFlow(waves, request.PivotPosition, runtimeVersion);
@@ -232,15 +234,16 @@ namespace Project.Scripts.Services.Board
                     }
                 }
 
-                AccumulateMatchEnergy(waves, _cascadeEnergyConfig, energyByKind);
+                AccumulateMatchEnergy(waves, _cascadeEnergyConfig, matchEnergyByKind);
                 energySourcePositions.CollectFromMatches(waves, _view);
 
-                if (energyByKind.Count > 0 && CanContinueFlow(runtimeVersion))
+                var energyBreakdown = new EnergyGainBreakdown(matchEnergyByKind, specialActivationEnergyByKind);
+                if (false == energyBreakdown.IsEmpty && CanContinueFlow(runtimeVersion))
                 {
-                    _eventBus.Publish(new EnergyGeneratedEvent(energyByKind));
+                    _eventBus.Publish(new EnergyGeneratedEvent(BattleSide.Player, energyBreakdown));
                     _eventBus.Publish(new EnergyGeneratedVisualEvent(energySourcePositions.Build()));
                     if (_debugConfig.LogCascades)
-                        Debug.Log(BuildDetailedCascadeLog(waves, _cascadeEnergyConfig, energyByKind));
+                        Debug.Log(BuildDetailedCascadeLog(waves, _cascadeEnergyConfig, energyBreakdown.TotalEnergyByKind));
                 }
 
                 if (moveUsed && CanContinueFlow(runtimeVersion))
@@ -657,7 +660,8 @@ namespace Project.Scripts.Services.Board
             }
         }
 
-        private static string BuildDetailedCascadeLog(List<List<MatchResult>> waves, CascadeEnergyConfig config, Dictionary<TileKind, float> energyByKind)
+        private static string BuildDetailedCascadeLog(List<List<MatchResult>> waves, CascadeEnergyConfig config,
+            IReadOnlyDictionary<TileKind, float> energyByKind)
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("[Energy] === Cascade report ===");

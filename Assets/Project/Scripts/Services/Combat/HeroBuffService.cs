@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project.Scripts.Shared.Energy;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Passives;
 using Project.Scripts.Shared.Tiles;
@@ -40,7 +41,14 @@ namespace Project.Scripts.Services.Combat
             return _engine.HasBuffFromSource(source);
         }
 
-        public float CalculateMatchEnergy(BattleSide side, IReadOnlyDictionary<TileKind, float> energyByKind)
+        public float CalculateEnergy(BattleSide side, EnergyGainBreakdown breakdown)
+        {
+            return CalculateMatchEnergy(side, breakdown.MatchEnergyByKind)
+                   + _engine.GetModifiedSpecialActivationEnergy(
+                       EnergyGainRules.SumAll(breakdown.SpecialActivationEnergyByKind), side);
+        }
+
+        private float CalculateMatchEnergy(BattleSide side, IReadOnlyDictionary<TileKind, float> energyByKind)
         {
             if (null == energyByKind)
                 return 0f;

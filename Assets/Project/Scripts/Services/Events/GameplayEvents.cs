@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Project.Scripts.Shared.BattleFlow;
+using Project.Scripts.Shared.Energy;
 using Project.Scripts.Shared.GroupDefense;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Passives;
@@ -35,7 +36,8 @@ namespace Project.Scripts.Services.Events
     public readonly struct EnergyGeneratedEvent
     {
         public BattleSide Side { get; }
-        public IReadOnlyDictionary<TileKind, float> EnergyByKind { get; }
+        public EnergyGainBreakdown Breakdown { get; }
+        public IReadOnlyDictionary<TileKind, float> EnergyByKind => Breakdown.TotalEnergyByKind;
 
 
         public EnergyGeneratedEvent(IReadOnlyDictionary<TileKind, float> energyByKind)
@@ -44,9 +46,15 @@ namespace Project.Scripts.Services.Events
         }
 
         public EnergyGeneratedEvent(BattleSide side, IReadOnlyDictionary<TileKind, float> energyByKind)
+            : this(side, new EnergyGainBreakdown(energyByKind))
+        {
+            
+        }
+
+        public EnergyGeneratedEvent(BattleSide side, EnergyGainBreakdown breakdown)
         {
             Side = side;
-            EnergyByKind = energyByKind;
+            Breakdown = breakdown;
         }
     }
 

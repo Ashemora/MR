@@ -95,7 +95,7 @@ namespace Project.Scripts.Services.Combat
 
         private void OnEnergyGenerated(EnergyGeneratedEvent e)
         {
-            var gain = _energyGainModifier.CalculateMatchEnergy(e.Side, e.EnergyByKind)
+            var gain = _energyGainModifier.CalculateEnergy(e.Side, e.Breakdown)
                        * _battleEconomyModifier.CascadeEnergyMultiplier;
             if (gain <= 0f)
                 return;

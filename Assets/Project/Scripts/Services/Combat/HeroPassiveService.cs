@@ -191,15 +191,23 @@ namespace Project.Scripts.Services.Combat
             if (_currentPhase != BattlePhaseKind.Hero)
                 return;
 
-            AddHeroAbilityActivationProgressAndPublish(e.Side, e.SlotIndex, e.OccurredAtTick);
+            AddHeroAbilityActivationProgressAndPublish(UnitDescriptor.Hero(e.Side, e.SlotIndex,
+                GetSourceActionType(e.Side, e.SlotIndex)), e.OccurredAtTick);
         }
 
         private void OnAbilityExecuted(AbilityExecutedEvent e)
         {
-            if (_currentPhase != BattlePhaseKind.Hero || e.Source.Kind != UnitKind.Hero)
+            if (_currentPhase != BattlePhaseKind.Hero)
                 return;
 
-            AddHeroAbilityActivationProgressAndPublish(e.Source.Side, e.Source.SlotIndex, e.OccurredAtTick);
+            if (e.Source.Kind == UnitKind.Hero)
+            {
+                AddHeroAbilityActivationProgressAndPublish(e.Source, e.OccurredAtTick);
+                return;
+            }
+
+            if (e.Source.Kind == UnitKind.Avatar)
+                AddUnitActivationProgressAndPublish(e.Source, e.OccurredAtTick);
         }
 
         private void OnBattleSideEnergyAdded(BattleSideEnergyAddedEvent e)
@@ -283,9 +291,9 @@ namespace Project.Scripts.Services.Combat
 
         private void ResetTimeWindowProgress()
         {
-            _engine.ResetActivationConditionProgress(ActivationConditionKind.HeroActivationsInTimeWindow,
+            _engine.ResetActivationConditionProgress(ActivationConditionKind.UnitActivationsInTimeWindow,
                 BattleSide.Player);
-            _engine.ResetActivationConditionProgress(ActivationConditionKind.HeroActivationsInTimeWindow,
+            _engine.ResetActivationConditionProgress(ActivationConditionKind.UnitActivationsInTimeWindow,
                 BattleSide.Enemy);
             _engine.ResetActivationConditionProgress(ActivationConditionKind.SlotKindMatchesInTimeWindow,
                 BattleSide.Player);
@@ -308,29 +316,37 @@ namespace Project.Scripts.Services.Combat
             RefreshAllSlotKindPassiveStates();
         }
 
-        private ActivationConditionEvent CreateAbilityActivatedEvent(ActivationConditionKind kind, BattleSide side,
-            int slotIndex, long occurredAtTick)
+        private ActivationConditionEvent CreateAbilityActivatedEvent(ActivationConditionKind kind,
+            UnitDescriptor source, long occurredAtTick)
         {
-            return new ActivationConditionEvent(kind,
-                UnitDescriptor.Hero(side, slotIndex, GetSourceActionType(side, slotIndex)),
+            return new ActivationConditionEvent(
+                kind,
+                source,
                 occurredAtTick: ResolveOccurredAtTick(occurredAtTick));
         }
 
-        private void AddHeroAbilityActivationProgressAndPublish(BattleSide side, int slotIndex, long occurredAtTick)
+        private void AddHeroAbilityActivationProgressAndPublish(UnitDescriptor source, long occurredAtTick)
         {
             var activationCounts = CaptureActivationCounts();
             var resolvedTick = ResolveOccurredAtTick(occurredAtTick);
             var changed = _engine.ProcessActivationConditionEvent(
-                CreateAbilityActivatedEvent(ActivationConditionKind.AbilityActivated, side, slotIndex, resolvedTick),
+                CreateAbilityActivatedEvent(ActivationConditionKind.AbilityActivated, source, resolvedTick),
                 HasActiveBuffForPassiveOwner);
 
             changed |= _engine.ProcessActivationConditionEvent(
-                CreateAbilityActivatedEvent(ActivationConditionKind.HeroActivationsInTimeWindow, side,
-                    slotIndex, resolvedTick),
+                CreateAbilityActivatedEvent(ActivationConditionKind.UnitActivationsInTimeWindow, source, resolvedTick),
                 HasActiveBuffForPassiveOwner);
 
             if (changed)
                 PublishNewActivations(activationCounts);
+        }
+
+        private void AddUnitActivationProgressAndPublish(UnitDescriptor source, long occurredAtTick)
+        {
+            AddProgressAndPublishActivations(CreateAbilityActivatedEvent(
+                ActivationConditionKind.UnitActivationsInTimeWindow,
+                source,
+                occurredAtTick));
         }
 
         private void AddProgressAndPublishActivations(ActivationConditionEvent e)

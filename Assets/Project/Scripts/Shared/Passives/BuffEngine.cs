@@ -103,6 +103,24 @@ namespace Project.Scripts.Shared.Passives
             return result < 0f ? 0f : result;
         }
 
+        public float GetModifiedSpecialActivationEnergy(float baseEnergy, BattleSide side)
+        {
+            var result = baseEnergy;
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.Kind != BuffKind.ModifySpecialTileActivationEnergy)
+                    continue;
+
+                if (buff.Target.Side != side)
+                    continue;
+
+                result = BuffRules.Apply(result, buff.Definition, buff.StackCount);
+            }
+
+            return result < 0f ? 0f : result;
+        }
+
         public int GetNextAttackDamage(UnitDescriptor source)
         {
             var total = 0f;

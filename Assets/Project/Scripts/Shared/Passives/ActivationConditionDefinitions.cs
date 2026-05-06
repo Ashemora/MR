@@ -26,7 +26,7 @@ namespace Project.Scripts.Shared.Passives
 
         private static bool RequiresWindow(ActivationConditionKind kind)
         {
-            return kind is ActivationConditionKind.HeroActivationsInTimeWindow
+            return kind is ActivationConditionKind.UnitActivationsInTimeWindow
                 or ActivationConditionKind.SlotKindMatchesInTimeWindow
                 or ActivationConditionKind.EnemyHeroDefeatsInTimeWindow;
         }
@@ -110,7 +110,7 @@ namespace Project.Scripts.Shared.Passives
         BombUsed,
         StormUsed,
         SlotKindMatchesCollected,
-        HeroActivationsInTimeWindow,
+        UnitActivationsInTimeWindow,
         SlotKindMatchesInTimeWindow,
         EnemyHeroDefeatsInTimeWindow
     }
