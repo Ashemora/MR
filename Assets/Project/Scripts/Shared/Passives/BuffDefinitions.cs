@@ -80,7 +80,8 @@ namespace Project.Scripts.Shared.Passives
     {
         Battle,
         Rounds,
-        NextAttack
+        NextAttack,
+        NextActivation
     }
 
     public enum BuffStackingMode

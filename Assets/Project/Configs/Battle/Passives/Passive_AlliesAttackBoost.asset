@@ -24,16 +24,15 @@ MonoBehaviour:
   - _targeting:
       _scope: 1
       _relation: 0
-      _unitKind: 0
-      _includeOwner: 0
+      _unitKind: 1
+      _includeOwner: 1
       _selectionMode: 0
-      _filters:
-      - 0
+      _filters: []
     _buff:
-      _kind: 4
+      _kind: 1
       _operation: 1
       _value: 3
-      _lifetimeKind: 2
+      _lifetimeKind: 3
       _durationRounds: 0
       _stackingMode: 0
   _canActivateWhileActive: 1

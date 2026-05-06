@@ -9,4 +9,9 @@ namespace Project.Scripts.Services.Combat
         int Consume(UnitDescriptor source);
         void Grant(IReadOnlyList<UnitDescriptor> targets, int amount);
     }
+
+    public interface INextActivationBuffService
+    {
+        bool Consume(UnitDescriptor source);
+    }
 }

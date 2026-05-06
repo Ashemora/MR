@@ -175,6 +175,26 @@ namespace Project.Scripts.Shared.Passives
             return BuffRules.ToDisplayInt(total);
         }
 
+        public bool ConsumeNextActivationBuffs(UnitDescriptor source)
+        {
+            var sourceKey = BattleUnitKey.FromDescriptor(source);
+            var removed = false;
+            for (var i = _buffs.Count - 1; i >= 0; i--)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.LifetimeKind != BuffLifetimeKind.NextActivation)
+                    continue;
+
+                if (BattleUnitKey.FromDescriptor(buff.Target) != sourceKey)
+                    continue;
+
+                _buffs.RemoveAt(i);
+                removed = true;
+            }
+
+            return removed;
+        }
+
         public bool HasMatchEnergyBuff(BattleSide side, TileKind tileKind)
         {
             for (var i = 0; i < _buffs.Count; i++)
