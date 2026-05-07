@@ -6,6 +6,98 @@ using Project.Scripts.Shared.Rules;
 
 namespace Project.Scripts.Services.Combat
 {
+    public interface IAbilityApplicationService
+    {
+        int Apply(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType, int value,
+            int repeatCount, long occurredAtTick);
+    }
+
+    public class AbilityApplicationService : IAbilityApplicationService
+    {
+        private const float RepeatApplicationDelaySeconds = 0.2f;
+
+
+        private readonly IHeroService _heroService;
+        private readonly IPlayerStateService _playerState;
+        private readonly IEnemyStateService _enemyState;
+        private readonly EventBus _eventBus;
+
+
+        public AbilityApplicationService(IHeroService heroService, IPlayerStateService playerState,
+            IEnemyStateService enemyState, EventBus eventBus)
+        {
+            _heroService = heroService;
+            _playerState = playerState;
+            _enemyState = enemyState;
+            _eventBus = eventBus;
+        }
+
+        public int Apply(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType, int value,
+            int repeatCount, long occurredAtTick)
+        {
+            if (value <= 0)
+                return 0;
+
+            var appliedCount = 0;
+            var totalApplications = 1 + (repeatCount < 0 ? 0 : repeatCount);
+            for (var applicationIndex = 0; applicationIndex < totalApplications; applicationIndex++)
+            {
+                if (false == CanApply(target))
+                    break;
+
+                ApplySingle(target, actionType, value);
+                _eventBus.Publish(new AbilityApplicationEvent(source, target, actionType, value, applicationIndex,
+                    applicationIndex > 0, applicationIndex * RepeatApplicationDelaySeconds, occurredAtTick));
+                appliedCount++;
+            }
+
+            return appliedCount;
+        }
+
+        private void ApplySingle(UnitDescriptor target, HeroActionType actionType, int value)
+        {
+            if (actionType == HeroActionType.DealDamage)
+            {
+                if (target.Kind == UnitKind.Avatar)
+                {
+                    if (target.Side == BattleSide.Player)
+                        _playerState.TakeDamage(value);
+                    else
+                        _enemyState.ApplyDamage(value);
+                }
+                else
+                    _heroService.ApplyDamageToHero(target.Side, target.SlotIndex, value);
+
+                return;
+            }
+
+            if (target.Kind == UnitKind.Avatar)
+            {
+                if (target.Side == BattleSide.Player)
+                    _playerState.Heal(value);
+                else
+                    _enemyState.ApplyHeal(value);
+            }
+            else
+                _heroService.ApplyHealToHero(target.Side, target.SlotIndex, value);
+        }
+
+        private bool CanApply(UnitDescriptor target)
+        {
+            if (target.Kind == UnitKind.Avatar)
+                return target.Side == BattleSide.Player
+                    ? _playerState.CurrentHP > 0
+                    : _enemyState.CurrentHP > 0;
+
+            var slots = _heroService.GetSlots(target.Side);
+            if (target.SlotIndex < 0 || target.SlotIndex >= slots.Count)
+                return false;
+
+            var slot = slots[target.SlotIndex];
+            return slot is { IsAssigned: true, IsAlive: true };
+        }
+    }
+
     public class AbilityExecutionService : IAbilityExecutionService
     {
         private readonly IPlayerAvatarChargeService _playerAvatarCharge;
@@ -17,6 +109,8 @@ namespace Project.Scripts.Services.Combat
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
         private readonly IHeroAbilityModifierService _heroAbilityModifierService;
         private readonly INextAttackBuffService _nextAttackBuffService;
+        private readonly IAbilityRepeatModifierService _abilityRepeatModifierService;
+        private readonly IAbilityApplicationService _abilityApplicationService;
         private readonly EventBus _eventBus;
         private readonly IBattleClock _battleClock;
 
@@ -31,6 +125,8 @@ namespace Project.Scripts.Services.Combat
             IBattleActionRuntimeService battleActionRuntimeService,
             IHeroAbilityModifierService heroAbilityModifierService,
             INextAttackBuffService nextAttackBuffService,
+            IAbilityRepeatModifierService abilityRepeatModifierService,
+            IAbilityApplicationService abilityApplicationService,
             EventBus eventBus,
             IBattleClock battleClock)
         {
@@ -43,6 +139,8 @@ namespace Project.Scripts.Services.Combat
             _battleActionRuntimeService = battleActionRuntimeService;
             _heroAbilityModifierService = heroAbilityModifierService;
             _nextAttackBuffService = nextAttackBuffService;
+            _abilityRepeatModifierService = abilityRepeatModifierService;
+            _abilityApplicationService = abilityApplicationService;
             _eventBus = eventBus;
             _battleClock = battleClock;
         }
@@ -77,38 +175,10 @@ namespace Project.Scripts.Services.Combat
             if (actionType != sourceActionType || actionValue != sourceActionValue)
                 return;
 
-            ApplyToTarget(target, actionType, actionValue);
+            _abilityApplicationService.Apply(source, target, actionType, actionValue,
+                GetRepeatCount(source), _battleClock.CurrentTick);
             _eventBus.Publish(new AbilityExecutedEvent(source, target, actionType, actionValue,
                 _battleClock.CurrentTick));
-        }
-
-
-        private void ApplyToTarget(UnitDescriptor target, HeroActionType actionType, int actionValue)
-        {
-            if (actionType == HeroActionType.DealDamage)
-            {
-                if (target.Kind == UnitKind.Avatar)
-                {
-                    if (target.Side == BattleSide.Player)
-                        _playerState.TakeDamage(actionValue);
-                    else
-                        _enemyState.ApplyDamage(actionValue);
-                }
-                else
-                    _heroService.ApplyDamageToHero(target.Side, target.SlotIndex, actionValue);
-            }
-            else
-            {
-                if (target.Kind == UnitKind.Avatar)
-                {
-                    if (target.Side == BattleSide.Player)
-                        _playerState.Heal(actionValue);
-                    else
-                        _enemyState.ApplyHeal(actionValue);
-                }
-                else
-                    _heroService.ApplyHealToHero(target.Side, target.SlotIndex, actionValue);
-            }
         }
 
         private bool TryGetSourceState(UnitDescriptor source, out HeroActionType actionType, out int actionValue, out bool isAlive)
@@ -217,6 +287,11 @@ namespace Project.Scripts.Services.Combat
                 return baseActionValue;
 
             return baseActionValue + _nextAttackBuffService.Consume(source);
+        }
+
+        private int GetRepeatCount(UnitDescriptor source)
+        {
+            return source.Kind == UnitKind.Hero ? _abilityRepeatModifierService.GetRepeatCount(source) : 0;
         }
     }
 }

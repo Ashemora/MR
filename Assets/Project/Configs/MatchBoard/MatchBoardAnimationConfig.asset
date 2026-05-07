@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 274bcba0308258448ba48b5d237ba4c6, type: 3}
-  m_Name: BoardAnimationConfig
+  m_Name: MatchBoardAnimationConfig
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.AnimationConfig
   _swapDuration: 0.17
   _fallDuration: 0.12

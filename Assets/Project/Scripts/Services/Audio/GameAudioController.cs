@@ -28,7 +28,7 @@ namespace Project.Scripts.Services.Audio
                 _prevPlayerHp = e.Current;
             }).AddTo(_disposables);
 
-            eventBus.Subscribe<AbilityExecutedEvent>(e =>
+            eventBus.Subscribe<AbilityApplicationEvent>(e =>
             {
                 var sound = e.ActionType == HeroActionType.HealAlly
                     ? AudioTags.Sound_Heal_01

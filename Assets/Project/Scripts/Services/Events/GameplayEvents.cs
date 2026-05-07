@@ -344,6 +344,32 @@ namespace Project.Scripts.Services.Events
         }
     }
 
+    public readonly struct AbilityApplicationEvent
+    {
+        public UnitDescriptor Source { get; }
+        public UnitDescriptor Target { get; }
+        public HeroActionType ActionType { get; }
+        public int Value { get; }
+        public int ApplicationIndex { get; }
+        public bool IsRepeat { get; }
+        public float PresentationDelaySeconds { get; }
+        public long OccurredAtTick { get; }
+
+
+        public AbilityApplicationEvent(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType,
+            int value, int applicationIndex, bool isRepeat, float presentationDelaySeconds, long occurredAtTick = 0)
+        {
+            Source = source;
+            Target = target;
+            ActionType = actionType;
+            Value = value;
+            ApplicationIndex = applicationIndex < 0 ? 0 : applicationIndex;
+            IsRepeat = isRepeat;
+            PresentationDelaySeconds = presentationDelaySeconds < 0f ? 0f : presentationDelaySeconds;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
+        }
+    }
+
     public readonly struct AvatarExposedEvent
     {
         public BattleSide Side { get; }

@@ -23,13 +23,13 @@ MonoBehaviour:
       _localPosition: {x: 0, y: 0.14, z: 0}
       _localScale: {x: 1, y: 1, z: 1}
     _playerHeroSlots:
-    - _localPosition: {x: -1.8, y: 0.48, z: 0}
+    - _localPosition: {x: -1.8, y: 0.454, z: 0}
       _localScale: {x: 0.6, y: 0.6, z: 0.6}
-    - _localPosition: {x: -1, y: 0.48000005, z: 0}
+    - _localPosition: {x: -1, y: 0.45400006, z: 0}
       _localScale: {x: 0.6, y: 0.6, z: 0.6}
-    - _localPosition: {x: 1, y: 0.48000005, z: 0}
+    - _localPosition: {x: 1, y: 0.45400006, z: 0}
       _localScale: {x: 0.6, y: 0.6, z: 0.6}
-    - _localPosition: {x: 1.8, y: 0.48000005, z: 0}
+    - _localPosition: {x: 1.8, y: 0.45400006, z: 0}
       _localScale: {x: 0.6, y: 0.6, z: 0.6}
     _enemyHeroSlots:
     - _localPosition: {x: -1.8, y: -0.22000006, z: 0}

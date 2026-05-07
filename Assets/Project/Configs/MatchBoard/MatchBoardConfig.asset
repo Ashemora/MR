@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8d3fb30c2784ab14f8662ac32eebd3b3, type: 3}
-  m_Name: BoardConfig
+  m_Name: MatchBoardConfig
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.BoardConfig
   _tilePaddingPercent: 0.16
   _tileFillPercent: 1.2

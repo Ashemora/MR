@@ -14,4 +14,9 @@ namespace Project.Scripts.Services.Combat
     {
         bool Consume(UnitDescriptor source);
     }
+
+    public interface IAbilityRepeatModifierService
+    {
+        int GetRepeatCount(UnitDescriptor source);
+    }
 }

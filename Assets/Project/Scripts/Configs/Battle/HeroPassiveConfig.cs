@@ -165,7 +165,7 @@ namespace Project.Scripts.Configs.Battle
     [Serializable]
     public class BuffEffectConfig
     {
-        [Tooltip("Что меняет баф: ModifyAbilityPower = силу способности героя, ModifyActivationEnergyCost = стоимость активации, ModifyActivationCooldown = длительность cooldown активации героя, ModifyMatchEnergyBySlotKind = энергию от тайлов цвета слота владельца, ModifySpecialTileActivationEnergy = энергию от непосредственной активации спецтайлов, ModifyBombRadius = радиус действия бомб стороны цели, NextAttackDamage = урон следующей атаки цели")]
+        [Tooltip("Что меняет баф: ModifyAbilityPower = силу способности героя, ModifyActivationEnergyCost = стоимость активации, ModifyActivationCooldown = длительность cooldown активации героя, ModifyMatchEnergyBySlotKind = энергию от тайлов цвета слота владельца, ModifySpecialTileActivationEnergy = энергию от непосредственной активации спецтайлов, ModifyBombRadius = радиус действия бомб стороны цели, RepeatAbilityApplication = количество дополнительных применений способности героя к той же цели, NextAttackDamage = урон следующей атаки цели")]
         [SerializeField] private BuffKind _kind;
 
         [Tooltip("Как именно меняется числовой параметр")]

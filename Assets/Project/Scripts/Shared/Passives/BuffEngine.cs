@@ -6,6 +6,9 @@ namespace Project.Scripts.Shared.Passives
 {
     public class BuffEngine
     {
+        private const int MaxRepeatAbilityApplications = 10;
+
+
         public IReadOnlyList<BuffRuntimeState> Buffs => _buffs;
 
         
@@ -142,6 +145,29 @@ namespace Project.Scripts.Shared.Passives
             }
 
             return BuffRules.ToDisplayInt(result);
+        }
+
+        public int GetAbilityRepeatCount(UnitDescriptor source)
+        {
+            var result = 0f;
+            var sourceKey = BattleUnitKey.FromDescriptor(source);
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.Kind != BuffKind.RepeatAbilityApplication)
+                    continue;
+
+                if (BattleUnitKey.FromDescriptor(buff.Target) != sourceKey)
+                    continue;
+
+                result = BuffRules.Apply(result, buff.Definition, buff.StackCount);
+            }
+
+            if (result <= 0f)
+                return 0;
+
+            var repeatCount = (int)result;
+            return repeatCount > MaxRepeatAbilityApplications ? MaxRepeatAbilityApplications : repeatCount;
         }
 
         public int GetNextAttackDamage(UnitDescriptor source)

@@ -51,7 +51,8 @@ namespace Project.Scripts.DI
                 .As<INextAttackBuffService>()
                 .As<IBombRadiusModifierService>()
                 .As<IHeroCooldownModifierService>()
-                .As<INextActivationBuffService>();
+                .As<INextActivationBuffService>()
+                .As<IAbilityRepeatModifierService>();
             builder.RegisterEntryPoint<HeroPassiveService>().As<IHeroPassiveService>();
             builder.RegisterEntryPoint<BattleSideEnergyService>().As<IBattleSideEnergyService>();
             builder.Register<IUnitActivationCooldownService, UnitActivationCooldownService>(Lifetime.Singleton);
@@ -72,6 +73,7 @@ namespace Project.Scripts.DI
                     .As<IBattleEconomyModifierService>();
             }
 
+            builder.Register<IAbilityApplicationService, AbilityApplicationService>(Lifetime.Singleton);
             builder.Register<IAbilityExecutionService, AbilityExecutionService>(Lifetime.Singleton);
 
             builder.Register<MoveBarViewModel>(Lifetime.Singleton);

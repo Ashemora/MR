@@ -29,6 +29,8 @@ namespace Project.Scripts.Services.Bot
         private readonly IAvatarGroupDefenseService _groupDefense;
         private readonly IBattleEconomyModifierService _battleEconomyModifier;
         private readonly INextAttackBuffService _nextAttackBuffService;
+        private readonly IAbilityRepeatModifierService _abilityRepeatModifierService;
+        private readonly IAbilityApplicationService _abilityApplicationService;
         private readonly IBattleClock _battleClock;
         private readonly BotConfig _botConfig;
         private readonly SlotLayoutConfig _slotLayoutConfig;
@@ -52,6 +54,8 @@ namespace Project.Scripts.Services.Bot
             IAvatarGroupDefenseService groupDefense,
             IBattleEconomyModifierService battleEconomyModifier,
             INextAttackBuffService nextAttackBuffService,
+            IAbilityRepeatModifierService abilityRepeatModifierService,
+            IAbilityApplicationService abilityApplicationService,
             IBattleClock battleClock,
             BotConfig botConfig,
             SlotLayoutConfig slotLayoutConfig)
@@ -66,6 +70,8 @@ namespace Project.Scripts.Services.Bot
             _groupDefense = groupDefense;
             _battleEconomyModifier = battleEconomyModifier;
             _nextAttackBuffService = nextAttackBuffService;
+            _abilityRepeatModifierService = abilityRepeatModifierService;
+            _abilityApplicationService = abilityApplicationService;
             _battleClock = battleClock;
             _botConfig = botConfig;
             _slotLayoutConfig = slotLayoutConfig;
@@ -184,15 +190,25 @@ namespace Project.Scripts.Services.Bot
                         return;
 
                     abilityPower = GetAvatarActionValueWithNextAttackBuff(abilityPower);
-                    _heroService.ApplyDamageToHero(BattleSide.Player, targetIdx, abilityPower);
 
                     var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.DealDamage);
                     var target = UnitDescriptor.Hero(BattleSide.Player, targetIdx, HeroActionType.DealDamage);
+                    _abilityApplicationService.Apply(source, target, HeroActionType.DealDamage, abilityPower,
+                        0, _battleClock.CurrentTick);
                     PublishAbilityExecuted(source, target, HeroActionType.DealDamage, abilityPower);
                 }
                 else
                 {
-                    _enemyChargeService.TriggerAttack();
+                    if (!_enemyChargeService.TryRelease())
+                        return;
+
+                    abilityPower = GetAvatarActionValueWithNextAttackBuff(abilityPower);
+
+                    var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.DealDamage);
+                    var target = UnitDescriptor.Avatar(BattleSide.Player, HeroActionType.DealDamage);
+                    _abilityApplicationService.Apply(source, target, HeroActionType.DealDamage, abilityPower,
+                        0, _battleClock.CurrentTick);
+                    PublishAbilityExecuted(source, target, HeroActionType.DealDamage, abilityPower);
                 }
             }
             else
@@ -215,10 +231,10 @@ namespace Project.Scripts.Services.Bot
                 if (!_enemyChargeService.TryRelease())
                     return;
 
-                _heroService.ApplyHealToHero(BattleSide.Enemy, targetIdx, abilityPower);
-
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
+                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, abilityPower,
+                    0, _battleClock.CurrentTick);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
             else if (_enemyState.CurrentHP < _enemyState.MaxHP)
@@ -226,10 +242,10 @@ namespace Project.Scripts.Services.Bot
                 if (false == _enemyChargeService.TryRelease())
                     return;
 
-                _enemyState.ApplyHeal(abilityPower);
-
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
+                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, abilityPower,
+                    0, _battleClock.CurrentTick);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
             else
@@ -242,10 +258,10 @@ namespace Project.Scripts.Services.Bot
                 if (false == _enemyChargeService.TryRelease())
                     return;
 
-                _heroService.ApplyHealToHero(BattleSide.Enemy, targetIdx, abilityPower);
-
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
+                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, abilityPower,
+                    0, _battleClock.CurrentTick);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
         }
@@ -351,14 +367,23 @@ namespace Project.Scripts.Services.Bot
                 if (!_heroService.TryDischargeHero(BattleSide.Enemy, slotIndex, out _, out var damageValue))
                     return;
 
-                _heroService.ApplyDamageToHero(BattleSide.Player, targetIdx, damageValue);
-
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.DealDamage);
                 var target = UnitDescriptor.Hero(BattleSide.Player, targetIdx, HeroActionType.DealDamage);
+                _abilityApplicationService.Apply(source, target, HeroActionType.DealDamage, damageValue,
+                    GetRepeatCount(source), _battleClock.CurrentTick);
                 PublishAbilityExecuted(source, target, HeroActionType.DealDamage, damageValue);
             }
             else
-                _heroService.TryActivate(BattleSide.Enemy, slotIndex);
+            {
+                if (!_heroService.TryDischargeHero(BattleSide.Enemy, slotIndex, out _, out var damageValue))
+                    return;
+
+                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.DealDamage);
+                var target = UnitDescriptor.Avatar(BattleSide.Player, HeroActionType.DealDamage);
+                _abilityApplicationService.Apply(source, target, HeroActionType.DealDamage, damageValue,
+                    GetRepeatCount(source), _battleClock.CurrentTick);
+                PublishAbilityExecuted(source, target, HeroActionType.DealDamage, damageValue);
+            }
         }
 
         private void ActivateHeroHeal(int slotIndex, IReadOnlyList<HeroSlotState> enemySlots)
@@ -376,10 +401,10 @@ namespace Project.Scripts.Services.Bot
                 if (!_heroService.TryDischargeHero(BattleSide.Enemy, slotIndex, out _, out var healValue))
                     return;
 
-                _heroService.ApplyHealToHero(BattleSide.Enemy, targetIdx, healValue);
-
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
+                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, healValue,
+                    GetRepeatCount(source), _battleClock.CurrentTick);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, healValue);
             }
             else if (_enemyState.CurrentHP < _enemyState.MaxHP)
@@ -387,10 +412,10 @@ namespace Project.Scripts.Services.Bot
                 if (!_heroService.TryDischargeHero(BattleSide.Enemy, slotIndex, out _, out var healValue))
                     return;
 
-                _enemyState.ApplyHeal(healValue);
-
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
+                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, healValue,
+                    GetRepeatCount(source), _battleClock.CurrentTick);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, healValue);
             }
             else
@@ -402,10 +427,10 @@ namespace Project.Scripts.Services.Bot
                 if (!_heroService.TryDischargeHero(BattleSide.Enemy, slotIndex, out _, out var healValue))
                     return;
 
-                _heroService.ApplyHealToHero(BattleSide.Enemy, targetIdx, healValue);
-
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
+                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, healValue,
+                    GetRepeatCount(source), _battleClock.CurrentTick);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, healValue);
             }
         }
@@ -465,6 +490,11 @@ namespace Project.Scripts.Services.Bot
             var source = UnitDescriptor.Avatar(BattleSide.Enemy, _enemyChargeService.AbilityType);
             
             return baseActionValue + _nextAttackBuffService.Consume(source);
+        }
+
+        private int GetRepeatCount(UnitDescriptor source)
+        {
+            return source.Kind == UnitKind.Hero ? _abilityRepeatModifierService.GetRepeatCount(source) : 0;
         }
     }
 }
