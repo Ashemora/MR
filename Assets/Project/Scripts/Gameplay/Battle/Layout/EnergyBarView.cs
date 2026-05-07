@@ -65,7 +65,9 @@ namespace Project.Scripts.Gameplay.Battle.Layout
         public void SetMaxValue(int maxValue)
         {
             _maxValue = Mathf.Max(1, maxValue);
-            ApplyFill(GetRatio(_currentValue));
+            _fillTween?.Kill();
+            _displayedRatio = GetRatio(_currentValue);
+            ApplyFill(_displayedRatio);
         }
 
         public void SetValue(int value, bool animate = true)

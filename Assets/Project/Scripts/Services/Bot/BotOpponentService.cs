@@ -129,13 +129,17 @@ namespace Project.Scripts.Services.Bot
                 if (cancelled || false == _gameStateService.IsPlaying)
                     return;
 
-                if (_battleFlowService.Snapshot.Phase != BattlePhaseKind.Match)
-                    continue;
+                var phase = _battleFlowService.Snapshot.Phase;
 
-                var generatedEnergy = GenerateSimulatedMatchEnergy();
-                _battleSideEnergyService.AddEnergy(BattleSide.Enemy, generatedEnergy);
+                if (phase == BattlePhaseKind.Match)
+                {
+                    var generatedEnergy = GenerateSimulatedMatchEnergy();
+                    _battleSideEnergyService.AddEnergy(BattleSide.Enemy, generatedEnergy);
+                }
 
-                if (_enemyChargeService.IsReady && false == _dischargeScheduled)
+                if (phase == BattlePhaseKind.Hero
+                    && _enemyChargeService.IsReady
+                    && false == _dischargeScheduled)
                 {
                     _dischargeScheduled = true;
                     ScheduleDischarge(ct).Forget();
