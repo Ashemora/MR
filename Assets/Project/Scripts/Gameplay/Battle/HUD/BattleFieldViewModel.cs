@@ -43,7 +43,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         public ReadOnlyReactiveProperty<bool> IsInteractionOverlayVisible => _isInteractionOverlayVisible;
         public ReadOnlyReactiveProperty<int> PlayerEnergy => _playerEnergy;
         public ReadOnlyReactiveProperty<int> EnemyEnergy => _enemyEnergy;
-        public int EnergyCap => _battleSideEnergyService.EnergyCap;
+        public ReadOnlyReactiveProperty<int> EnergyCap => _energyCap;
 
 
         private readonly EventBus _eventBus;
@@ -70,6 +70,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         private readonly ReactiveProperty<bool> _isInteractionOverlayVisible;
         private readonly ReactiveProperty<int> _playerEnergy;
         private readonly ReactiveProperty<int> _enemyEnergy;
+        private readonly ReactiveProperty<int> _energyCap;
 
 
         public BattleFieldViewModel(
@@ -121,6 +122,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
                                                                       && false == battleActionRuntimeService.CanAcceptNormalActions);
             _playerEnergy = new ReactiveProperty<int>(battleSideEnergyService.GetDisplayEnergy(BattleSide.Player));
             _enemyEnergy = new ReactiveProperty<int>(battleSideEnergyService.GetDisplayEnergy(BattleSide.Enemy));
+            _energyCap = new ReactiveProperty<int>(battleSideEnergyService.EnergyCap);
         }
 
 
@@ -190,6 +192,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             _isInteractionOverlayVisible.Dispose();
             _playerEnergy.Dispose();
             _enemyEnergy.Dispose();
+            _energyCap.Dispose();
             PlayerAvatar?.Dispose();
             EnemyAvatar?.Dispose();
 
@@ -251,6 +254,9 @@ namespace Project.Scripts.Gameplay.Battle.HUD
                 _playerEnergy.Value = e.Current;
             else
                 _enemyEnergy.Value = e.Current;
+
+            if (_energyCap.Value != e.EnergyCap)
+                _energyCap.Value = e.EnergyCap;
         }
 
         private void RefreshInteractionOverlay()

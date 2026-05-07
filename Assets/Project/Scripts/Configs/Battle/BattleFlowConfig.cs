@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Project.Scripts.Shared.BattleFlow;
 using UnityEngine;
 
@@ -19,8 +20,8 @@ namespace Project.Scripts.Configs.Battle
         [Tooltip("Правило переноса остатка энергии между раундами")]
         [SerializeField] private EnergyCarryoverMode _energyCarryoverMode = EnergyCarryoverMode.CarryOverBetweenRounds;
 
-        [Tooltip("Максимальный запас энергии для каждой стороны боя")]
-        [SerializeField] private int _energyCap = 250;
+        [Tooltip("Максимальный запас энергии для каждой стороны боя по раундам. Индекс 0 - первый раунд, и так далее. Если раундов больше, чем элементов - повторяется значение последнего элемента. Если массив пуст - будет залогирована ошибка и использован fallback из RoundEnergyCapSchedule.DefaultCap")]
+        [SerializeField] private int[] _energyCaps = { 150, 225, 300 };
 
         [Header("Cooldown settings")]
         [Tooltip("Минимальная длительность кулдауна активируемого юнита после применения всех модификаторов. Ноль отключает нижний предел")]
@@ -49,7 +50,7 @@ namespace Project.Scripts.Configs.Battle
         public bool EnablePrePhaseOnBattleStart => _enablePrePhaseOnBattleStart;
         public int CountdownThreshold => _countdownThreshold;
         public EnergyCarryoverMode EnergyCarryoverMode => _energyCarryoverMode;
-        public int EnergyCap => Mathf.Max(1, _energyCap);
+        public IReadOnlyList<int> EnergyCaps => _energyCaps;
         public float MinUnitActivationCooldownSeconds => Mathf.Max(0f, _minUnitActivationCooldownSeconds);
     }
 }

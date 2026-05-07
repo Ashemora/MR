@@ -16,7 +16,10 @@ MonoBehaviour:
   _matchPhaseDuration: 30
   _heroPhaseDuration: 30
   _energyCarryoverMode: 0
-  _energyCap: 150
+  _energyCaps:
+  - 150
+  - 225
+  - 300
   _minUnitActivationCooldownSeconds: 0.5
   _prePhaseDuration: 2
   _dimCurrentPhaseDuringPrePhase: 1

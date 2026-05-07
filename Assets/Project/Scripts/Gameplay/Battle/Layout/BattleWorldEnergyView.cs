@@ -81,13 +81,18 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             if (viewModel == null)
                 return;
 
-            _playerBar?.SetMaxValue(viewModel.EnergyCap);
-            _enemyBar?.SetMaxValue(viewModel.EnergyCap);
+            _playerBar?.SetMaxValue(viewModel.EnergyCap.CurrentValue);
+            _enemyBar?.SetMaxValue(viewModel.EnergyCap.CurrentValue);
             _playerBar?.SetValue(viewModel.PlayerEnergy.CurrentValue, false);
             _enemyBar?.SetValue(viewModel.EnemyEnergy.CurrentValue, false);
 
             _disposables.Add(viewModel.PlayerEnergy.Subscribe(v => _playerBar?.SetValue(v)));
             _disposables.Add(viewModel.EnemyEnergy.Subscribe(v => _enemyBar?.SetValue(v)));
+            _disposables.Add(viewModel.EnergyCap.Subscribe(cap =>
+            {
+                _playerBar?.SetMaxValue(cap);
+                _enemyBar?.SetMaxValue(cap);
+            }));
 
             if (announcementService != null)
             {

@@ -6,7 +6,7 @@ namespace Project.Scripts.Shared.Energy
         public float EnergyCap => _energyCap;
 
 
-        private readonly float _energyCap;
+        private float _energyCap;
         private float _currentEnergy;
 
 
@@ -24,7 +24,7 @@ namespace Project.Scripts.Shared.Energy
             _currentEnergy += amount;
             if (_energyCap > 0f && _currentEnergy > _energyCap)
                 _currentEnergy = _energyCap;
-            
+
             return _currentEnergy - before;
         }
 
@@ -39,8 +39,15 @@ namespace Project.Scripts.Shared.Energy
                 return false;
 
             _currentEnergy -= amount;
-            
+
             return true;
+        }
+
+        public void SetCap(float energyCap)
+        {
+            _energyCap = energyCap < 0f ? 0f : energyCap;
+            if (_energyCap > 0f && _currentEnergy > _energyCap)
+                _currentEnergy = _energyCap;
         }
 
         public void Reset()

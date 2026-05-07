@@ -16,13 +16,15 @@ namespace Project.Scripts.Services.Combat
         private readonly BattleFlowConfig _battleFlowConfig;
         private readonly IBattleEconomyModifierService _battleEconomyModifier;
         private readonly IEnergyGainModifierService _energyGainModifier;
+        private readonly RoundEnergyCapSchedule _capSchedule;
         private readonly SideEnergyPoolEngine _playerPool;
         private readonly SideEnergyPoolEngine _enemyPool;
+        private int _currentRound = 1;
         private IDisposable _energyGeneratedSubscription;
         private IDisposable _roundChangedSubscription;
 
 
-        public int EnergyCap => _battleFlowConfig.EnergyCap;
+        public int EnergyCap => _capSchedule.GetCapForRound(_currentRound);
 
 
         public BattleSideEnergyService(EventBus eventBus, DebugConfig debugConfig, BattleFlowConfig battleFlowConfig,
@@ -33,8 +35,15 @@ namespace Project.Scripts.Services.Combat
             _battleFlowConfig = battleFlowConfig;
             _battleEconomyModifier = battleEconomyModifier;
             _energyGainModifier = energyGainModifier;
-            _playerPool = new SideEnergyPoolEngine(battleFlowConfig.EnergyCap);
-            _enemyPool = new SideEnergyPoolEngine(battleFlowConfig.EnergyCap);
+            _capSchedule = new RoundEnergyCapSchedule(battleFlowConfig.EnergyCaps);
+
+            if (false == _capSchedule.HasExplicitCaps)
+                UnityEngine.Debug.LogError(
+                    $"[BattleSideEnergyService] BattleFlowConfig.EnergyCaps is empty. Falling back to RoundEnergyCapSchedule.DefaultCap={RoundEnergyCapSchedule.DefaultCap} for all rounds.");
+
+            var initialCap = _capSchedule.GetCapForRound(_currentRound);
+            _playerPool = new SideEnergyPoolEngine(initialCap);
+            _enemyPool = new SideEnergyPoolEngine(initialCap);
         }
 
 
@@ -72,7 +81,7 @@ namespace Project.Scripts.Services.Combat
                 return false;
 
             PublishEnergyChanged(side);
-            
+
             return true;
         }
 
@@ -108,14 +117,22 @@ namespace Project.Scripts.Services.Combat
 
         private void OnRoundChanged(BattleFlowRoundChangedEvent e)
         {
-            if (_battleFlowConfig.EnergyCarryoverMode != EnergyCarryoverMode.ResetEachRound)
-                return;
+            _currentRound = e.CurrentRound;
 
-            if (e.CurrentRound <= 1)
-                return;
+            var newCap = _capSchedule.GetCapForRound(_currentRound);
+            _playerPool.SetCap(newCap);
+            _enemyPool.SetCap(newCap);
 
-            Reset(BattleSide.Player);
-            Reset(BattleSide.Enemy);
+            if (_battleFlowConfig.EnergyCarryoverMode == EnergyCarryoverMode.ResetEachRound && e.CurrentRound > 1)
+            {
+                Reset(BattleSide.Player);
+                Reset(BattleSide.Enemy);
+                
+                return;
+            }
+
+            PublishEnergyChanged(BattleSide.Player);
+            PublishEnergyChanged(BattleSide.Enemy);
         }
 
         private void PublishEnergyChanged(BattleSide side)
