@@ -54,7 +54,8 @@ namespace Project.Scripts.DI
                 .As<IHeroCooldownModifierService>()
                 .As<INextActivationBuffService>()
                 .As<IAbilityRepeatModifierService>()
-                .As<IAbilityAdditionalTargetModifierService>();
+                .As<IAbilityAdditionalTargetModifierService>()
+                .As<IResurrectOnDeathBuffService>();
             builder.RegisterEntryPoint<HeroPassiveService>().As<IHeroPassiveService>();
             builder.RegisterEntryPoint<BattleSideEnergyService>().As<IBattleSideEnergyService>();
             builder.Register<IUnitActivationCooldownService, UnitActivationCooldownService>(Lifetime.Singleton);

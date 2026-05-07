@@ -75,7 +75,8 @@ namespace Project.Scripts.Shared.Passives
         RepeatAbilityApplication,
         NextAttackDamage,
         ApplyAbilityToAdditionalTargets,
-        ModifyLineRuneThickness
+        ModifyLineRuneThickness,
+        ResurrectOnDeath
     }
 
     public enum BuffModifierOperation

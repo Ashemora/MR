@@ -33,6 +33,7 @@ namespace Project.Scripts.Services.Combat
         private float _playerAvatarLastPublished = -1f;
         private float _enemyAvatarLastPublished = -1f;
         private IDisposable _heroDefeatedSubscription;
+        private IDisposable _heroResurrectedSubscription;
         private IDisposable _playerDefeatedSubscription;
         private IDisposable _enemyDefeatedSubscription;
         private IDisposable _burndownStartedSubscription;
@@ -50,6 +51,7 @@ namespace Project.Scripts.Services.Combat
             _enemyAvatarDuration = levelConfig.EnemyAvatarConfig ? levelConfig.EnemyAvatarConfig.ActivationCooldownSeconds : 0f;
 
             _heroDefeatedSubscription = _eventBus.Subscribe<HeroDefeatedEvent>(OnHeroDefeated);
+            _heroResurrectedSubscription = _eventBus.Subscribe<HeroResurrectedEvent>(OnHeroResurrected);
             _playerDefeatedSubscription = _eventBus.Subscribe<PlayerDefeatedEvent>(_ => ResetAvatarCooldown(BattleSide.Player));
             _enemyDefeatedSubscription = _eventBus.Subscribe<EnemyDefeatedEvent>(_ => ResetAvatarCooldown(BattleSide.Enemy));
             _burndownStartedSubscription = _eventBus.Subscribe<BurndownStartedEvent>(_ => ResetAllCooldowns());
@@ -129,6 +131,8 @@ namespace Project.Scripts.Services.Combat
         {
             _heroDefeatedSubscription?.Dispose();
             _heroDefeatedSubscription = null;
+            _heroResurrectedSubscription?.Dispose();
+            _heroResurrectedSubscription = null;
             _playerDefeatedSubscription?.Dispose();
             _playerDefeatedSubscription = null;
             _enemyDefeatedSubscription?.Dispose();
@@ -174,6 +178,11 @@ namespace Project.Scripts.Services.Combat
         }
 
         private void OnHeroDefeated(HeroDefeatedEvent e)
+        {
+            ResetHeroCooldown(e.Side, e.SlotIndex);
+        }
+
+        private void OnHeroResurrected(HeroResurrectedEvent e)
         {
             ResetHeroCooldown(e.Side, e.SlotIndex);
         }

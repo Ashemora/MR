@@ -10,7 +10,7 @@ namespace Project.Scripts.Services.Combat
     public class HeroBuffService : IBuffService, IEnergyGainModifierService, IHeroAbilityModifierService,
         IAbilityPowerModifierService, INextAttackBuffService, IBombRadiusModifierService,
         IHeroCooldownModifierService, INextActivationBuffService, IAbilityRepeatModifierService,
-        IAbilityAdditionalTargetModifierService, ILineRuneModifierService
+        IAbilityAdditionalTargetModifierService, ILineRuneModifierService, IResurrectOnDeathBuffService
     {
         public IReadOnlyList<BuffRuntimeState> Buffs => _engine.Buffs;
 
@@ -129,6 +129,11 @@ namespace Project.Scripts.Services.Combat
         bool INextActivationBuffService.Consume(UnitDescriptor source)
         {
             return _engine.ConsumeNextActivationBuffs(source);
+        }
+
+        public int GetResurrectOnDeath(UnitDescriptor target, int maxHP)
+        {
+            return _engine.GetResurrectOnDeath(target, maxHP);
         }
 
         public void Grant(IReadOnlyList<UnitDescriptor> targets, int amount)

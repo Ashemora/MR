@@ -25,6 +25,8 @@ namespace Project.Scripts.Services.Combat
         private readonly IHeroAbilityModifierService _heroAbilityModifierService;
         private readonly INextAttackBuffService _nextAttackBuffService;
         private readonly INextActivationBuffService _nextActivationBuffService;
+        private readonly IResurrectOnDeathBuffService _resurrectOnDeathBuffService;
+        private readonly IGameStateService _gameStateService;
         private readonly IBattleClock _battleClock;
         private readonly HeroSlotState[] _playerSlots = new HeroSlotState[SlotCount];
         private readonly HeroSlotState[] _enemySlots = new HeroSlotState[SlotCount];
@@ -34,7 +36,8 @@ namespace Project.Scripts.Services.Combat
             IPlayerStateService playerState, IEnemyStateService enemyState, IBattleSideEnergyService battleSideEnergyService,
             IBattleActionRuntimeService battleActionRuntimeService, IUnitActivationCooldownService unitActivationCooldownService,
             IHeroAbilityModifierService heroAbilityModifierService, INextAttackBuffService nextAttackBuffService,
-            INextActivationBuffService nextActivationBuffService, IBattleClock battleClock)
+            INextActivationBuffService nextActivationBuffService, IResurrectOnDeathBuffService resurrectOnDeathBuffService,
+            IGameStateService gameStateService, IBattleClock battleClock)
         {
             _eventBus = eventBus;
             _playerState = playerState;
@@ -45,6 +48,8 @@ namespace Project.Scripts.Services.Combat
             _heroAbilityModifierService = heroAbilityModifierService;
             _nextAttackBuffService = nextAttackBuffService;
             _nextActivationBuffService = nextActivationBuffService;
+            _resurrectOnDeathBuffService = resurrectOnDeathBuffService;
+            _gameStateService = gameStateService;
             _battleClock = battleClock;
 
             InitSlots(_playerSlots, levelConfig.PlayerHeroes, slotLayoutConfig.HeroSlotKinds);
@@ -228,14 +233,29 @@ namespace Project.Scripts.Services.Combat
             if (false == slot.IsAssigned || slot.MaxHP <= 0)
                 return;
 
-            var result = HealthChangeRules.Apply(slot.CurrentHP, slot.MaxHP, delta);
-            if (false == result.WasChanged)
+            var owner = UnitDescriptor.Hero(side, slotIndex, slot.ActionType);
+            var resurrectChargeHP = _resurrectOnDeathBuffService.GetResurrectOnDeath(owner, slot.MaxHP);
+            var isBurndownActive = _gameStateService.State.CurrentValue == GameState.Burndown;
+            var resolution = HeroDeathResolutionRules.Resolve(slot.CurrentHP, slot.MaxHP, delta, resurrectChargeHP,
+                isBurndownActive);
+
+            if (false == resolution.HealthChange.WasChanged)
                 return;
 
-            slot.CurrentHP = result.CurrentHP;
+            slot.CurrentHP = resolution.HealthChange.CurrentHP;
+
+            if (resolution.WasResurrected)
+            {
+                _eventBus.Publish(new HeroResurrectedEvent(side, slotIndex, resolution.ResurrectedHP,
+                    _battleClock.CurrentTick));
+                _eventBus.Publish(new HeroHPChangedEvent(side, slotIndex, slot.CurrentHP, slot.MaxHP, silent));
+                
+                return;
+            }
+
             _eventBus.Publish(new HeroHPChangedEvent(side, slotIndex, slot.CurrentHP, slot.MaxHP, silent));
 
-            if (false == result.BecameDefeated)
+            if (false == resolution.HealthChange.BecameDefeated)
                 return;
 
             _eventBus.Publish(new HeroDefeatedEvent(side, slotIndex, slot.SlotKind, _battleClock.CurrentTick));

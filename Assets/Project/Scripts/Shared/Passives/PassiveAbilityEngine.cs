@@ -214,6 +214,37 @@ namespace Project.Scripts.Shared.Passives
             return result;
         }
 
+        public bool ResetOwnerProgress(BattleSide side, int slotIndex)
+        {
+            var changed = false;
+            for (var i = 0; i < _states.Length; i++)
+            {
+                var state = _states[i];
+                if (state.Side != side || state.SlotIndex != slotIndex)
+                    continue;
+
+                var conditions = state.Definition.ActivationConditions.Conditions;
+                var stateChanged = false;
+                for (var conditionIndex = 0; conditionIndex < conditions.Count; conditionIndex++)
+                {
+                    if (state.GetConditionProgress(conditionIndex) == 0f)
+                        continue;
+
+                    state = state.WithConditionProgress(conditionIndex, 0f)
+                        .WithConditionOccurrenceTicksConsumed(conditionIndex, int.MaxValue);
+                    stateChanged = true;
+                }
+
+                if (false == stateChanged)
+                    continue;
+
+                _states[i] = state;
+                changed = true;
+            }
+
+            return changed;
+        }
+
         public bool DisableOwner(BattleSide side, int slotIndex)
         {
             var changed = false;

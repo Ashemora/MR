@@ -250,6 +250,31 @@ namespace Project.Scripts.Shared.Passives
             return BuffRules.ToDisplayInt(total);
         }
 
+        public int GetResurrectOnDeath(UnitDescriptor target, int maxHP)
+        {
+            if (maxHP <= 0)
+                return 0;
+
+            var total = 0f;
+            var targetKey = BattleUnitKey.FromDescriptor(target);
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.Kind != BuffKind.ResurrectOnDeath)
+                    continue;
+
+                if (BattleUnitKey.FromDescriptor(buff.Target) != targetKey)
+                    continue;
+
+                if (buff.Definition.Operation == BuffModifierOperation.AddPercent)
+                    total += maxHP * buff.Definition.Value * buff.StackCount / 100f;
+                else
+                    total += buff.Definition.Value * buff.StackCount;
+            }
+
+            return BuffRules.ToDisplayInt(total);
+        }
+
         public bool ConsumeNextActivationBuffs(UnitDescriptor source)
         {
             var sourceKey = BattleUnitKey.FromDescriptor(source);

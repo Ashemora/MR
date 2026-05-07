@@ -155,6 +155,23 @@ namespace Project.Scripts.Services.Events
         }
     }
 
+    public readonly struct HeroResurrectedEvent
+    {
+        public BattleSide Side { get; }
+        public int SlotIndex { get; }
+        public int RestoredHP { get; }
+        public long OccurredAtTick { get; }
+
+
+        public HeroResurrectedEvent(BattleSide side, int slotIndex, int restoredHP, long occurredAtTick = 0)
+        {
+            Side = side;
+            SlotIndex = slotIndex;
+            RestoredHP = restoredHP < 0 ? 0 : restoredHP;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
+        }
+    }
+
     public readonly struct HeroActivatedEvent
     {
         public BattleSide Side { get; }

@@ -30,6 +30,7 @@ namespace Project.Scripts.Services.Combat
         private readonly IBattleClock _battleClock;
         private readonly PassiveAbilityEngine _engine = new();
         private IDisposable _heroDefeatedSubscription;
+        private IDisposable _heroResurrectedSubscription;
         private IDisposable _heroActivatedSubscription;
         private IDisposable _abilityExecutedSubscription;
         private IDisposable _energyAddedSubscription;
@@ -64,6 +65,7 @@ namespace Project.Scripts.Services.Combat
         {
             InitializePassives();
             _heroDefeatedSubscription = _eventBus.Subscribe<HeroDefeatedEvent>(OnHeroDefeated);
+            _heroResurrectedSubscription = _eventBus.Subscribe<HeroResurrectedEvent>(OnHeroResurrected);
             _heroActivatedSubscription = _eventBus.Subscribe<HeroActivatedEvent>(OnHeroActivated);
             _abilityExecutedSubscription = _eventBus.Subscribe<AbilityExecutedEvent>(OnAbilityExecuted);
             _energyAddedSubscription = _eventBus.Subscribe<BattleSideEnergyAddedEvent>(OnBattleSideEnergyAdded);
@@ -79,6 +81,8 @@ namespace Project.Scripts.Services.Combat
         {
             _heroDefeatedSubscription?.Dispose();
             _heroDefeatedSubscription = null;
+            _heroResurrectedSubscription?.Dispose();
+            _heroResurrectedSubscription = null;
             _heroActivatedSubscription?.Dispose();
             _heroActivatedSubscription = null;
             _abilityExecutedSubscription?.Dispose();
@@ -154,9 +158,8 @@ namespace Project.Scripts.Services.Combat
                 UnitDescriptor.Hero(e.Side, e.SlotIndex, GetSourceActionType(e.Side, e.SlotIndex)),
                 occurredAtTick: ResolveOccurredAtTick(e.OccurredAtTick)));
 
-            var owner = UnitDescriptor.Hero(e.Side, e.SlotIndex, GetSourceActionType(e.Side, e.SlotIndex));
+            _engine.ResetOwnerProgress(e.Side, e.SlotIndex);
             var passiveDisabled = _engine.DisableOwner(e.Side, e.SlotIndex);
-            var buffsChanged = _buffService.RemoveByUnit(owner);
 
             if (passiveDisabled)
             {
@@ -164,16 +167,29 @@ namespace Project.Scripts.Services.Combat
                 _eventBus.Publish(new HeroPassiveDisabledEvent(e.Side, e.SlotIndex));
             }
 
-            if (buffsChanged)
-            {
-                _eventBus.Publish(new BuffsChangedEvent());
-                PublishAllAbilityStatsChanged();
-                RefreshAllSlotKindPassiveStates();
-                return;
-            }
-
-            if (passiveDisabled)
+            var buffsChanged = RunOwnerBuffCleanup(e.Side, e.SlotIndex);
+            if (false == buffsChanged && passiveDisabled)
                 RefreshSlotKindPassiveState(e.Side, e.SlotIndex);
+        }
+
+        private void OnHeroResurrected(HeroResurrectedEvent e)
+        {
+            _engine.ResetOwnerProgress(e.Side, e.SlotIndex);
+            ClearPendingActivations(e.Side, e.SlotIndex);
+            RunOwnerBuffCleanup(e.Side, e.SlotIndex);
+        }
+
+        private bool RunOwnerBuffCleanup(BattleSide side, int slotIndex)
+        {
+            var owner = UnitDescriptor.Hero(side, slotIndex, GetSourceActionType(side, slotIndex));
+            if (false == _buffService.RemoveByUnit(owner))
+                return false;
+
+            _eventBus.Publish(new BuffsChangedEvent());
+            PublishAllAbilityStatsChanged();
+            RefreshAllSlotKindPassiveStates();
+
+            return true;
         }
 
         private void RemoveBuffsForUnit(UnitDescriptor unit)
