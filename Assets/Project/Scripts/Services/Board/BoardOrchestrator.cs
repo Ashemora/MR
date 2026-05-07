@@ -41,6 +41,7 @@ namespace Project.Scripts.Services.Board
         private readonly SpecialTileResolver _specialTileResolver;
         private readonly SwapComboResolver _swapComboResolver;
         private readonly IBombRadiusModifierService _bombRadiusModifierService;
+        private readonly ILineRuneModifierService _lineRuneModifierService;
         private readonly DebugConfig _debugConfig;
         private bool _isProcessing;
 
@@ -50,7 +51,8 @@ namespace Project.Scripts.Services.Board
             IMoveChecker moveChecker, CascadeEnergyConfig cascadeEnergyConfig,
             IGameStateService gameStateService, IBoardRuntimeService boardRuntimeService, IMoveBarService moveBarService,
             SpecialTileResolver specialTileResolver, SwapComboResolver swapComboResolver,
-            IBombRadiusModifierService bombRadiusModifierService, DebugConfig debugConfig)
+            IBombRadiusModifierService bombRadiusModifierService, ILineRuneModifierService lineRuneModifierService,
+            DebugConfig debugConfig)
         {
             _eventBus = eventBus;
             _state = state;
@@ -67,6 +69,7 @@ namespace Project.Scripts.Services.Board
             _specialTileResolver = specialTileResolver;
             _swapComboResolver = swapComboResolver;
             _bombRadiusModifierService = bombRadiusModifierService;
+            _lineRuneModifierService = lineRuneModifierService;
             _debugConfig = debugConfig;
         }
 
@@ -311,12 +314,13 @@ namespace Project.Scripts.Services.Board
                     var bombPos = kindA == TileKind.Bomb ? posA : posB;
                     var bombTile = kindA == TileKind.Bomb ? tileA : tileB;
                     var radius = GetBombRadius(bombTile, BattleSide.Player);
-                    await ExecuteBombLineCombo(posA, posB, bombPos, radius, runtimeVersion);
+                    var lineThicknessBonus = GetLineRuneThicknessBonus(BattleSide.Player);
+                    await ExecuteBombLineCombo(posA, posB, bombPos, radius, lineThicknessBonus, runtimeVersion);
                     break;
                 }
 
                 case SwapComboType.LineLine:
-                    await ExecuteLineLineCombo(posA, posB, runtimeVersion);
+                    await ExecuteLineLineCombo(posA, posB, GetLineRuneThicknessBonus(BattleSide.Player), runtimeVersion);
                     break;
             }
         }
@@ -389,7 +393,7 @@ namespace Project.Scripts.Services.Board
         }
 
         private async UniTask ExecuteBombLineCombo(GridPoint posA, GridPoint posB,
-            GridPoint bombPos, int bombRadius, int runtimeVersion)
+            GridPoint bombPos, int bombRadius, int lineThicknessBonus, int runtimeVersion)
         {
             if (false == CanContinueFlow(runtimeVersion))
                 return;
@@ -400,18 +404,14 @@ namespace Project.Scripts.Services.Board
                 return;
 
             var area = new HashSet<GridPoint>(_state.GetNeighboursInRadius(bombPos, bombRadius));
-            var row = _state.GetAllInRow(bombPos.Y);
-            for (var i = 0; i < row.Count; i++)
-                area.Add(row[i]);
-
-            var ps = _state.GetAllInColumn(bombPos.X);
-            for (var i = 0; i < ps.Count; i++)
-                area.Add(ps[i]);
+            AddLineArea(area, bombPos, LineClearOrientation.Horizontal, lineThicknessBonus);
+            AddLineArea(area, bombPos, LineClearOrientation.Vertical, lineThicknessBonus);
 
             await _gridOps.ActivateTiles(new List<GridPoint>(area));
         }
 
-        private async UniTask ExecuteLineLineCombo(GridPoint posA, GridPoint posB, int runtimeVersion)
+        private async UniTask ExecuteLineLineCombo(GridPoint posA, GridPoint posB, int lineThicknessBonus,
+            int runtimeVersion)
         {
             if (false == CanContinueFlow(runtimeVersion))
                 return;
@@ -421,12 +421,19 @@ namespace Project.Scripts.Services.Board
             if (false == CanContinueFlow(runtimeVersion))
                 return;
 
-            var cross = new HashSet<GridPoint>(_state.GetAllInRow(posA.Y));
-            var col = _state.GetAllInColumn(posA.X);
-            for (var i = 0; i < col.Count; i++)
-                cross.Add(col[i]);
+            var cross = new HashSet<GridPoint>();
+            AddLineArea(cross, posA, LineClearOrientation.Horizontal, lineThicknessBonus);
+            AddLineArea(cross, posA, LineClearOrientation.Vertical, lineThicknessBonus);
 
             await _gridOps.ActivateTiles(new List<GridPoint>(cross));
+        }
+
+        private void AddLineArea(HashSet<GridPoint> target, GridPoint origin, LineClearOrientation orientation,
+            int lineThicknessBonus)
+        {
+            var positions = LineClearRules.GetAffectedPositions(_state, origin, orientation, lineThicknessBonus);
+            for (var i = 0; i < positions.Count; i++)
+                target.Add(positions[i]);
         }
 
         private async UniTask RunPostActivationFlow(List<List<MatchResult>> waves, GridPoint pivotPosition, int runtimeVersion)
@@ -566,6 +573,11 @@ namespace Project.Scripts.Services.Board
 
             var baseRadius = bomb?.DoubleRadius ?? 2;
             return BombRadiusRules.GetEffectiveRadius(baseRadius, _bombRadiusModifierService.GetBombRadiusBonus(side));
+        }
+
+        private int GetLineRuneThicknessBonus(BattleSide side)
+        {
+            return _lineRuneModifierService.GetLineRuneThicknessBonus(side);
         }
 
         private void EnsureBoardStableAfterResolution()

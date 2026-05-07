@@ -153,6 +153,24 @@ namespace Project.Scripts.Shared.Passives
             return BuffRules.ToDisplayInt(result);
         }
 
+        public int GetLineRuneThicknessBonus(BattleSide side)
+        {
+            var result = 0f;
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.Kind != BuffKind.ModifyLineRuneThickness)
+                    continue;
+
+                if (buff.Target.Side != side)
+                    continue;
+
+                result = BuffRules.Apply(result, buff.Definition, buff.StackCount);
+            }
+
+            return BuffRules.ToDisplayInt(result);
+        }
+
         public int GetAbilityRepeatCount(UnitDescriptor source)
         {
             var result = 0f;

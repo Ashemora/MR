@@ -121,7 +121,7 @@ namespace Project.Scripts.Configs.Battle
 
         private ActivationConditionDefinition[] ToConditionDefinitions()
         {
-            if (_conditions == null || _conditions.Length == 0)
+            if (null == _conditions || _conditions.Length == 0)
                 return Array.Empty<ActivationConditionDefinition>();
 
             var result = new ActivationConditionDefinition[_conditions.Length];
@@ -165,7 +165,7 @@ namespace Project.Scripts.Configs.Battle
     [Serializable]
     public class BuffEffectConfig
     {
-        [Tooltip("Что меняет баф: ModifyAbilityPower = силу способности героя, ModifyActivationEnergyCost = стоимость активации, ModifyActivationCooldown = длительность cooldown активации героя, ModifyMatchEnergyBySlotKind = энергию от тайлов цвета слота владельца, ModifySpecialTileActivationEnergy = энергию от непосредственной активации спецтайлов, ModifyBombRadius = радиус действия бомб стороны цели, RepeatAbilityApplication = количество дополнительных применений способности героя к той же цели, NextAttackDamage = урон следующей атаки цели, ApplyAbilityToAdditionalTargets = применить способность героя к дополнительным подходящим целям")]
+        [Tooltip("Что меняет баф: ModifyAbilityPower = силу способности героя, ModifyActivationEnergyCost = стоимость активации, ModifyActivationCooldown = длительность cooldown активации героя, ModifyMatchEnergyBySlotKind = энергию от тайлов цвета слота владельца, ModifySpecialTileActivationEnergy = энергию от непосредственной активации спецтайлов, ModifyBombRadius = радиус действия бомб стороны цели, RepeatAbilityApplication = количество дополнительных применений способности героя к той же цели, NextAttackDamage = урон следующей атаки цели, ApplyAbilityToAdditionalTargets = применить способность героя к дополнительным подходящим целям, ModifyLineRuneThickness = дополнительные соседние ряды/столбцы при активации LineRune")]
         [SerializeField] private BuffKind _kind;
 
         [Tooltip("Как именно меняется числовой параметр")]

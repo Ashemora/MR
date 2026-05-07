@@ -10,7 +10,7 @@ namespace Project.Scripts.Services.Combat
     public class HeroBuffService : IBuffService, IEnergyGainModifierService, IHeroAbilityModifierService,
         IAbilityPowerModifierService, INextAttackBuffService, IBombRadiusModifierService,
         IHeroCooldownModifierService, INextActivationBuffService, IAbilityRepeatModifierService,
-        IAbilityAdditionalTargetModifierService
+        IAbilityAdditionalTargetModifierService, ILineRuneModifierService
     {
         public IReadOnlyList<BuffRuntimeState> Buffs => _engine.Buffs;
 
@@ -99,6 +99,11 @@ namespace Project.Scripts.Services.Combat
         public int GetBombRadiusBonus(BattleSide side)
         {
             return _engine.GetBombRadiusBonus(side);
+        }
+
+        public int GetLineRuneThicknessBonus(BattleSide side)
+        {
+            return _engine.GetLineRuneThicknessBonus(side);
         }
 
         public int GetRepeatCount(UnitDescriptor source)

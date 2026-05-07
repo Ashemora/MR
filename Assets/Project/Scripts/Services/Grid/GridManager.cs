@@ -30,13 +30,14 @@ namespace Project.Scripts.Services.Grid
         private readonly IBoardRuntimeService _boardRuntimeService;
         private readonly EventBus _eventBus;
         private readonly IBombRadiusModifierService _bombRadiusModifierService;
+        private readonly ILineRuneModifierService _lineRuneModifierService;
         private float _cellSize;
         private Vector3 _origin;
        
 
         public GridManager(LevelConfig levelConfig, GridConfig gridConfig, BoardAnimationConfig animConfig,
             TilePool pool, float cellSize, IBoardRuntimeService boardRuntimeService, EventBus eventBus,
-            IBombRadiusModifierService bombRadiusModifierService)
+            IBombRadiusModifierService bombRadiusModifierService, ILineRuneModifierService lineRuneModifierService)
         {
             _levelConfig = levelConfig;
             _gridConfig = gridConfig;
@@ -48,6 +49,7 @@ namespace Project.Scripts.Services.Grid
             _boardRuntimeService = boardRuntimeService;
             _eventBus = eventBus;
             _bombRadiusModifierService = bombRadiusModifierService;
+            _lineRuneModifierService = lineRuneModifierService;
         }
 
         // IGridView
@@ -569,7 +571,8 @@ namespace Project.Scripts.Services.Grid
 
         private TileDestructionContext CreateTileDestructionContext(BattleSide side)
         {
-            return new TileDestructionContext(side, _bombRadiusModifierService.GetBombRadiusBonus(side));
+            return new TileDestructionContext(side, _bombRadiusModifierService.GetBombRadiusBonus(side),
+                _lineRuneModifierService.GetLineRuneThicknessBonus(side));
         }
 
         private void ReInitTileAt(int x, int y, TileConfig config)

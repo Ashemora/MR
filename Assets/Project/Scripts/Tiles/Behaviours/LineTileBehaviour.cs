@@ -1,4 +1,5 @@
 using Project.Scripts.Shared;
+using Project.Scripts.Shared.Rules;
 using Project.Scripts.Shared.Tiles;
 using UnityEngine;
 
@@ -18,7 +19,9 @@ namespace Project.Scripts.Tiles.Behaviours
         public override void OnTileDestroyed(GridPoint gridPos, IGridState state, TileKind payloadKind,
             TileDestructionContext context)
         {
-            var positions = _isHorizontal ? state.GetAllInRow(gridPos.Y) : state.GetAllInColumn(gridPos.X);
+            var orientation = _isHorizontal ? LineClearOrientation.Horizontal : LineClearOrientation.Vertical;
+            var positions = LineClearRules.GetAffectedPositions(state, gridPos, orientation,
+                context.LineRuneThicknessBonus);
             state.ScheduleRemove(positions);
         }
     }

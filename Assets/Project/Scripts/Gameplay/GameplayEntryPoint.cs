@@ -86,6 +86,7 @@ namespace Project.Scripts.Gameplay
         private IHeroPassiveService _heroPassiveService;
         private IBuffService _buffService;
         private IBombRadiusModifierService _bombRadiusModifierService;
+        private ILineRuneModifierService _lineRuneModifierService;
         private HintService _hintService;
         private PassiveTileGlowService _passiveTileGlowService;
         private DebugConfig _debugConfig;
@@ -219,6 +220,7 @@ namespace Project.Scripts.Gameplay
             IHeroPassiveService heroPassiveService,
             IBuffService buffService,
             IBombRadiusModifierService bombRadiusModifierService,
+            ILineRuneModifierService lineRuneModifierService,
             DebugConfig debugConfig,
             IBoardAnnouncementService boardAnnouncementService)
         {
@@ -255,6 +257,7 @@ namespace Project.Scripts.Gameplay
             _heroPassiveService = heroPassiveService;
             _buffService = buffService;
             _bombRadiusModifierService = bombRadiusModifierService;
+            _lineRuneModifierService = lineRuneModifierService;
             _debugConfig = debugConfig;
             _boardAnnouncementService = boardAnnouncementService;
         }
@@ -311,7 +314,7 @@ namespace Project.Scripts.Gameplay
             var pool = new TilePool(_boardConfig.TilePrefab, _battleWorldLayout.TileContainer, _animConfig, worldLayout.TileCellSize, _boardConfig.TileFillPercent);
             var matchFinder = new MatchFinder(MatchRules.MinMatchLength);
             var gridManager = new GridManager(_levelConfig, _gridConfig, _animConfig, pool, worldLayout.TileCellSize,
-                _boardRuntimeService, _eventBus, _bombRadiusModifierService);
+                _boardRuntimeService, _eventBus, _bombRadiusModifierService, _lineRuneModifierService);
             gridManager.SetOrigin(ComputeGridOrigin(boardCenter, worldLayout.TileCellSize));
 
 #if UNITY_EDITOR
@@ -355,6 +358,7 @@ namespace Project.Scripts.Gameplay
                 specialTileResolver,
                 swapComboResolver,
                 _bombRadiusModifierService,
+                _lineRuneModifierService,
                 _debugConfig);
 
             _hintService = new HintService(_hintConfig, gridManager.State, gridManager, matchFinder,

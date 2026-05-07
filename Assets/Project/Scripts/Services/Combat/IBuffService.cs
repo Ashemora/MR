@@ -21,4 +21,9 @@ namespace Project.Scripts.Services.Combat
     {
         int GetBombRadiusBonus(BattleSide side);
     }
+
+    public interface ILineRuneModifierService
+    {
+        int GetLineRuneThicknessBonus(BattleSide side);
+    }
 }

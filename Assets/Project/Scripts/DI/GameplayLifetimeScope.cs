@@ -50,6 +50,7 @@ namespace Project.Scripts.DI
                 .As<IAbilityPowerModifierService>()
                 .As<INextAttackBuffService>()
                 .As<IBombRadiusModifierService>()
+                .As<ILineRuneModifierService>()
                 .As<IHeroCooldownModifierService>()
                 .As<INextActivationBuffService>()
                 .As<IAbilityRepeatModifierService>()

@@ -74,7 +74,8 @@ namespace Project.Scripts.Shared.Passives
         ModifyBombRadius,
         RepeatAbilityApplication,
         NextAttackDamage,
-        ApplyAbilityToAdditionalTargets
+        ApplyAbilityToAdditionalTargets,
+        ModifyLineRuneThickness
     }
 
     public enum BuffModifierOperation
