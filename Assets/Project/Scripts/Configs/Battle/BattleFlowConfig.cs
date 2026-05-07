@@ -22,6 +22,10 @@ namespace Project.Scripts.Configs.Battle
         [Tooltip("Максимальный запас энергии для каждой стороны боя")]
         [SerializeField] private int _energyCap = 250;
 
+        [Header("Cooldown settings")]
+        [Tooltip("Минимальная длительность кулдауна активируемого юнита после применения всех модификаторов. Ноль отключает нижний предел")]
+        [SerializeField] private float _minUnitActivationCooldownSeconds = 0.5f;
+
         [Header("PrePhase settings")]
         [Tooltip("Длительность подготовительной паузы перед фазой в секундах")]
         [SerializeField] private int _prePhaseDuration = 5;
@@ -46,5 +50,6 @@ namespace Project.Scripts.Configs.Battle
         public int CountdownThreshold => _countdownThreshold;
         public EnergyCarryoverMode EnergyCarryoverMode => _energyCarryoverMode;
         public int EnergyCap => Mathf.Max(1, _energyCap);
+        public float MinUnitActivationCooldownSeconds => Mathf.Max(0f, _minUnitActivationCooldownSeconds);
     }
 }

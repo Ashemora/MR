@@ -1,3 +1,4 @@
+using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
 
@@ -9,19 +10,17 @@ namespace Project.Scripts.Shared.Passives
         public BuffModifierOperation Operation { get; }
         public float Value { get; }
         public BuffLifetimeKind LifetimeKind { get; }
-        public int DurationRounds { get; }
         public BuffStackingMode StackingMode { get; }
         public bool IsConfigured => Kind != BuffKind.None;
 
 
         public BuffDefinition(BuffKind kind, BuffModifierOperation operation, float value, 
-            BuffLifetimeKind lifetimeKind, int durationRounds, BuffStackingMode stackingMode)
+            BuffLifetimeKind lifetimeKind, BuffStackingMode stackingMode)
         {
             Kind = kind;
             Operation = operation;
             Value = value;
             LifetimeKind = lifetimeKind;
-            DurationRounds = durationRounds < 0 ? 0 : durationRounds;
             StackingMode = stackingMode;
         }
     }
@@ -33,26 +32,33 @@ namespace Project.Scripts.Shared.Passives
         public TileKind SourceSlotKind { get; }
         public BuffDefinition Definition { get; }
         public int StackCount { get; }
-        public int ExpiresAtRound { get; }
+        public BattlePhaseKind ExpiresAfterMainPhase { get; }
 
 
         public BuffRuntimeState(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind,
-            BuffDefinition definition, int stackCount, int currentRound)
+            BuffDefinition definition, int stackCount, int currentRound, BattlePhaseKind currentPhase)
         {
             Source = source;
             Target = target;
             SourceSlotKind = sourceSlotKind;
             Definition = definition;
             StackCount = stackCount < 1 ? 1 : stackCount;
-            ExpiresAtRound = definition.LifetimeKind == BuffLifetimeKind.Rounds
-                ? currentRound + definition.DurationRounds
-                : 0;
+            ExpiresAfterMainPhase = definition.LifetimeKind == BuffLifetimeKind.UntilEndOfNextMainPhase
+                ? GetNextMainPhase(currentPhase)
+                : default;
         }
 
-        public BuffRuntimeState WithStackAdded(int amount, int currentRound)
+        public BuffRuntimeState WithStackAdded(int amount, int currentRound, BattlePhaseKind currentPhase)
         {
             return new BuffRuntimeState(Source, Target, SourceSlotKind, Definition, StackCount + amount,
-                currentRound);
+                currentRound, currentPhase);
+        }
+
+        private static BattlePhaseKind GetNextMainPhase(BattlePhaseKind currentPhase)
+        {
+            return currentPhase == BattlePhaseKind.Hero
+                ? BattlePhaseKind.Match
+                : BattlePhaseKind.Hero;
         }
     }
     
@@ -67,7 +73,8 @@ namespace Project.Scripts.Shared.Passives
         ModifySpecialTileActivationEnergy,
         ModifyBombRadius,
         RepeatAbilityApplication,
-        NextAttackDamage
+        NextAttackDamage,
+        ApplyAbilityToAdditionalTargets
     }
 
     public enum BuffModifierOperation
@@ -79,10 +86,10 @@ namespace Project.Scripts.Shared.Passives
 
     public enum BuffLifetimeKind
     {
-        Battle,
-        Rounds,
-        NextAttack,
-        NextActivation
+        Battle = 0,
+        NextAttack = 2,
+        NextActivation = 3,
+        UntilEndOfNextMainPhase = 4
     }
 
     public enum BuffStackingMode

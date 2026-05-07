@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
 
@@ -7,6 +8,7 @@ namespace Project.Scripts.Shared.Passives
     public class BuffEngine
     {
         private const int MaxRepeatAbilityApplications = 10;
+        private const int MaxAdditionalAbilityTargets = 10;
 
 
         public IReadOnlyList<BuffRuntimeState> Buffs => _buffs;
@@ -16,7 +18,7 @@ namespace Project.Scripts.Shared.Passives
 
 
         public bool AddBuff(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind, BuffDefinition definition,
-            int currentRound)
+            int currentRound, BattlePhaseKind currentPhase)
         {
             if (false == definition.IsConfigured)
                 return false;
@@ -29,11 +31,12 @@ namespace Project.Scripts.Shared.Passives
                 if (definition.StackingMode == BuffStackingMode.IgnoreNew)
                     return false;
 
-                _buffs[i] = _buffs[i].WithStackAdded(1, currentRound);
+                _buffs[i] = _buffs[i].WithStackAdded(1, currentRound, currentPhase);
                 return true;
             }
 
-            _buffs.Add(new BuffRuntimeState(source, target, sourceSlotKind, definition, 1, currentRound));
+            _buffs.Add(new BuffRuntimeState(source, target, sourceSlotKind, definition, 1, currentRound,
+                currentPhase));
             
             return true;
         }
@@ -54,16 +57,19 @@ namespace Project.Scripts.Shared.Passives
             return removed;
         }
 
-        public bool ExpireRoundLimitedBuffs(int currentRound)
+        public bool ExpireUntilEndOfNextMainPhaseBuffs(BattlePhaseKind previousPhase, BattlePhaseKind nextPhase)
         {
+            if (IsMainPhase(previousPhase) == false || previousPhase == nextPhase)
+                return false;
+
             var removed = false;
             for (var i = _buffs.Count - 1; i >= 0; i--)
             {
                 var buff = _buffs[i];
-                if (buff.Definition.LifetimeKind != BuffLifetimeKind.Rounds || buff.ExpiresAtRound <= 0)
+                if (buff.Definition.LifetimeKind != BuffLifetimeKind.UntilEndOfNextMainPhase)
                     continue;
 
-                if (currentRound < buff.ExpiresAtRound)
+                if (buff.ExpiresAfterMainPhase != previousPhase)
                     continue;
 
                 _buffs.RemoveAt(i);
@@ -167,7 +173,32 @@ namespace Project.Scripts.Shared.Passives
                 return 0;
 
             var repeatCount = (int)result;
+            
             return repeatCount > MaxRepeatAbilityApplications ? MaxRepeatAbilityApplications : repeatCount;
+        }
+
+        public int GetAdditionalAbilityTargetCount(UnitDescriptor source)
+        {
+            var result = 0f;
+            var sourceKey = BattleUnitKey.FromDescriptor(source);
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.Kind != BuffKind.ApplyAbilityToAdditionalTargets)
+                    continue;
+
+                if (BattleUnitKey.FromDescriptor(buff.Target) != sourceKey)
+                    continue;
+
+                result = BuffRules.Apply(result, buff.Definition, buff.StackCount);
+            }
+
+            if (result <= 0f)
+                return 0;
+
+            var targetCount = (int)result;
+            
+            return targetCount > MaxAdditionalAbilityTargets ? MaxAdditionalAbilityTargets : targetCount;
         }
 
         public int GetNextAttackDamage(UnitDescriptor source)
@@ -285,8 +316,12 @@ namespace Project.Scripts.Shared.Passives
                    && buff.Definition.Operation == definition.Operation
                    && buff.Definition.Value.Equals(definition.Value)
                    && buff.Definition.LifetimeKind == definition.LifetimeKind
-                   && buff.Definition.DurationRounds == definition.DurationRounds
                    && buff.Definition.StackingMode == definition.StackingMode;
+        }
+
+        private static bool IsMainPhase(BattlePhaseKind phase)
+        {
+            return phase is BattlePhaseKind.Match or BattlePhaseKind.Hero;
         }
     }
 }

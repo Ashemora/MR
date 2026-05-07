@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Energy;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Passives;
@@ -8,7 +9,8 @@ namespace Project.Scripts.Services.Combat
 {
     public class HeroBuffService : IBuffService, IEnergyGainModifierService, IHeroAbilityModifierService,
         IAbilityPowerModifierService, INextAttackBuffService, IBombRadiusModifierService,
-        IHeroCooldownModifierService, INextActivationBuffService, IAbilityRepeatModifierService
+        IHeroCooldownModifierService, INextActivationBuffService, IAbilityRepeatModifierService,
+        IAbilityAdditionalTargetModifierService
     {
         public IReadOnlyList<BuffRuntimeState> Buffs => _engine.Buffs;
 
@@ -17,9 +19,9 @@ namespace Project.Scripts.Services.Combat
 
 
         public bool AddBuff(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind, BuffDefinition definition,
-            int currentRound)
+            int currentRound, BattlePhaseKind currentPhase)
         {
-            return _engine.AddBuff(source, target, sourceSlotKind, definition, currentRound);
+            return _engine.AddBuff(source, target, sourceSlotKind, definition, currentRound, currentPhase);
         }
 
         public bool RemoveByUnit(UnitDescriptor unit)
@@ -27,9 +29,9 @@ namespace Project.Scripts.Services.Combat
             return _engine.RemoveByUnit(unit);
         }
 
-        public bool ExpireRoundLimitedBuffs(int currentRound)
+        public bool ExpireUntilEndOfNextMainPhaseBuffs(BattlePhaseKind previousPhase, BattlePhaseKind nextPhase)
         {
-            return _engine.ExpireRoundLimitedBuffs(currentRound);
+            return _engine.ExpireUntilEndOfNextMainPhaseBuffs(previousPhase, nextPhase);
         }
 
         public bool HasMatchEnergyBuff(BattleSide side, TileKind tileKind)
@@ -104,6 +106,11 @@ namespace Project.Scripts.Services.Combat
             return _engine.GetAbilityRepeatCount(source);
         }
 
+        public int GetAdditionalTargetCount(UnitDescriptor source)
+        {
+            return _engine.GetAdditionalAbilityTargetCount(source);
+        }
+
         public int Get(UnitDescriptor source)
         {
             return _engine.GetNextAttackDamage(source);
@@ -122,10 +129,10 @@ namespace Project.Scripts.Services.Combat
         public void Grant(IReadOnlyList<UnitDescriptor> targets, int amount)
         {
             var definition = new BuffDefinition(BuffKind.NextAttackDamage, BuffModifierOperation.AddFlat,
-                amount, BuffLifetimeKind.NextAttack, 0, BuffStackingMode.Stack);
+                amount, BuffLifetimeKind.NextAttack, BuffStackingMode.Stack);
 
             for (var i = 0; i < targets.Count; i++)
-                _engine.AddBuff(targets[i], targets[i], TileKind.None, definition, 0);
+                _engine.AddBuff(targets[i], targets[i], TileKind.None, definition, 0, BattlePhaseKind.Hero);
         }
     }
 }

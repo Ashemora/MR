@@ -265,8 +265,10 @@ namespace Project.Scripts.Services.Combat
 
         private void OnBattleFlowPhaseChanged(BattleFlowPhaseChangedEvent e)
         {
+            var previousPhase = _currentPhase;
             _currentPhase = e.Phase;
             ResetTimeWindowProgress();
+            ExpireUntilEndOfNextMainPhaseBuffs(previousPhase, e.Phase);
 
             if (e.Phase == BattlePhaseKind.Match)
             {
@@ -289,6 +291,16 @@ namespace Project.Scripts.Services.Combat
             }
         }
 
+        private void ExpireUntilEndOfNextMainPhaseBuffs(BattlePhaseKind previousPhase, BattlePhaseKind nextPhase)
+        {
+            if (false == _buffService.ExpireUntilEndOfNextMainPhaseBuffs(previousPhase, nextPhase))
+                return;
+
+            _eventBus.Publish(new BuffsChangedEvent());
+            PublishAllAbilityStatsChanged();
+            RefreshAllSlotKindPassiveStates();
+        }
+
         private void ResetTimeWindowProgress()
         {
             _engine.ResetActivationConditionProgress(ActivationConditionKind.UnitActivationsInTimeWindow,
@@ -308,12 +320,6 @@ namespace Project.Scripts.Services.Combat
         private void OnBattleFlowRoundChanged(BattleFlowRoundChangedEvent e)
         {
             _currentRound = e.CurrentRound;
-            if (false == _buffService.ExpireRoundLimitedBuffs(_currentRound))
-                return;
-
-            _eventBus.Publish(new BuffsChangedEvent());
-            PublishAllAbilityStatsChanged();
-            RefreshAllSlotKindPassiveStates();
         }
 
         private ActivationConditionEvent CreateAbilityActivatedEvent(ActivationConditionKind kind,
@@ -469,10 +475,11 @@ namespace Project.Scripts.Services.Combat
             for (var i = 0; i < entries.Count; i++)
             {
                 var entry = entries[i];
-                var targets = UnitTargetingRules.SelectTargets(entry.Targeting, source, CollectCandidates());
+                var targets = UnitTargetingRules.SelectTargets(entry.EffectRecipients, source, CollectCandidates());
                 for (var j = 0; j < targets.Count; j++)
                 {
-                    if (_buffService.AddBuff(source, targets[j], state.SlotKind, entry.Buff, _currentRound))
+                    if (_buffService.AddBuff(source, targets[j], state.SlotKind, entry.Buff, _currentRound,
+                            _currentPhase))
                     {
                         buffsChanged = true;
                         PublishAbilityStatsChanged(targets[j]);

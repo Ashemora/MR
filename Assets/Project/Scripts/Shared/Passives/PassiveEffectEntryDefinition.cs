@@ -2,14 +2,14 @@ namespace Project.Scripts.Shared.Passives
 {
     public readonly struct PassiveEffectEntryDefinition
     {
-        public UnitTargetingDefinition Targeting { get; }
+        public UnitTargetingDefinition EffectRecipients { get; }
         public BuffDefinition Buff { get; }
         public bool IsConfigured => Buff.IsConfigured;
 
 
-        public PassiveEffectEntryDefinition(UnitTargetingDefinition targeting, BuffDefinition buff)
+        public PassiveEffectEntryDefinition(UnitTargetingDefinition effectRecipients, BuffDefinition buff)
         {
-            Targeting = targeting;
+            EffectRecipients = effectRecipients;
             Buff = buff;
         }
     }

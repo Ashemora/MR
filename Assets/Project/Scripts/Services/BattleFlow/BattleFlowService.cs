@@ -33,7 +33,8 @@ namespace Project.Scripts.Services.BattleFlow
                 _config.PrePhaseDuration,
                 _config.EnablePrePhaseOnBattleStart,
                 _config.CountdownThreshold,
-                _config.EnergyCarryoverMode);
+                _config.EnergyCarryoverMode,
+                _config.MinUnitActivationCooldownSeconds);
 
             _engine.Initialize(settings);
             IsInitialized = true;

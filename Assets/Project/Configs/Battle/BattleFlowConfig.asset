@@ -17,6 +17,7 @@ MonoBehaviour:
   _heroPhaseDuration: 30
   _energyCarryoverMode: 0
   _energyCap: 150
+  _minUnitActivationCooldownSeconds: 0.5
   _prePhaseDuration: 2
   _dimCurrentPhaseDuringPrePhase: 1
   _enablePrePhaseOnBattleStart: 1

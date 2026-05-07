@@ -9,6 +9,7 @@ namespace Project.Scripts.Shared.BattleFlow
         public bool EnablePrePhaseOnBattleStart { get; }
         public int CountdownThreshold { get; }
         public EnergyCarryoverMode EnergyCarryoverMode { get; }
+        public float MinUnitActivationCooldownSeconds { get; }
 
 
         public BattleFlowSettings(
@@ -18,7 +19,8 @@ namespace Project.Scripts.Shared.BattleFlow
             int prePhaseDuration,
             bool enablePrePhaseOnBattleStart,
             int countdownThreshold,
-            EnergyCarryoverMode energyCarryoverMode)
+            EnergyCarryoverMode energyCarryoverMode,
+            float minUnitActivationCooldownSeconds)
         {
             RoundCount = roundCount < 1 ? 1 : roundCount;
             MatchPhaseDuration = matchPhaseDuration < 0f ? 0f : matchPhaseDuration;
@@ -27,6 +29,9 @@ namespace Project.Scripts.Shared.BattleFlow
             EnablePrePhaseOnBattleStart = enablePrePhaseOnBattleStart;
             CountdownThreshold = countdownThreshold < 0 ? 0 : countdownThreshold;
             EnergyCarryoverMode = energyCarryoverMode;
+            MinUnitActivationCooldownSeconds = minUnitActivationCooldownSeconds < 0f
+                ? 0f
+                : minUnitActivationCooldownSeconds;
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Clock;
@@ -10,6 +11,8 @@ namespace Project.Scripts.Services.Combat
     {
         int Apply(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType, int value,
             int repeatCount, long occurredAtTick);
+        int ApplyAdditionalTargets(UnitDescriptor source, IReadOnlyList<UnitDescriptor> targets,
+            HeroActionType actionType, int value, long occurredAtTick);
     }
 
     public class AbilityApplicationService : IAbilityApplicationService
@@ -48,6 +51,28 @@ namespace Project.Scripts.Services.Combat
                 ApplySingle(target, actionType, value);
                 _eventBus.Publish(new AbilityApplicationEvent(source, target, actionType, value, applicationIndex,
                     applicationIndex > 0, applicationIndex * RepeatApplicationDelaySeconds, occurredAtTick));
+                appliedCount++;
+            }
+
+            return appliedCount;
+        }
+
+        public int ApplyAdditionalTargets(UnitDescriptor source, IReadOnlyList<UnitDescriptor> targets,
+            HeroActionType actionType, int value, long occurredAtTick)
+        {
+            if (value <= 0 || targets == null)
+                return 0;
+
+            var appliedCount = 0;
+            for (var i = 0; i < targets.Count; i++)
+            {
+                var target = targets[i];
+                if (false == CanApply(target))
+                    continue;
+
+                ApplySingle(target, actionType, value);
+                _eventBus.Publish(new AbilityApplicationEvent(source, target, actionType, value, i + 1,
+                    true, 0f, occurredAtTick));
                 appliedCount++;
             }
 
@@ -110,6 +135,7 @@ namespace Project.Scripts.Services.Combat
         private readonly IHeroAbilityModifierService _heroAbilityModifierService;
         private readonly INextAttackBuffService _nextAttackBuffService;
         private readonly IAbilityRepeatModifierService _abilityRepeatModifierService;
+        private readonly IAbilityAdditionalTargetModifierService _abilityAdditionalTargetModifierService;
         private readonly IAbilityApplicationService _abilityApplicationService;
         private readonly EventBus _eventBus;
         private readonly IBattleClock _battleClock;
@@ -126,6 +152,7 @@ namespace Project.Scripts.Services.Combat
             IHeroAbilityModifierService heroAbilityModifierService,
             INextAttackBuffService nextAttackBuffService,
             IAbilityRepeatModifierService abilityRepeatModifierService,
+            IAbilityAdditionalTargetModifierService abilityAdditionalTargetModifierService,
             IAbilityApplicationService abilityApplicationService,
             EventBus eventBus,
             IBattleClock battleClock)
@@ -140,6 +167,7 @@ namespace Project.Scripts.Services.Combat
             _heroAbilityModifierService = heroAbilityModifierService;
             _nextAttackBuffService = nextAttackBuffService;
             _abilityRepeatModifierService = abilityRepeatModifierService;
+            _abilityAdditionalTargetModifierService = abilityAdditionalTargetModifierService;
             _abilityApplicationService = abilityApplicationService;
             _eventBus = eventBus;
             _battleClock = battleClock;
@@ -169,6 +197,8 @@ namespace Project.Scripts.Services.Combat
                     isTargetAlive, isTargetHpFull, isTargetExposed))
                 return;
 
+            var additionalTargets = SelectAdditionalTargets(source, target, sourceActionType);
+
             if (false == TryCommitSource(source, out var actionType, out var actionValue))
                 return;
 
@@ -177,6 +207,8 @@ namespace Project.Scripts.Services.Combat
 
             _abilityApplicationService.Apply(source, target, actionType, actionValue,
                 GetRepeatCount(source), _battleClock.CurrentTick);
+            _abilityApplicationService.ApplyAdditionalTargets(source, additionalTargets, actionType, actionValue,
+                _battleClock.CurrentTick);
             _eventBus.Publish(new AbilityExecutedEvent(source, target, actionType, actionValue,
                 _battleClock.CurrentTick));
         }
@@ -292,6 +324,49 @@ namespace Project.Scripts.Services.Combat
         private int GetRepeatCount(UnitDescriptor source)
         {
             return source.Kind == UnitKind.Hero ? _abilityRepeatModifierService.GetRepeatCount(source) : 0;
+        }
+
+        private int GetAdditionalTargetCount(UnitDescriptor source)
+        {
+            return source.Kind == UnitKind.Hero
+                ? _abilityAdditionalTargetModifierService.GetAdditionalTargetCount(source)
+                : 0;
+        }
+
+        private List<UnitDescriptor> SelectAdditionalTargets(UnitDescriptor source, UnitDescriptor primaryTarget,
+            HeroActionType actionType)
+        {
+            return AbilityAdditionalTargetRules.SelectTargets(source, primaryTarget, actionType,
+                GetAdditionalTargetCount(source), CollectTargetCandidates());
+        }
+
+        private List<AbilityTargetCandidate> CollectTargetCandidates()
+        {
+            var result = new List<AbilityTargetCandidate>(10)
+            {
+                new(UnitDescriptor.Avatar(BattleSide.Player, HeroActionType.DealDamage),
+                    _playerState.CurrentHP, _playerState.MaxHP, _playerState.CurrentHP > 0,
+                    _groupDefense.IsExposed(BattleSide.Player)),
+                new(UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.DealDamage),
+                    _enemyState.CurrentHP, _enemyState.MaxHP, _enemyState.CurrentHP > 0,
+                    _groupDefense.IsExposed(BattleSide.Enemy))
+            };
+
+            AddHeroTargetCandidates(result, BattleSide.Player);
+            AddHeroTargetCandidates(result, BattleSide.Enemy);
+
+            return result;
+        }
+
+        private void AddHeroTargetCandidates(List<AbilityTargetCandidate> result, BattleSide side)
+        {
+            var slots = _heroService.GetSlots(side);
+            for (var i = 0; i < slots.Count; i++)
+            {
+                var slot = slots[i];
+                result.Add(new AbilityTargetCandidate(UnitDescriptor.Hero(side, i, slot.ActionType),
+                    slot.CurrentHP, slot.MaxHP, slot is { IsAssigned: true, IsAlive: true }, true));
+            }
         }
     }
 }

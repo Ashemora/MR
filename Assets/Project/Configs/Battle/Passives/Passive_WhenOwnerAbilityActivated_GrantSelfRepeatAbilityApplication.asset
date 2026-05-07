@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 11a1f4e56449459d95b723f4f66adfde, type: 3}
-  m_Name: Passive_AlliesAttackBoost
+  m_Name: Passive_WhenOwnerAbilityActivated_GrantSelfRepeatAbilityApplication
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroPassiveConfig
-  _id: allies_attack_boost
-  _displayName: Allies Attack Boost
+  _id: when_owner_ability_activated_grant_self_repeat_ability_application
+  _displayName: When Owner Ability Activated Grant Self Repeat Ability Application
   _activationConditionGroup:
     _operator: 0
     _conditions:
@@ -21,19 +21,18 @@ MonoBehaviour:
       _subject: 0
       _requiredCount: 1
   _effectEntries:
-  - _targeting:
-      _scope: 1
+  - _effectRecipients:
+      _scope: 0
       _relation: 0
-      _unitKind: 1
+      _unitKind: 0
       _includeOwner: 1
       _selectionMode: 0
       _filters: []
     _buff:
-      _kind: 1
+      _kind: 7
       _operation: 1
-      _value: 3
-      _lifetimeKind: 3
-      _durationRounds: 0
-      _stackingMode: 0
-  _canActivateWhileActive: 1
+      _value: 1
+      _lifetimeKind: 4
+      _stackingMode: 1
+  _canActivateWhileActive: 0
   _maxActivations: 0

@@ -165,7 +165,7 @@ namespace Project.Scripts.Configs.Battle
     [Serializable]
     public class BuffEffectConfig
     {
-        [Tooltip("Что меняет баф: ModifyAbilityPower = силу способности героя, ModifyActivationEnergyCost = стоимость активации, ModifyActivationCooldown = длительность cooldown активации героя, ModifyMatchEnergyBySlotKind = энергию от тайлов цвета слота владельца, ModifySpecialTileActivationEnergy = энергию от непосредственной активации спецтайлов, ModifyBombRadius = радиус действия бомб стороны цели, RepeatAbilityApplication = количество дополнительных применений способности героя к той же цели, NextAttackDamage = урон следующей атаки цели")]
+        [Tooltip("Что меняет баф: ModifyAbilityPower = силу способности героя, ModifyActivationEnergyCost = стоимость активации, ModifyActivationCooldown = длительность cooldown активации героя, ModifyMatchEnergyBySlotKind = энергию от тайлов цвета слота владельца, ModifySpecialTileActivationEnergy = энергию от непосредственной активации спецтайлов, ModifyBombRadius = радиус действия бомб стороны цели, RepeatAbilityApplication = количество дополнительных применений способности героя к той же цели, NextAttackDamage = урон следующей атаки цели, ApplyAbilityToAdditionalTargets = применить способность героя к дополнительным подходящим целям")]
         [SerializeField] private BuffKind _kind;
 
         [Tooltip("Как именно меняется числовой параметр")]
@@ -174,11 +174,8 @@ namespace Project.Scripts.Configs.Battle
         [Tooltip("Значение бафа")]
         [SerializeField] private float _value;
 
-        [Tooltip("Когда баф снимается: Battle = до конца боя, Rounds = через указанное число раундов, NextAttack = после следующей атаки цели")]
+        [Tooltip("Когда баф снимается: Battle = до конца боя, NextAttack = после следующей атаки цели, NextActivation = после следующей активации цели, UntilEndOfNextMainPhase = до конца следующей Match/Hero фазы")]
         [SerializeField] private BuffLifetimeKind _lifetimeKind = BuffLifetimeKind.Battle;
-
-        [Tooltip("Сколько раундов действует баф, если выбран lifetime Rounds")]
-        [SerializeField] private int _durationRounds;
 
         [Tooltip("Stack = повторное наложение усиливает баф. IgnoreNew = новый такой же баф игнорируется, пока старый активен")]
         [SerializeField] private BuffStackingMode _stackingMode = BuffStackingMode.Stack;
@@ -186,15 +183,15 @@ namespace Project.Scripts.Configs.Battle
 
         public BuffDefinition ToDefinition()
         {
-            return new BuffDefinition(_kind, _operation, _value, _lifetimeKind, _durationRounds, _stackingMode);
+            return new BuffDefinition(_kind, _operation, _value, _lifetimeKind, _stackingMode);
         }
     }
 
     [Serializable]
     public class PassiveEffectEntryConfig
     {
-        [Tooltip("Кого выбирает эта запись эффекта")]
-        [SerializeField] private UnitTargetingConfig _targeting;
+        [Tooltip("Кто получает эффект или баф этой записи")]
+        [SerializeField] private UnitTargetingConfig _effectRecipients;
 
         [Tooltip("Какой баф накладывается на выбранные цели")]
         [SerializeField] private BuffEffectConfig _buff;
@@ -203,7 +200,7 @@ namespace Project.Scripts.Configs.Battle
         public PassiveEffectEntryDefinition ToDefinition()
         {
             return new PassiveEffectEntryDefinition(
-                null != _targeting ? _targeting.ToDefinition() : default,
+                null != _effectRecipients ? _effectRecipients.ToDefinition() : default,
                 null != _buff ? _buff.ToDefinition() : default);
         }
     }
