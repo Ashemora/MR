@@ -1,4 +1,4 @@
-using Project.Scripts.Shared.Tiles;
+using Project.Scripts.Shared.Energy;
 using UnityEngine;
 
 namespace Project.Scripts.Configs.Battle
@@ -31,18 +31,17 @@ namespace Project.Scripts.Configs.Battle
         [Tooltip("Множитель энергии от тайлов, уничтоженных штормом")]
         [SerializeField] private float _stormEnergyMultiplier = 1f;
 
-
-        public float CascadeMultiplierStep => _cascadeMultiplierStep;
-        public float MultiMatchMultiplier => _multiMatchMultiplier;
-        public float LShapeMultiplier => _lShapeMultiplier;
-        public float TShapeMultiplier => _tShapeMultiplier;
-
-        public float GetSpecialTileMultiplier(TileKind kind) => kind switch
+        
+        public CascadeEnergySettings ToSettings()
         {
-            TileKind.Bomb => _bombEnergyMultiplier,
-            TileKind.LineRuneH or TileKind.LineRuneV => _lineRuneEnergyMultiplier,
-            TileKind.Storm => _stormEnergyMultiplier,
-            _ => 1f
-        };
+            return new CascadeEnergySettings(
+                _cascadeMultiplierStep,
+                _multiMatchMultiplier,
+                _lShapeMultiplier,
+                _tShapeMultiplier,
+                _bombEnergyMultiplier,
+                _lineRuneEnergyMultiplier,
+                _stormEnergyMultiplier);
+        }
     }
 }

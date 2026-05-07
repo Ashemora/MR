@@ -139,6 +139,7 @@ namespace Project.Scripts.Services.Board
                 var waves = new List<List<MatchResult>>();
                 var matchEnergyByKind = new Dictionary<TileKind, float>();
                 var specialActivationEnergyByKind = new Dictionary<TileKind, float>();
+                var energySettings = _cascadeEnergyConfig.ToSettings();
                 var moveUsed = false;
 
                 if (fromIsSpecial && toIsSpecial)
@@ -157,9 +158,10 @@ namespace Project.Scripts.Services.Board
                     var stateAfter = _state.GetGridState();
 
                     _eventBus.Publish(new BombActivatedEvent());
-                    var comboMultiplier = _cascadeEnergyConfig.GetSpecialTileMultiplier(fromKind)
-                                         * _cascadeEnergyConfig.GetSpecialTileMultiplier(toKind);
-                    AccumulateGridDiffEnergy(stateBefore, stateAfter, specialActivationEnergyByKind, comboMultiplier);
+                    var comboMultiplier = energySettings.GetSpecialTileMultiplier(fromKind)
+                                         * energySettings.GetSpecialTileMultiplier(toKind);
+                    MatchEnergyRules.AccumulateGridDiffEnergy(stateBefore, stateAfter, specialActivationEnergyByKind,
+                        comboMultiplier);
                     energySourcePositions.CollectFromGridDiff(stateBefore, stateAfter, _view);
 
                     await RunPostActivationFlow(waves, request.PivotPosition, runtimeVersion);
@@ -201,8 +203,9 @@ namespace Project.Scripts.Services.Board
                     var stateAfter = _state.GetGridState();
 
                     _eventBus.Publish(new BombActivatedEvent());
-                    var specialMultiplier = _cascadeEnergyConfig.GetSpecialTileMultiplier(specialTile.Config.Kind);
-                    AccumulateGridDiffEnergy(stateBefore, stateAfter, specialActivationEnergyByKind, specialMultiplier);
+                    var specialMultiplier = energySettings.GetSpecialTileMultiplier(specialTile.Config.Kind);
+                    MatchEnergyRules.AccumulateGridDiffEnergy(stateBefore, stateAfter, specialActivationEnergyByKind,
+                        specialMultiplier);
                     energySourcePositions.CollectFromGridDiff(stateBefore, stateAfter, _view);
 
                     await RunPostActivationFlow(waves, request.PivotPosition, runtimeVersion);
@@ -239,7 +242,7 @@ namespace Project.Scripts.Services.Board
                     }
                 }
 
-                AccumulateMatchEnergy(waves, _cascadeEnergyConfig, matchEnergyByKind);
+                MatchEnergyRules.AccumulateMatchEnergy(waves, energySettings, matchEnergyByKind);
                 energySourcePositions.CollectFromMatches(waves, _view);
 
                 var energyBreakdown = new EnergyGainBreakdown(matchEnergyByKind, specialActivationEnergyByKind);
@@ -248,7 +251,7 @@ namespace Project.Scripts.Services.Board
                     _eventBus.Publish(new EnergyGeneratedEvent(BattleSide.Player, energyBreakdown));
                     _eventBus.Publish(new EnergyGeneratedVisualEvent(energySourcePositions.Build()));
                     if (_debugConfig.LogCascades)
-                        Debug.Log(BuildDetailedCascadeLog(waves, _cascadeEnergyConfig, energyBreakdown.TotalEnergyByKind));
+                        Debug.Log(BuildDetailedCascadeLog(waves, energySettings, energyBreakdown.TotalEnergyByKind));
                 }
 
                 if (moveUsed && CanContinueFlow(runtimeVersion))
@@ -649,34 +652,7 @@ namespace Project.Scripts.Services.Board
             return issues;
         }
 
-        private static void AccumulateMatchEnergy(List<List<MatchResult>> waves, CascadeEnergyConfig config, Dictionary<TileKind, float> energy)
-        {
-            for (var i = 0; i < waves.Count; i++)
-            {
-                var matches = waves[i];
-                var cascadeMult = 1f + config.CascadeMultiplierStep * i;
-                var multiMatchMult = matches.Count > 1 ? config.MultiMatchMultiplier : 1f;
-
-                for (var j = 0; j < matches.Count; j++)
-                {
-                    var match = matches[j];
-                    if (false == match.TileKind.IsColor())
-                        continue;
-
-                    var shapeMult = match.Shape switch
-                    {
-                        MatchShape.LShape => config.LShapeMultiplier,
-                        MatchShape.TShape => config.TShapeMultiplier,
-                        _ => 1f
-                    };
-
-                    energy.TryGetValue(match.TileKind, out var current);
-                    energy[match.TileKind] = current + match.Positions.Count * shapeMult * cascadeMult * multiMatchMult;
-                }
-            }
-        }
-
-        private static string BuildDetailedCascadeLog(List<List<MatchResult>> waves, CascadeEnergyConfig config,
+        private static string BuildDetailedCascadeLog(List<List<MatchResult>> waves, CascadeEnergySettings settings,
             IReadOnlyDictionary<TileKind, float> energyByKind)
         {
             var sb = new System.Text.StringBuilder();
@@ -685,8 +661,8 @@ namespace Project.Scripts.Services.Board
             for (var i = 0; i < waves.Count; i++)
             {
                 var matches = waves[i];
-                var cascadeMult = 1f + config.CascadeMultiplierStep * i;
-                var multiMatchMult = matches.Count > 1 ? config.MultiMatchMultiplier : 1f;
+                var cascadeMult = MatchEnergyRules.GetCascadeMultiplier(i, settings);
+                var multiMatchMult = MatchEnergyRules.GetMultiMatchMultiplier(matches.Count, settings);
 
                 sb.AppendLine($"  Wave {i + 1}  cascade×{cascadeMult:F2}  multiMatch×{multiMatchMult:F2}  ({matches.Count} match(es))");
 
@@ -696,14 +672,9 @@ namespace Project.Scripts.Services.Board
                     if (false == match.TileKind.IsColor())
                         continue;
 
-                    var shapeMult = match.Shape switch
-                    {
-                        MatchShape.LShape => config.LShapeMultiplier,
-                        MatchShape.TShape => config.TShapeMultiplier,
-                        _ => 1f
-                    };
+                    var shapeMult = MatchEnergyRules.GetShapeMultiplier(match.Shape, settings);
+                    var raw = MatchEnergyRules.CalculateMatchEnergy(match, i, matches.Count, settings);
 
-                    var raw = match.Positions.Count * shapeMult * cascadeMult * multiMatchMult;
                     sb.AppendLine($"    [{match.TileKind}] {match.Positions.Count} tiles  shape={match.Shape}×{shapeMult:F2}  → +{raw:F2}");
                 }
             }
@@ -721,29 +692,6 @@ namespace Project.Scripts.Services.Board
 
             sb.Append($"  Total energy generated: +{total:F2}");
             return sb.ToString();
-        }
-
-        private static void AccumulateGridDiffEnergy(TileKind[,] before, TileKind[,] after,
-            Dictionary<TileKind, float> energy, float multiplier = 1f)
-        {
-            var width = before.GetLength(0);
-            var height = before.GetLength(1);
-
-            for (var x = 0; x < width; x++)
-            {
-                for (var y = 0; y < height; y++)
-                {
-                    var kindBefore = before[x, y];
-                    if (false == kindBefore.IsColor())
-                        continue;
-
-                    if (after[x, y] != kindBefore)
-                    {
-                        energy.TryGetValue(kindBefore, out var current);
-                        energy[kindBefore] = current + multiplier;
-                    }
-                }
-            }
         }
     }
 }
