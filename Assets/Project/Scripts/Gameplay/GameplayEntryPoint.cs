@@ -106,6 +106,14 @@ namespace Project.Scripts.Gameplay
         private Rect _lastSafeArea;
         private int _delayedTopBarLayoutVersion;
 #endif
+        
+        private enum BattleFieldLayoutIntent
+        {
+            Compressed,
+            Full,
+            Preserve
+        }
+        
 
         private void Start()
         {
@@ -633,16 +641,29 @@ namespace Project.Scripts.Gameplay
 
         private void ApplyBattleFieldLayoutForPhase(BattlePhaseKind phase, bool animate)
         {
-            var target = ShouldUseFullBattleFieldLayout(phase) ? 1f : 0f;
+            var intent = ResolveBattleFieldLayoutIntent(phase);
+            if (intent == BattleFieldLayoutIntent.Preserve)
+                return;
+
+            var target = intent == BattleFieldLayoutIntent.Full ? 1f : 0f;
             if (animate)
                 AnimateBattleFieldLayoutBlend(target);
             else
                 ApplyBattleFieldLayoutBlend(target);
         }
 
-        private bool ShouldUseFullBattleFieldLayout(BattlePhaseKind phase)
+        private static BattleFieldLayoutIntent ResolveBattleFieldLayoutIntent(BattlePhaseKind phase)
         {
-            return phase == BattlePhaseKind.Hero;
+            switch (phase)
+            {
+                case BattlePhaseKind.Hero:
+                    return BattleFieldLayoutIntent.Full;
+                case BattlePhaseKind.PendingBurndown:
+                case BattlePhaseKind.Finished:
+                    return BattleFieldLayoutIntent.Preserve;
+                default:
+                    return BattleFieldLayoutIntent.Compressed;
+            }
         }
 
         private void AnimateBattleFieldLayoutBlend(float target)
