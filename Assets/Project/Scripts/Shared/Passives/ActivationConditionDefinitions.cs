@@ -103,7 +103,6 @@ namespace Project.Scripts.Shared.Passives
     public enum ActivationConditionKind
     {
         None,
-        AbilityActivated,
         MatchEnergyCollected,
         MatchesCollected,
         LineRuneUsed,
@@ -117,7 +116,6 @@ namespace Project.Scripts.Shared.Passives
 
     public enum ActivationConditionSubject
     {
-        Owner,
         OwnerSide,
         OwnerSlotKind,
         OpponentSide

@@ -19,19 +19,11 @@ namespace Project.Scripts.Shared.Passives
 
             return condition.Subject switch
             {
-                ActivationConditionSubject.Owner => IsOwner(e.Source, ownerSide, ownerSlotIndex),
                 ActivationConditionSubject.OwnerSide => e.Side == ownerSide,
                 ActivationConditionSubject.OwnerSlotKind => e.Side == ownerSide && e.TileKind == ownerSlotKind,
                 ActivationConditionSubject.OpponentSide => e.Side != ownerSide,
                 _ => false
             };
-        }
-
-        private static bool IsOwner(UnitDescriptor source, BattleSide ownerSide, int ownerSlotIndex)
-        {
-            return source.Kind == UnitKind.Hero
-                   && source.Side == ownerSide
-                   && source.SlotIndex == ownerSlotIndex;
         }
 
         private static bool IsActivatableUnit(UnitDescriptor source)

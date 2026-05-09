@@ -284,8 +284,6 @@ namespace Project.Scripts.Services.Combat
 
             if (e.Phase == BattlePhaseKind.Hero)
             {
-                _engine.ResetActivationConditionProgress(ActivationConditionKind.AbilityActivated, BattleSide.Player);
-                _engine.ResetActivationConditionProgress(ActivationConditionKind.AbilityActivated, BattleSide.Enemy);
                 PublishPendingActivations();
             }
         }
@@ -321,7 +319,7 @@ namespace Project.Scripts.Services.Combat
             _currentRound = e.CurrentRound;
         }
 
-        private ActivationConditionEvent CreateAbilityActivatedEvent(ActivationConditionKind kind,
+        private ActivationConditionEvent CreateUnitActivationEvent(ActivationConditionKind kind,
             UnitDescriptor source, long occurredAtTick)
         {
             return new ActivationConditionEvent(kind, source, occurredAtTick: ResolveOccurredAtTick(occurredAtTick));
@@ -332,11 +330,7 @@ namespace Project.Scripts.Services.Combat
             var activationCounts = CaptureActivationCounts();
             var resolvedTick = ResolveOccurredAtTick(occurredAtTick);
             var changed = _engine.ProcessActivationConditionEvent(
-                CreateAbilityActivatedEvent(ActivationConditionKind.AbilityActivated, source, resolvedTick),
-                HasActiveBuffForPassiveOwner);
-
-            changed |= _engine.ProcessActivationConditionEvent(
-                CreateAbilityActivatedEvent(ActivationConditionKind.UnitActivationsInTimeWindow, source, resolvedTick),
+                CreateUnitActivationEvent(ActivationConditionKind.UnitActivationsInTimeWindow, source, resolvedTick),
                 HasActiveBuffForPassiveOwner);
 
             if (changed)
@@ -345,7 +339,7 @@ namespace Project.Scripts.Services.Combat
 
         private void AddUnitActivationProgressAndPublish(UnitDescriptor source, long occurredAtTick)
         {
-            AddProgressAndPublishActivations(CreateAbilityActivatedEvent(ActivationConditionKind.UnitActivationsInTimeWindow,
+            AddProgressAndPublishActivations(CreateUnitActivationEvent(ActivationConditionKind.UnitActivationsInTimeWindow,
                 source, occurredAtTick));
         }
 
