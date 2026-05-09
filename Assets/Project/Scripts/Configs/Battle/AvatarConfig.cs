@@ -1,3 +1,4 @@
+using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.Heroes;
 using UnityEngine;
 
@@ -9,27 +10,44 @@ namespace Project.Scripts.Configs.Battle
         [Tooltip("Максимальные HP аватара. Ноль означает бессмертие")]
         [SerializeField] private int _maxHP = 550;
 
-        [Tooltip("Стоимость активации аватара из общего пула энергии стороны")]
-        [SerializeField] private int _activationEnergyCost = 110;
-
-        [Tooltip("Действие аватара при активации")]
-        [SerializeField] private HeroActionType _abilityType;
-
-        [Tooltip("Количество урона (DealDamage) или восстановленного HP (HealAlly) при активации")]
-        [SerializeField] private int _abilityPower = 80;
-
         [Tooltip("Portrait sprite displayed in the avatar slot (null = empty frame)")]
         [SerializeField] private Sprite _portrait;
 
-        [Tooltip("Кулдаун повторной активации аватара в секундах")]
-        [SerializeField] private float _activationCooldownSeconds = 3;
+        [Tooltip("Активная способность аватара")]
+        [SerializeField] private ActiveAbilityConfig _activeAbility;
 
 
         public int MaxHP => _maxHP;
-        public int ActivationEnergyCost => _activationEnergyCost;
-        public HeroActionType AbilityType => _abilityType;
-        public int AbilityPower => _abilityPower;
+        public int ActivationEnergyCost => _activeAbility?.ActivationEnergyCost ?? 0;
+        public HeroActionType AbilityType => ToHeroActionType(GetPrimaryDirectAction().Kind);
+        public int AbilityPower => GetPrimaryDirectAction().Value;
         public Sprite Portrait => _portrait;
-        public float ActivationCooldownSeconds => _activationCooldownSeconds;
+        public float ActivationCooldownSeconds => _activeAbility?.ActivationCooldownSeconds ?? 0f;
+
+
+        public ActiveAbilityDefinition ToActiveAbilityDefinition()
+        {
+            return null != _activeAbility ? _activeAbility.ToDefinition() : default;
+        }
+
+        private DirectActionDefinition GetPrimaryDirectAction()
+        {
+            var definition = ToActiveAbilityDefinition();
+            var entries = definition.EffectEntries;
+            for (var i = 0; i < entries.Count; i++)
+            {
+                var directActions = entries[i].DirectActions;
+                for (var j = 0; j < directActions.Count; j++)
+                    if (directActions[j].Kind is DirectActionKind.Damage or DirectActionKind.Heal)
+                        return directActions[j];
+            }
+
+            return default;
+        }
+
+        private static HeroActionType ToHeroActionType(DirectActionKind actionKind)
+        {
+            return actionKind == DirectActionKind.Heal ? HeroActionType.HealAlly : HeroActionType.DealDamage;
+        }
     }
 }

@@ -75,8 +75,7 @@ namespace Project.Scripts.DI
                     .As<IEscalationModifierService>()
                     .As<IBattleEconomyModifierService>();
             }
-
-            builder.Register<IAbilityApplicationService, AbilityApplicationService>(Lifetime.Singleton);
+            builder.Register<IAbilityEffectApplicationService, AbilityEffectApplicationService>(Lifetime.Singleton);
             builder.Register<IAbilityExecutionService, AbilityExecutionService>(Lifetime.Singleton);
 
             builder.Register<MoveBarViewModel>(Lifetime.Singleton);

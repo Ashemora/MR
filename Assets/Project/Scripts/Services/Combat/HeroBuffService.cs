@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using Project.Scripts.Configs.Levels;
+using Project.Scripts.Configs.Battle;
+using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Energy;
 using Project.Scripts.Shared.Heroes;
@@ -15,13 +18,37 @@ namespace Project.Scripts.Services.Combat
         public IReadOnlyList<BuffRuntimeState> Buffs => _engine.Buffs;
 
         
+        private const int SlotCount = 4;
+
+
+        private readonly EventBus _eventBus;
+        private readonly LevelConfig _levelConfig;
         private readonly BuffEngine _engine = new();
 
 
-        public bool AddBuff(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind, BuffDefinition definition,
-            int currentRound, BattlePhaseKind currentPhase)
+        public HeroBuffService(EventBus eventBus, LevelConfig levelConfig)
         {
-            return _engine.AddBuff(source, target, sourceSlotKind, definition, currentRound, currentPhase);
+            _eventBus = eventBus;
+            _levelConfig = levelConfig;
+        }
+
+
+        public bool Tick(float deltaTime)
+        {
+            if (false == _engine.Tick(deltaTime))
+                return false;
+
+            _eventBus.Publish(new BuffsChangedEvent());
+            PublishAllAbilityStatsChanged();
+            
+            return true;
+        }
+
+        public bool AddBuff(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind, BuffDefinition definition,
+            int currentRound, BattlePhaseKind currentPhase, float durationSeconds = 0f)
+        {
+            return _engine.AddBuff(source, target, sourceSlotKind, definition, currentRound, currentPhase,
+                durationSeconds);
         }
 
         public bool RemoveByUnit(UnitDescriptor unit)
@@ -47,8 +74,7 @@ namespace Project.Scripts.Services.Combat
         public float CalculateEnergy(BattleSide side, EnergyGainBreakdown breakdown)
         {
             return CalculateMatchEnergy(side, breakdown.MatchEnergyByKind)
-                   + _engine.GetModifiedSpecialActivationEnergy(
-                       EnergyGainRules.SumAll(breakdown.SpecialActivationEnergyByKind), side);
+                   + _engine.GetModifiedSpecialActivationEnergy(EnergyGainRules.SumAll(breakdown.SpecialActivationEnergyByKind), side);
         }
 
         private float CalculateMatchEnergy(BattleSide side, IReadOnlyDictionary<TileKind, float> energyByKind)
@@ -143,6 +169,54 @@ namespace Project.Scripts.Services.Combat
 
             for (var i = 0; i < targets.Count; i++)
                 _engine.AddBuff(targets[i], targets[i], TileKind.None, definition, 0, BattlePhaseKind.Hero);
+        }
+
+        private void PublishAllAbilityStatsChanged()
+        {
+            for (var i = 0; i < SlotCount; i++)
+            {
+                PublishHeroAbilityStatsChanged(BattleSide.Player, i);
+                PublishHeroAbilityStatsChanged(BattleSide.Enemy, i);
+            }
+
+            PublishAvatarAbilityPowerChanged(BattleSide.Player);
+            PublishAvatarAbilityPowerChanged(BattleSide.Enemy);
+        }
+
+        private void PublishHeroAbilityStatsChanged(BattleSide side, int slotIndex)
+        {
+            var heroConfig = GetHeroConfig(side, slotIndex);
+            if (!heroConfig)
+                return;
+
+            _eventBus.Publish(new HeroAbilityStatsChangedEvent(side, slotIndex,
+                GetActivationEnergyCost(side, slotIndex, heroConfig.ActivationEnergyCost),
+                GetAbilityPower(UnitDescriptor.Hero(side, slotIndex, heroConfig.AbilityType),
+                    heroConfig.AbilityPower)));
+        }
+
+        private void PublishAvatarAbilityPowerChanged(BattleSide side)
+        {
+            var config = side == BattleSide.Player
+                ? _levelConfig.PlayerAvatarConfig
+                : _levelConfig.EnemyAvatarConfig;
+            if (!config)
+                return;
+
+            var target = UnitDescriptor.Avatar(side, config.AbilityType);
+            _eventBus.Publish(new AvatarAbilityPowerChangedEvent(side, GetAbilityPower(target, config.AbilityPower)));
+        }
+
+        private HeroConfig GetHeroConfig(BattleSide side, int slotIndex)
+        {
+            if (slotIndex is < 0 or >= SlotCount)
+                return null;
+
+            var heroes = side == BattleSide.Player
+                ? _levelConfig.PlayerHeroes
+                : _levelConfig.EnemyHeroes;
+
+            return null != heroes && slotIndex < heroes.Length ? heroes[slotIndex] : null;
         }
     }
 }

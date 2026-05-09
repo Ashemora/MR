@@ -13,11 +13,38 @@ MonoBehaviour:
   m_Name: Hero_Healer_2
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
   _maxHP: 40
-  _abilityType: 1
-  _abilityPower: 30
-  _activationEnergyCost: 15
-  _activationCooldownSeconds: 10
-  _portrait: {fileID: 21300000, guid: 27e02dbeb09a77c46944c9428156ae3d, type: 3}
   _displayName: Hero_Healer_2
-  _passiveAbilities:
-  - {fileID: 11400000, guid: c38f02f191c64c53a56d8e4a62a2a3e9, type: 2}
+  _portrait: {fileID: 21300000, guid: 27e02dbeb09a77c46944c9428156ae3d, type: 3}
+  _activeAbility:
+    _displayName: Heal
+    _activationEnergyCost: 15
+    _activationCooldownSeconds: 10
+    _effectEntries:
+    - _targeting:
+        _scope: 2
+        _relation: 0
+        _unitKind: 0
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: []
+      _directActions:
+      - _kind: 2
+        _value: 30
+      _buffApplications: []
+    - _targeting:
+        _scope: 1
+        _relation: 0
+        _unitKind: 1
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: []
+      _directActions: []
+      _buffApplications:
+      - _buff:
+          _kind: 1
+          _operation: 1
+          _value: 3
+          _lifetimeKind: 3
+          _stackingMode: 0
+        _durationSeconds: 0
+  _passiveAbilities: []

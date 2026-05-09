@@ -13,8 +13,20 @@ MonoBehaviour:
   m_Name: AvatarConfig_Damager
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.AvatarConfig
   _maxHP: 100
-  _activationEnergyCost: 10
-  _abilityType: 0
-  _abilityPower: 10
+  _activeAbility:
+    _displayName:
+    _activationEnergyCost: 10
+    _activationCooldownSeconds: 10
+    _effectEntries:
+    - _targeting:
+        _scope: 2
+        _relation: 1
+        _unitKind: 0
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: []
+      _directActions:
+      - _kind: 1
+        _value: 10
+      _buffApplications: []
   _portrait: {fileID: 21300000, guid: 9d15217da4c9fae4eb2403f184431d76, type: 3}
-  _activationCooldownSeconds: 10

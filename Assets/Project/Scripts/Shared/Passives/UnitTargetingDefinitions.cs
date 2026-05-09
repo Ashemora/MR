@@ -48,7 +48,8 @@ namespace Project.Scripts.Shared.Passives
     public enum UnitTargetScope
     {
         Self,
-        ByRelation
+        ByRelation,
+        SelectedTarget
     }
 
     public enum UnitTargetRelation

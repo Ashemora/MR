@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.BattleFlow;
 using Project.Scripts.Services.Combat;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Clock;
+using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Bot;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Rules;
+using Project.Scripts.Shared.Tiles;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -33,10 +36,11 @@ namespace Project.Scripts.Services.Bot
         private readonly INextAttackBuffService _nextAttackBuffService;
         private readonly IAbilityRepeatModifierService _abilityRepeatModifierService;
         private readonly IAbilityAdditionalTargetModifierService _abilityAdditionalTargetModifierService;
-        private readonly IAbilityApplicationService _abilityApplicationService;
+        private readonly IAbilityEffectApplicationService _abilityEffectApplicationService;
         private readonly IBattleClock _battleClock;
         private readonly BotConfig _botConfig;
         private readonly SlotLayoutConfig _slotLayoutConfig;
+        private readonly LevelConfig _levelConfig;
 
         private BotDecisionEngine _engine;
         private CancellationTokenSource _cts;
@@ -60,10 +64,11 @@ namespace Project.Scripts.Services.Bot
             INextAttackBuffService nextAttackBuffService,
             IAbilityRepeatModifierService abilityRepeatModifierService,
             IAbilityAdditionalTargetModifierService abilityAdditionalTargetModifierService,
-            IAbilityApplicationService abilityApplicationService,
+            IAbilityEffectApplicationService abilityEffectApplicationService,
             IBattleClock battleClock,
             BotConfig botConfig,
-            SlotLayoutConfig slotLayoutConfig)
+            SlotLayoutConfig slotLayoutConfig,
+            LevelConfig levelConfig)
         {
             _eventBus = eventBus;
             _heroService = heroService;
@@ -78,10 +83,11 @@ namespace Project.Scripts.Services.Bot
             _nextAttackBuffService = nextAttackBuffService;
             _abilityRepeatModifierService = abilityRepeatModifierService;
             _abilityAdditionalTargetModifierService = abilityAdditionalTargetModifierService;
-            _abilityApplicationService = abilityApplicationService;
+            _abilityEffectApplicationService = abilityEffectApplicationService;
             _battleClock = battleClock;
             _botConfig = botConfig;
             _slotLayoutConfig = slotLayoutConfig;
+            _levelConfig = levelConfig;
         }
 
 
@@ -130,16 +136,13 @@ namespace Project.Scripts.Services.Bot
                     return;
 
                 var phase = _battleFlowService.Snapshot.Phase;
-
                 if (phase == BattlePhaseKind.Match)
                 {
                     var generatedEnergy = GenerateSimulatedMatchEnergy();
                     _battleSideEnergyService.AddEnergy(BattleSide.Enemy, generatedEnergy);
                 }
 
-                if (phase == BattlePhaseKind.Hero
-                    && _enemyChargeService.IsReady
-                    && false == _dischargeScheduled)
+                if (phase == BattlePhaseKind.Hero && _enemyChargeService.IsReady && false == _dischargeScheduled)
                 {
                     _dischargeScheduled = true;
                     ScheduleDischarge(ct).Forget();
@@ -186,7 +189,7 @@ namespace Project.Scripts.Services.Bot
 
             if (_enemyChargeService.AbilityType == HeroActionType.DealDamage)
             {
-                if (!_groupDefense.IsExposed(BattleSide.Player))
+                if (false == _groupDefense.IsExposed(BattleSide.Player))
                 {
                     var playerSlots = _heroService.GetSlots(BattleSide.Player);
                     var targetIdx = _engine.PickGroupBreakTarget(
@@ -204,21 +207,19 @@ namespace Project.Scripts.Services.Bot
 
                     var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.DealDamage);
                     var target = UnitDescriptor.Hero(BattleSide.Player, targetIdx, HeroActionType.DealDamage);
-                    _abilityApplicationService.Apply(source, target, HeroActionType.DealDamage, abilityPower,
-                        0, _battleClock.CurrentTick);
+                    ApplySingleAbility(source, target, HeroActionType.DealDamage, abilityPower);
                     PublishAbilityExecuted(source, target, HeroActionType.DealDamage, abilityPower);
                 }
                 else
                 {
-                    if (!_enemyChargeService.TryRelease())
+                    if (false == _enemyChargeService.TryRelease())
                         return;
 
                     abilityPower = GetAvatarActionValueWithNextAttackBuff(abilityPower);
 
                     var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.DealDamage);
                     var target = UnitDescriptor.Avatar(BattleSide.Player, HeroActionType.DealDamage);
-                    _abilityApplicationService.Apply(source, target, HeroActionType.DealDamage, abilityPower,
-                        0, _battleClock.CurrentTick);
+                    ApplySingleAbility(source, target, HeroActionType.DealDamage, abilityPower);
                     PublishAbilityExecuted(source, target, HeroActionType.DealDamage, abilityPower);
                 }
             }
@@ -228,7 +229,7 @@ namespace Project.Scripts.Services.Bot
 
         private void DischargeAvatarHeal(int abilityPower)
         {
-            if (!_groupDefense.IsExposed(BattleSide.Enemy))
+            if (false == _groupDefense.IsExposed(BattleSide.Enemy))
             {
                 var enemySlots = _heroService.GetSlots(BattleSide.Enemy);
                 var targetIdx = _engine.PickWeakestGroupHero(
@@ -239,13 +240,12 @@ namespace Project.Scripts.Services.Bot
                 if (targetIdx < 0)
                     return;
 
-                if (!_enemyChargeService.TryRelease())
+                if (false == _enemyChargeService.TryRelease())
                     return;
 
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
-                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, abilityPower,
-                    0, _battleClock.CurrentTick);
+                ApplySingleAbility(source, target, HeroActionType.HealAlly, abilityPower);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
             else if (_enemyState.CurrentHP < _enemyState.MaxHP)
@@ -255,8 +255,7 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
-                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, abilityPower,
-                    0, _battleClock.CurrentTick);
+                ApplySingleAbility(source, target, HeroActionType.HealAlly, abilityPower);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
             else
@@ -271,8 +270,7 @@ namespace Project.Scripts.Services.Bot
 
                 var source = UnitDescriptor.Avatar(BattleSide.Enemy, HeroActionType.HealAlly);
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, HeroActionType.HealAlly);
-                _abilityApplicationService.Apply(source, target, HeroActionType.HealAlly, abilityPower,
-                    0, _battleClock.CurrentTick);
+                ApplySingleAbility(source, target, HeroActionType.HealAlly, abilityPower);
                 PublishAbilityExecuted(source, target, HeroActionType.HealAlly, abilityPower);
             }
         }
@@ -440,12 +438,40 @@ namespace Project.Scripts.Services.Bot
             int value)
         {
             var occurredAtTick = _battleClock.CurrentTick;
-            var additionalTargets = SelectAdditionalTargets(source, target, actionType);
-            _abilityApplicationService.Apply(source, target, actionType, value, GetRepeatCount(source),
-                occurredAtTick);
-            _abilityApplicationService.ApplyAdditionalTargets(source, additionalTargets, actionType, value,
-                occurredAtTick);
+            var entries = AbilityRuntimeDefinitionResolver.CreateCommittedEntries(_levelConfig, source, actionType, value);
+            var additionalTargets = SelectAdditionalTargets(source, target, actionType, entries);
+            var repeatCount = GetRepeatCount(source);
+            var totalApplications = 1 + (repeatCount < 0 ? 0 : repeatCount);
+            for (var applicationIndex = 0; applicationIndex < totalApplications; applicationIndex++)
+            {
+                var result = ApplySingleAbility(source, target, entries, applicationIndex,
+                    applicationIndex > 0, applicationIndex * 0.2f);
+                if (false == result.WasChanged)
+                    break;
+            }
+
+            for (var i = 0; i < additionalTargets.Count; i++)
+                ApplySingleAbility(source, additionalTargets[i], entries, i + 1, true, 0f);
+
             PublishAbilityExecuted(source, target, actionType, value);
+        }
+
+        private AbilityEffectApplicationResult ApplySingleAbility(UnitDescriptor source, UnitDescriptor target,
+            HeroActionType actionType, int value, int applicationIndex = 0, bool isRepeat = false,
+            float presentationDelaySeconds = 0f)
+        {
+            return ApplySingleAbility(source, target,
+                AbilityRuntimeDefinitionResolver.CreateCommittedEntries(_levelConfig, source, actionType, value),
+                applicationIndex, isRepeat, presentationDelaySeconds);
+        }
+
+        private AbilityEffectApplicationResult ApplySingleAbility(UnitDescriptor source, UnitDescriptor target,
+            IReadOnlyList<AbilityEffectEntryDefinition> entries, int applicationIndex = 0, bool isRepeat = false,
+            float presentationDelaySeconds = 0f)
+        {
+            return _abilityEffectApplicationService.Apply(source, target, entries, GetSourceSlotKind(source),
+                0, BattlePhaseKind.Hero, _battleClock.CurrentTick, applicationIndex, isRepeat,
+                presentationDelaySeconds);
         }
 
         private void PublishAbilityExecuted(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType,
@@ -481,7 +507,7 @@ namespace Project.Scripts.Services.Bot
 
         private void EnsureLoopsRunning()
         {
-            if (_cts != null)
+            if (null != _cts)
                 return;
 
             _cts = new CancellationTokenSource();
@@ -517,11 +543,22 @@ namespace Project.Scripts.Services.Bot
                 : 0;
         }
 
+        private TileKind GetSourceSlotKind(UnitDescriptor source)
+        {
+            if (source.Kind != UnitKind.Hero)
+                return TileKind.None;
+
+            var slots = _heroService.GetSlots(source.Side);
+            return source.SlotIndex >= 0 && source.SlotIndex < slots.Count
+                ? slots[source.SlotIndex].SlotKind
+                : TileKind.None;
+        }
+
         private List<UnitDescriptor> SelectAdditionalTargets(UnitDescriptor source, UnitDescriptor primaryTarget,
-            HeroActionType actionType)
+            HeroActionType actionType, IReadOnlyList<AbilityEffectEntryDefinition> entries)
         {
             return AbilityAdditionalTargetRules.SelectTargets(source, primaryTarget, actionType,
-                GetAdditionalTargetCount(source), CollectTargetCandidates());
+                GetAdditionalTargetCount(source), CollectTargetCandidates(), entries);
         }
 
         private List<AbilityTargetCandidate> CollectTargetCandidates()

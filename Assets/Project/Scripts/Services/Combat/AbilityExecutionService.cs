@@ -1,130 +1,23 @@
+using System;
 using System.Collections.Generic;
+using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Clock;
+using Project.Scripts.Shared.Abilities;
+using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Passives;
 using Project.Scripts.Shared.Rules;
+using Project.Scripts.Shared.Tiles;
 
 namespace Project.Scripts.Services.Combat
 {
-    public interface IAbilityApplicationService
-    {
-        int Apply(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType, int value,
-            int repeatCount, long occurredAtTick);
-        int ApplyAdditionalTargets(UnitDescriptor source, IReadOnlyList<UnitDescriptor> targets,
-            HeroActionType actionType, int value, long occurredAtTick);
-    }
-
-    public class AbilityApplicationService : IAbilityApplicationService
+    public class AbilityExecutionService : IAbilityExecutionService
     {
         private const float RepeatApplicationDelaySeconds = 0.2f;
 
 
-        private readonly IHeroService _heroService;
-        private readonly IPlayerStateService _playerState;
-        private readonly IEnemyStateService _enemyState;
-        private readonly EventBus _eventBus;
-
-
-        public AbilityApplicationService(IHeroService heroService, IPlayerStateService playerState,
-            IEnemyStateService enemyState, EventBus eventBus)
-        {
-            _heroService = heroService;
-            _playerState = playerState;
-            _enemyState = enemyState;
-            _eventBus = eventBus;
-        }
-
-        public int Apply(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType, int value,
-            int repeatCount, long occurredAtTick)
-        {
-            if (value <= 0)
-                return 0;
-
-            var appliedCount = 0;
-            var totalApplications = 1 + (repeatCount < 0 ? 0 : repeatCount);
-            for (var applicationIndex = 0; applicationIndex < totalApplications; applicationIndex++)
-            {
-                if (false == CanApply(target))
-                    break;
-
-                ApplySingle(target, actionType, value);
-                _eventBus.Publish(new AbilityApplicationEvent(source, target, actionType, value, applicationIndex,
-                    applicationIndex > 0, applicationIndex * RepeatApplicationDelaySeconds, occurredAtTick));
-                appliedCount++;
-            }
-
-            return appliedCount;
-        }
-
-        public int ApplyAdditionalTargets(UnitDescriptor source, IReadOnlyList<UnitDescriptor> targets,
-            HeroActionType actionType, int value, long occurredAtTick)
-        {
-            if (value <= 0 || targets == null)
-                return 0;
-
-            var appliedCount = 0;
-            for (var i = 0; i < targets.Count; i++)
-            {
-                var target = targets[i];
-                if (false == CanApply(target))
-                    continue;
-
-                ApplySingle(target, actionType, value);
-                _eventBus.Publish(new AbilityApplicationEvent(source, target, actionType, value, i + 1,
-                    true, 0f, occurredAtTick));
-                appliedCount++;
-            }
-
-            return appliedCount;
-        }
-
-        private void ApplySingle(UnitDescriptor target, HeroActionType actionType, int value)
-        {
-            if (actionType == HeroActionType.DealDamage)
-            {
-                if (target.Kind == UnitKind.Avatar)
-                {
-                    if (target.Side == BattleSide.Player)
-                        _playerState.TakeDamage(value);
-                    else
-                        _enemyState.ApplyDamage(value);
-                }
-                else
-                    _heroService.ApplyDamageToHero(target.Side, target.SlotIndex, value);
-
-                return;
-            }
-
-            if (target.Kind == UnitKind.Avatar)
-            {
-                if (target.Side == BattleSide.Player)
-                    _playerState.Heal(value);
-                else
-                    _enemyState.ApplyHeal(value);
-            }
-            else
-                _heroService.ApplyHealToHero(target.Side, target.SlotIndex, value);
-        }
-
-        private bool CanApply(UnitDescriptor target)
-        {
-            if (target.Kind == UnitKind.Avatar)
-                return target.Side == BattleSide.Player
-                    ? _playerState.CurrentHP > 0
-                    : _enemyState.CurrentHP > 0;
-
-            var slots = _heroService.GetSlots(target.Side);
-            if (target.SlotIndex < 0 || target.SlotIndex >= slots.Count)
-                return false;
-
-            var slot = slots[target.SlotIndex];
-            return slot is { IsAssigned: true, IsAlive: true };
-        }
-    }
-
-    public class AbilityExecutionService : IAbilityExecutionService
-    {
         private readonly IPlayerAvatarChargeService _playerAvatarCharge;
         private readonly IHeroService _heroService;
         private readonly IPlayerStateService _playerState;
@@ -136,9 +29,10 @@ namespace Project.Scripts.Services.Combat
         private readonly INextAttackBuffService _nextAttackBuffService;
         private readonly IAbilityRepeatModifierService _abilityRepeatModifierService;
         private readonly IAbilityAdditionalTargetModifierService _abilityAdditionalTargetModifierService;
-        private readonly IAbilityApplicationService _abilityApplicationService;
+        private readonly IAbilityEffectApplicationService _abilityEffectApplicationService;
         private readonly EventBus _eventBus;
         private readonly IBattleClock _battleClock;
+        private readonly LevelConfig _levelConfig;
 
 
         public AbilityExecutionService(
@@ -153,9 +47,10 @@ namespace Project.Scripts.Services.Combat
             INextAttackBuffService nextAttackBuffService,
             IAbilityRepeatModifierService abilityRepeatModifierService,
             IAbilityAdditionalTargetModifierService abilityAdditionalTargetModifierService,
-            IAbilityApplicationService abilityApplicationService,
+            IAbilityEffectApplicationService abilityEffectApplicationService,
             EventBus eventBus,
-            IBattleClock battleClock)
+            IBattleClock battleClock,
+            LevelConfig levelConfig)
         {
             _playerAvatarCharge = playerAvatarCharge;
             _heroService = heroService;
@@ -168,9 +63,10 @@ namespace Project.Scripts.Services.Combat
             _nextAttackBuffService = nextAttackBuffService;
             _abilityRepeatModifierService = abilityRepeatModifierService;
             _abilityAdditionalTargetModifierService = abilityAdditionalTargetModifierService;
-            _abilityApplicationService = abilityApplicationService;
+            _abilityEffectApplicationService = abilityEffectApplicationService;
             _eventBus = eventBus;
             _battleClock = battleClock;
+            _levelConfig = levelConfig;
         }
 
         public void Execute(UnitDescriptor source, UnitDescriptor target)
@@ -190,14 +86,21 @@ namespace Project.Scripts.Services.Combat
             if (sourceActionValue <= 0)
                 return;
 
+            var previewEntries = AbilityRuntimeDefinitionResolver.CreateCommittedEntries(_levelConfig, source,
+                sourceActionType, sourceActionValue);
+
             if (false == TryGetTargetState(target, out var isTargetAlive, out var isTargetHpFull, out var isTargetExposed))
                 return;
 
-            if (false == AbilityTargetRules.IsTargetValid(source, target, sourceActionType, isSourceAlive,
-                    isTargetAlive, isTargetHpFull, isTargetExposed))
+            if (false == AbilityTargetRules.IsTargetValid(sourceActionType, isSourceAlive, isTargetAlive,
+                    isTargetHpFull, isTargetExposed))
                 return;
 
-            var additionalTargets = SelectAdditionalTargets(source, target, sourceActionType);
+            if (false == AbilityTargetRules.IsTargetAllowedByDirectEntries(source, target, previewEntries,
+                    CollectUnitTargetCandidates()))
+                return;
+
+            var additionalTargets = SelectAdditionalTargets(source, target, sourceActionType, previewEntries);
 
             if (false == TryCommitSource(source, out var actionType, out var actionValue))
                 return;
@@ -205,12 +108,39 @@ namespace Project.Scripts.Services.Combat
             if (actionType != sourceActionType || actionValue != sourceActionValue)
                 return;
 
-            _abilityApplicationService.Apply(source, target, actionType, actionValue,
-                GetRepeatCount(source), _battleClock.CurrentTick);
-            _abilityApplicationService.ApplyAdditionalTargets(source, additionalTargets, actionType, actionValue,
-                _battleClock.CurrentTick);
+            ApplyPrimaryTarget(source, target, actionType, actionValue, GetRepeatCount(source));
+            ApplyAdditionalTargets(source, additionalTargets, actionType, actionValue);
             _eventBus.Publish(new AbilityExecutedEvent(source, target, actionType, actionValue,
                 _battleClock.CurrentTick));
+        }
+
+        private void ApplyPrimaryTarget(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType,
+            int actionValue, int repeatCount)
+        {
+            var entries = AbilityRuntimeDefinitionResolver.CreateCommittedEntries(_levelConfig, source, actionType,
+                actionValue);
+            var totalApplications = 1 + (repeatCount < 0 ? 0 : repeatCount);
+            for (var applicationIndex = 0; applicationIndex < totalApplications; applicationIndex++)
+            {
+                var result = _abilityEffectApplicationService.Apply(source, target, entries, GetSourceSlotKind(source),
+                    0, BattlePhaseKind.Hero, _battleClock.CurrentTick, applicationIndex, applicationIndex > 0,
+                    applicationIndex * RepeatApplicationDelaySeconds);
+                if (false == result.WasChanged)
+                    break;
+            }
+        }
+
+        private void ApplyAdditionalTargets(UnitDescriptor source, IReadOnlyList<UnitDescriptor> targets,
+            HeroActionType actionType, int actionValue)
+        {
+            if (targets == null || targets.Count == 0)
+                return;
+
+            var entries = AbilityRuntimeDefinitionResolver.CreateCommittedEntries(_levelConfig, source, actionType,
+                actionValue);
+            for (var i = 0; i < targets.Count; i++)
+                _abilityEffectApplicationService.Apply(source, targets[i], entries, GetSourceSlotKind(source),
+                    0, BattlePhaseKind.Hero, _battleClock.CurrentTick, i + 1, true, 0f);
         }
 
         private bool TryGetSourceState(UnitDescriptor source, out HeroActionType actionType, out int actionValue, out bool isAlive)
@@ -333,11 +263,22 @@ namespace Project.Scripts.Services.Combat
                 : 0;
         }
 
+        private TileKind GetSourceSlotKind(UnitDescriptor source)
+        {
+            if (source.Kind != UnitKind.Hero)
+                return TileKind.None;
+
+            var slots = _heroService.GetSlots(source.Side);
+            return source.SlotIndex >= 0 && source.SlotIndex < slots.Count
+                ? slots[source.SlotIndex].SlotKind
+                : TileKind.None;
+        }
+
         private List<UnitDescriptor> SelectAdditionalTargets(UnitDescriptor source, UnitDescriptor primaryTarget,
-            HeroActionType actionType)
+            HeroActionType actionType, IReadOnlyList<AbilityEffectEntryDefinition> entries)
         {
             return AbilityAdditionalTargetRules.SelectTargets(source, primaryTarget, actionType,
-                GetAdditionalTargetCount(source), CollectTargetCandidates());
+                GetAdditionalTargetCount(source), CollectTargetCandidates(), entries);
         }
 
         private List<AbilityTargetCandidate> CollectTargetCandidates()
@@ -367,6 +308,20 @@ namespace Project.Scripts.Services.Combat
                 result.Add(new AbilityTargetCandidate(UnitDescriptor.Hero(side, i, slot.ActionType),
                     slot.CurrentHP, slot.MaxHP, slot is { IsAssigned: true, IsAlive: true }, true));
             }
+        }
+
+        private List<UnitTargetCandidate> CollectUnitTargetCandidates()
+        {
+            var targetCandidates = CollectTargetCandidates();
+            var result = new List<UnitTargetCandidate>(targetCandidates.Count);
+            for (var i = 0; i < targetCandidates.Count; i++)
+            {
+                var candidate = targetCandidates[i];
+                result.Add(new UnitTargetCandidate(candidate.Descriptor, candidate.CurrentHP, candidate.MaxHP,
+                    candidate.IsAlive));
+            }
+
+            return result;
         }
     }
 }

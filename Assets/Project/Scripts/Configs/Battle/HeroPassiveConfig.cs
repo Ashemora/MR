@@ -1,4 +1,5 @@
 using System;
+using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.Passives;
 using UnityEngine;
 
@@ -18,8 +19,8 @@ namespace Project.Scripts.Configs.Battle
         [SerializeField] private ActivationConditionGroupConfig _activationConditionGroup;
 
         [Space(10)]
-        [Tooltip("Что пассивка накладывает при срабатывании")]
-        [SerializeField] private PassiveEffectEntryConfig[] _effectEntries;
+        [Tooltip("Что пассивка применяет при срабатывании")]
+        [SerializeField] private AbilityEffectEntryConfig[] _abilityEffectEntries;
 
         [Tooltip("Может ли пассивная способность активироваться повторно, пока ее эффект уже активен")]
         [SerializeField] private bool _canActivateWhileActive;
@@ -27,19 +28,16 @@ namespace Project.Scripts.Configs.Battle
         [Tooltip("Максимум активаций за бой. Ноль означает без ограничений")]
         [SerializeField] private int _maxActivations;
 
-        
-        public string Id => _id;
-        public string DisplayName => _displayName;
-        public ActivationConditionGroupConfig ActivationConditionGroup => _activationConditionGroup;
-        public PassiveEffectEntryConfig[] EffectEntries => _effectEntries;
-        public bool CanActivateWhileActive => _canActivateWhileActive;
-        public int MaxActivations => _maxActivations;
-
-
         public HeroPassiveDefinition ToDefinition()
         {
             return new HeroPassiveDefinition(_displayName, ToActivationConditionGroupDefinition(),
-                ToEffectEntryDefinitions(), _canActivateWhileActive, _maxActivations);
+                ToAbilityEffectEntryDefinitions(), _canActivateWhileActive, _maxActivations);
+        }
+
+        public PassiveAbilityDefinition ToPassiveAbilityDefinition()
+        {
+            return new PassiveAbilityDefinition(_displayName, ToActivationConditionGroupDefinition(),
+                ToAbilityEffectEntryDefinitions(), _canActivateWhileActive, _maxActivations);
         }
 
         private ActivationConditionGroupDefinition ToActivationConditionGroupDefinition()
@@ -47,14 +45,14 @@ namespace Project.Scripts.Configs.Battle
             return null != _activationConditionGroup ? _activationConditionGroup.ToDefinition() : default;
         }
 
-        private PassiveEffectEntryDefinition[] ToEffectEntryDefinitions()
+        private AbilityEffectEntryDefinition[] ToAbilityEffectEntryDefinitions()
         {
-            if (null == _effectEntries || _effectEntries.Length == 0)
-                return Array.Empty<PassiveEffectEntryDefinition>();
+            if (null == _abilityEffectEntries || _abilityEffectEntries.Length == 0)
+                return Array.Empty<AbilityEffectEntryDefinition>();
 
-            var result = new PassiveEffectEntryDefinition[_effectEntries.Length];
-            for (var i = 0; i < _effectEntries.Length; i++)
-                result[i] = null != _effectEntries[i] ? _effectEntries[i].ToDefinition() : default;
+            var result = new AbilityEffectEntryDefinition[_abilityEffectEntries.Length];
+            for (var i = 0; i < _abilityEffectEntries.Length; i++)
+                result[i] = null != _abilityEffectEntries[i] ? _abilityEffectEntries[i].ToDefinition() : default;
 
             return result;
         }
@@ -126,7 +124,7 @@ namespace Project.Scripts.Configs.Battle
 
             var result = new ActivationConditionDefinition[_conditions.Length];
             for (var i = 0; i < _conditions.Length; i++)
-                result[i] = _conditions[i] != null ? _conditions[i].ToDefinition() : default;
+                result[i] = null != _conditions[i] ? _conditions[i].ToDefinition() : default;
 
             return result;
         }
@@ -184,24 +182,6 @@ namespace Project.Scripts.Configs.Battle
         public BuffDefinition ToDefinition()
         {
             return new BuffDefinition(_kind, _operation, _value, _lifetimeKind, _stackingMode);
-        }
-    }
-
-    [Serializable]
-    public class PassiveEffectEntryConfig
-    {
-        [Tooltip("Кто получает эффект или баф этой записи")]
-        [SerializeField] private UnitTargetingConfig _effectRecipients;
-
-        [Tooltip("Какой баф накладывается на выбранные цели")]
-        [SerializeField] private BuffEffectConfig _buff;
-
-
-        public PassiveEffectEntryDefinition ToDefinition()
-        {
-            return new PassiveEffectEntryDefinition(
-                null != _effectRecipients ? _effectRecipients.ToDefinition() : default,
-                null != _buff ? _buff.ToDefinition() : default);
         }
     }
 }

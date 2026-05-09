@@ -145,6 +145,7 @@ namespace Project.Scripts.Gameplay
 
             _burndownService?.Tick(Time.deltaTime);
             _unitActivationCooldownService?.Tick(Time.deltaTime);
+            _buffService?.Tick(Time.deltaTime);
 
             if (_moveBarService.IsEnabled && _boardRuntimeService.CanAcceptInput)
                 _moveBarService.Tick(Time.deltaTime);
@@ -472,7 +473,7 @@ namespace Project.Scripts.Gameplay
 
         private void ApplyLiveResizeIfNeeded()
         {
-            if (_gridManager == null)
+            if (null == _gridManager)
                 return;
 
             var safeArea = Screen.safeArea;
@@ -487,7 +488,7 @@ namespace Project.Scripts.Gameplay
 
         private void ApplyLiveTileLayout()
         {
-            if (_gridManager == null || _pool == null || !_battleWorldLayout)
+            if (null == _gridManager || null == _pool || !_battleWorldLayout)
                 return;
 
             var worldLayout = ComputeGameplayWorldLayout();
@@ -646,7 +647,7 @@ namespace Project.Scripts.Gameplay
 
         private void AnimateBattleFieldLayoutBlend(float target)
         {
-            if (_battleFieldView == null || _battleFieldLayoutConfig == null)
+            if (!_battleFieldView || !_battleFieldLayoutConfig)
                 return;
 
             _battleFieldLayoutTween?.Kill();
@@ -671,7 +672,7 @@ namespace Project.Scripts.Gameplay
 
         private float GetCurrentBattleFieldLayoutBlend()
         {
-            if (_battleWorldLayout == null)
+            if (!_battleWorldLayout)
                 return 0f;
 
             var fullOffset = CalculateHeroPhaseBoardOffset();
@@ -683,7 +684,7 @@ namespace Project.Scripts.Gameplay
 
         private float GetBoardPreviewYOffset()
         {
-            if (_battleWorldLayout == null)
+            if (!_battleWorldLayout)
                 return 0f;
 
             return _battleWorldLayout.GetBoardAndEnergyPreviewYOffset();
@@ -691,7 +692,7 @@ namespace Project.Scripts.Gameplay
 
         private void ApplyBattleFieldLayoutBlend(float blend)
         {
-            if (_battleFieldView == null || _battleFieldLayoutConfig == null)
+            if (!_battleFieldView || !_battleFieldLayoutConfig)
                 return;
 
             blend = Mathf.Clamp01(blend);
@@ -708,12 +709,13 @@ namespace Project.Scripts.Gameplay
 
         private float CalculateHeroPhaseBoardOffset()
         {
-            if (_battleWorldLayout == null)
+            if (!_battleWorldLayout)
                 return 0f;
 
             var heightDelta = Mathf.Max(0f,
                 _battleFieldLayoutConfig.FullProfile.LayoutHeight - _battleFieldLayoutConfig.CompressedProfile.LayoutHeight);
             var extraOffset = _battleWorldLayout.GetBoardWorldHeight() * _battleFieldLayoutConfig.HeroPhaseBoardOffsetFrameHeight;
+            
             return -(heightDelta * _battleFieldView.LayoutScale + extraOffset);
         }
 

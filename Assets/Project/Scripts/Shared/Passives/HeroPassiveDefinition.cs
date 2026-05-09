@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Project.Scripts.Shared.Abilities;
 
 namespace Project.Scripts.Shared.Passives
 {
@@ -7,42 +8,43 @@ namespace Project.Scripts.Shared.Passives
     {
         public string DisplayName { get; }
         public ActivationConditionGroupDefinition ActivationConditions { get; }
-        public IReadOnlyList<PassiveEffectEntryDefinition> EffectEntries =>
-            _effectEntries ?? Array.Empty<PassiveEffectEntryDefinition>();
+        public IReadOnlyList<AbilityEffectEntryDefinition> AbilityEffectEntries =>
+            _abilityEffectEntries ?? Array.Empty<AbilityEffectEntryDefinition>();
         public bool CanActivateWhileActive { get; }
         public int MaxActivations { get; }
-        public bool IsConfigured => ActivationConditions.IsConfigured && HasConfiguredEffects();
+        public bool IsConfigured => ActivationConditions.IsConfigured && HasConfiguredAbilityEffects();
 
 
-        private readonly PassiveEffectEntryDefinition[] _effectEntries;
+        private readonly AbilityEffectEntryDefinition[] _abilityEffectEntries;
 
 
         public HeroPassiveDefinition(string displayName, ActivationConditionGroupDefinition activationConditions,
-            IReadOnlyList<PassiveEffectEntryDefinition> effectEntries, bool canActivateWhileActive, int maxActivations)
+            IReadOnlyList<AbilityEffectEntryDefinition> abilityEffectEntries, bool canActivateWhileActive,
+            int maxActivations)
         {
             DisplayName = displayName ?? string.Empty;
             ActivationConditions = activationConditions;
-            _effectEntries = CopyConfiguredEffects(effectEntries);
+            _abilityEffectEntries = CopyConfiguredAbilityEffects(abilityEffectEntries);
             CanActivateWhileActive = canActivateWhileActive;
             MaxActivations = maxActivations < 0 ? 0 : maxActivations;
         }
 
-        private bool HasConfiguredEffects()
+        private bool HasConfiguredAbilityEffects()
         {
-            if (_effectEntries != null)
-                for (var i = 0; i < _effectEntries.Length; i++)
-                    if (_effectEntries[i].IsConfigured)
+            if (_abilityEffectEntries != null)
+                for (var i = 0; i < _abilityEffectEntries.Length; i++)
+                    if (_abilityEffectEntries[i].IsConfigured)
                         return true;
 
             return false;
         }
-
-        private static PassiveEffectEntryDefinition[] CopyConfiguredEffects(IReadOnlyList<PassiveEffectEntryDefinition> effects)
+        private static AbilityEffectEntryDefinition[] CopyConfiguredAbilityEffects(
+            IReadOnlyList<AbilityEffectEntryDefinition> effects)
         {
             if (null == effects || effects.Count == 0)
-                return Array.Empty<PassiveEffectEntryDefinition>();
+                return Array.Empty<AbilityEffectEntryDefinition>();
 
-            var result = new List<PassiveEffectEntryDefinition>(effects.Count);
+            var result = new List<AbilityEffectEntryDefinition>(effects.Count);
             for (var i = 0; i < effects.Count; i++)
             {
                 var effect = effects[i];

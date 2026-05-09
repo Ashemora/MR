@@ -24,9 +24,8 @@ namespace Project.Scripts.Services.Combat
         private readonly LevelConfig _levelConfig;
         private readonly SlotLayoutConfig _slotLayoutConfig;
         private readonly IBuffService _buffService;
+        private readonly IAbilityEffectApplicationService _abilityEffectApplicationService;
         private readonly IHeroService _heroService;
-        private readonly IPlayerStateService _playerState;
-        private readonly IEnemyStateService _enemyState;
         private readonly IBattleClock _battleClock;
         private readonly PassiveAbilityEngine _engine = new();
         private IDisposable _heroDefeatedSubscription;
@@ -47,16 +46,15 @@ namespace Project.Scripts.Services.Combat
 
 
         public HeroPassiveService(EventBus eventBus, LevelConfig levelConfig, SlotLayoutConfig slotLayoutConfig,
-            IBuffService buffService, IHeroService heroService, IPlayerStateService playerState, IEnemyStateService enemyState,
-            IBattleClock battleClock)
+            IBuffService buffService, IAbilityEffectApplicationService abilityEffectApplicationService,
+            IHeroService heroService, IBattleClock battleClock)
         {
             _eventBus = eventBus;
             _levelConfig = levelConfig;
             _slotLayoutConfig = slotLayoutConfig;
             _buffService = buffService;
+            _abilityEffectApplicationService = abilityEffectApplicationService;
             _heroService = heroService;
-            _playerState = playerState;
-            _enemyState = enemyState;
             _battleClock = battleClock;
         }
 
@@ -153,8 +151,7 @@ namespace Project.Scripts.Services.Combat
 
         private void OnHeroDefeated(HeroDefeatedEvent e)
         {
-            AddProgressAndPublishActivations(new ActivationConditionEvent(
-                ActivationConditionKind.EnemyHeroDefeatsInTimeWindow,
+            AddProgressAndPublishActivations(new ActivationConditionEvent(ActivationConditionKind.EnemyHeroDefeatsInTimeWindow,
                 UnitDescriptor.Hero(e.Side, e.SlotIndex, GetSourceActionType(e.Side, e.SlotIndex)),
                 occurredAtTick: ResolveOccurredAtTick(e.OccurredAtTick)));
 
@@ -231,10 +228,8 @@ namespace Project.Scripts.Services.Combat
             if (_currentPhase is not (BattlePhaseKind.Match or BattlePhaseKind.PendingHero))
                 return;
 
-            AddProgressAndQueueActivations(new ActivationConditionEvent(
-                ActivationConditionKind.MatchEnergyCollected,
-                e.Side,
-                e.Amount));
+            AddProgressAndQueueActivations(new ActivationConditionEvent(ActivationConditionKind.MatchEnergyCollected,
+                e.Side, e.Amount));
         }
 
         private void OnBattleSideMatchesCollected(BattleSideMatchesCollectedEvent e)
@@ -243,21 +238,12 @@ namespace Project.Scripts.Services.Combat
                 return;
 
             var occurredAtTick = ResolveOccurredAtTick(e.OccurredAtTick);
-            AddProgressAndQueueActivations(new ActivationConditionEvent(
-                ActivationConditionKind.MatchesCollected,
-                e.Side,
-                e.Count));
-            AddProgressAndQueueActivations(new ActivationConditionEvent(
-                ActivationConditionKind.SlotKindMatchesCollected,
-                e.Side,
-                e.Count,
-                e.TileKind));
-            AddProgressAndQueueActivations(new ActivationConditionEvent(
-                ActivationConditionKind.SlotKindMatchesInTimeWindow,
-                e.Side,
-                e.Count,
-                e.TileKind,
-                occurredAtTick));
+            AddProgressAndQueueActivations(new ActivationConditionEvent(ActivationConditionKind.MatchesCollected,
+                e.Side, e.Count));
+            AddProgressAndQueueActivations(new ActivationConditionEvent(ActivationConditionKind.SlotKindMatchesCollected,
+                e.Side, e.Count, e.TileKind));
+            AddProgressAndQueueActivations(new ActivationConditionEvent(ActivationConditionKind.SlotKindMatchesInTimeWindow,
+                e.Side, e.Count, e.TileKind, occurredAtTick));
         }
 
         private void OnBattleSideSpecialTileUsed(BattleSideSpecialTileUsedEvent e)
@@ -273,10 +259,7 @@ namespace Project.Scripts.Services.Combat
             if (conditionKind == ActivationConditionKind.None)
                 return;
 
-            AddProgressAndQueueActivations(new ActivationConditionEvent(
-                conditionKind,
-                e.Side,
-                e.Count));
+            AddProgressAndQueueActivations(new ActivationConditionEvent(conditionKind, e.Side, e.Count));
         }
 
         private void OnBattleFlowPhaseChanged(BattleFlowPhaseChangedEvent e)
@@ -341,10 +324,7 @@ namespace Project.Scripts.Services.Combat
         private ActivationConditionEvent CreateAbilityActivatedEvent(ActivationConditionKind kind,
             UnitDescriptor source, long occurredAtTick)
         {
-            return new ActivationConditionEvent(
-                kind,
-                source,
-                occurredAtTick: ResolveOccurredAtTick(occurredAtTick));
+            return new ActivationConditionEvent(kind, source, occurredAtTick: ResolveOccurredAtTick(occurredAtTick));
         }
 
         private void AddHeroAbilityActivationProgressAndPublish(UnitDescriptor source, long occurredAtTick)
@@ -365,10 +345,8 @@ namespace Project.Scripts.Services.Combat
 
         private void AddUnitActivationProgressAndPublish(UnitDescriptor source, long occurredAtTick)
         {
-            AddProgressAndPublishActivations(CreateAbilityActivatedEvent(
-                ActivationConditionKind.UnitActivationsInTimeWindow,
-                source,
-                occurredAtTick));
+            AddProgressAndPublishActivations(CreateAbilityActivatedEvent(ActivationConditionKind.UnitActivationsInTimeWindow,
+                source, occurredAtTick));
         }
 
         private void AddProgressAndPublishActivations(ActivationConditionEvent e)
@@ -485,26 +463,8 @@ namespace Project.Scripts.Services.Combat
         private void ApplyPassiveEffects(HeroPassiveRuntimeState state)
         {
             var source = UnitDescriptor.Hero(state.Side, state.SlotIndex, GetSourceActionType(state.Side, state.SlotIndex));
-            var entries = state.Definition.EffectEntries;
-            var buffsChanged = false;
-
-            for (var i = 0; i < entries.Count; i++)
-            {
-                var entry = entries[i];
-                var targets = UnitTargetingRules.SelectTargets(entry.EffectRecipients, source, CollectCandidates());
-                for (var j = 0; j < targets.Count; j++)
-                {
-                    if (_buffService.AddBuff(source, targets[j], state.SlotKind, entry.Buff, _currentRound,
-                            _currentPhase))
-                    {
-                        buffsChanged = true;
-                        PublishAbilityStatsChanged(targets[j]);
-                    }
-                }
-            }
-
-            if (buffsChanged)
-                _eventBus.Publish(new BuffsChangedEvent());
+            _abilityEffectApplicationService.Apply(source, default, state.Definition.AbilityEffectEntries,
+                state.SlotKind, _currentRound, _currentPhase, _battleClock.CurrentTick);
         }
 
         private void PublishHeroAbilityStatsChanged(BattleSide side, int slotIndex)
@@ -535,17 +495,6 @@ namespace Project.Scripts.Services.Combat
         {
             return (_buffService as IAbilityPowerModifierService)?.GetAbilityPower(target, basePower)
                    ?? basePower;
-        }
-
-        private void PublishAbilityStatsChanged(UnitDescriptor target)
-        {
-            if (target.Kind == UnitKind.Hero)
-            {
-                PublishHeroAbilityStatsChanged(target.Side, target.SlotIndex);
-                return;
-            }
-
-            PublishAvatarAbilityPowerChanged(target.Side);
         }
 
         private void PublishAllAbilityStatsChanged()
@@ -621,40 +570,6 @@ namespace Project.Scripts.Services.Combat
             }
 
             return false;
-        }
-
-        private List<UnitTargetCandidate> CollectCandidates()
-        {
-            var playerAvatarActionType = _levelConfig.PlayerAvatarConfig.AbilityType;
-            var enemyAvatarActionType = _levelConfig.EnemyAvatarConfig.AbilityType;
-            var result = new List<UnitTargetCandidate>(10)
-            {
-                new(UnitDescriptor.Avatar(BattleSide.Player, playerAvatarActionType),
-                    _playerState.CurrentHP,
-                    _playerState.MaxHP,
-                    _playerState.CurrentHP > 0),
-                new(UnitDescriptor.Avatar(BattleSide.Enemy, enemyAvatarActionType),
-                    _enemyState.CurrentHP,
-                    _enemyState.MaxHP,
-                    _enemyState.CurrentHP > 0)
-            };
-
-            AddHeroCandidates(result, BattleSide.Player);
-            AddHeroCandidates(result, BattleSide.Enemy);
-            
-            return result;
-        }
-
-        private void AddHeroCandidates(List<UnitTargetCandidate> result, BattleSide side)
-        {
-            var slots = _heroService.GetSlots(side);
-            for (var i = 0; i < SlotCount && i < slots.Count; i++)
-            {
-                var slot = slots[i];
-
-                result.Add(new UnitTargetCandidate(UnitDescriptor.Hero(side, i, slot.ActionType), 
-                    slot.CurrentHP, slot.MaxHP, slot is { IsAssigned: true, IsAlive: true }));
-            }
         }
 
         private HeroActionType GetSourceActionType(BattleSide side, int slotIndex)

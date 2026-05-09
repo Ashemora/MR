@@ -1,48 +1,67 @@
+using System.Collections.Generic;
+using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Passives;
 
 namespace Project.Scripts.Shared.Rules
 {
     public static class AbilityTargetRules
     {
-        public static bool IsTargetValid(UnitDescriptor source, UnitDescriptor target,
-            HeroActionType actionType, bool isSourceAlive, bool isTargetAlive, bool isTargetHpFull,
-            bool isTargetExposed)
+        public static bool IsTargetAllowedByDirectEntries(UnitDescriptor source, UnitDescriptor target,
+            IReadOnlyList<AbilityEffectEntryDefinition> entries, IReadOnlyList<UnitTargetCandidate> candidates)
+        {
+            if (entries == null || candidates == null)
+                return false;
+
+            for (var i = 0; i < entries.Count; i++)
+            {
+                var entry = entries[i];
+                if (false == HasConfiguredDirectActions(entry.DirectActions))
+                    continue;
+
+                var targets = UnitTargetingRules.SelectTargets(entry.Targeting, source, target, candidates);
+                if (UnitTargetingRules.ContainsTarget(targets, target))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsTargetValid(HeroActionType actionType, bool isSourceAlive, bool isTargetAlive,
+            bool isTargetHpFull, bool isTargetExposed)
         {
             if (false == isSourceAlive || false == isTargetAlive)
                 return false;
 
             if (actionType == HeroActionType.DealDamage)
-                return CanDealDamage(source, target, isTargetExposed);
+                return CanDealDamage(isTargetExposed);
 
             if (actionType == HeroActionType.HealAlly)
-                return CanHeal(source, target, isTargetHpFull);
+                return CanHeal(isTargetHpFull);
 
             return false;
         }
 
-        private static bool CanDealDamage(UnitDescriptor source, UnitDescriptor target, bool isTargetExposed)
+        private static bool HasConfiguredDirectActions(IReadOnlyList<DirectActionDefinition> directActions)
         {
-            if (target.Side == source.Side)
+            if (directActions == null)
                 return false;
 
-            if (target.Kind == UnitKind.Avatar && false == isTargetExposed)
-                return false;
+            for (var i = 0; i < directActions.Count; i++)
+                if (directActions[i].IsConfigured)
+                    return true;
 
-            return true;
+            return false;
         }
 
-        private static bool CanHeal(UnitDescriptor source, UnitDescriptor target, bool isTargetHpFull)
+        private static bool CanDealDamage(bool isTargetExposed)
         {
-            if (target.Side != source.Side)
-                return false;
+            return isTargetExposed;
+        }
 
-            if (source.Kind == target.Kind && source.Side == target.Side && source.SlotIndex == target.SlotIndex)
-                return false;
-
-            if (isTargetHpFull)
-                return false;
-
-            return true;
+        private static bool CanHeal(bool isTargetHpFull)
+        {
+            return false == isTargetHpFull;
         }
     }
 }

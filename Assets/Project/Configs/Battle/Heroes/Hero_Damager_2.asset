@@ -13,11 +13,45 @@ MonoBehaviour:
   m_Name: Hero_Damager_2
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
   _maxHP: 65
-  _abilityType: 0
-  _abilityPower: 10
-  _activationEnergyCost: 5
-  _activationCooldownSeconds: 10
-  _portrait: {fileID: 21300000, guid: 7aa2f66b0d575ae48a9d71a2cf7377d6, type: 3}
   _displayName: Hero_Damager_2
-  _passiveAbilities:
-  - {fileID: 11400000, guid: b2cda9edc5f34676a6148af5986bb7d2, type: 2}
+  _portrait: {fileID: 21300000, guid: 7aa2f66b0d575ae48a9d71a2cf7377d6, type: 3}
+  _activeAbility:
+    _displayName: Damage
+    _activationEnergyCost: 5
+    _activationCooldownSeconds: 10
+    _effectEntries:
+    - _targeting:
+        _scope: 2
+        _relation: 1
+        _unitKind: 0
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: []
+      _directActions:
+      - _kind: 1
+        _value: 10
+      _buffApplications: []
+    - _targeting:
+        _scope: 0
+        _relation: 0
+        _unitKind: 0
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: []
+      _directActions: []
+      _buffApplications:
+      - _buff:
+          _kind: 2
+          _operation: 1
+          _value: 5
+          _lifetimeKind: 0
+          _stackingMode: 0
+        _durationSeconds: 0
+      - _buff:
+          _kind: 1
+          _operation: 1
+          _value: 5
+          _lifetimeKind: 0
+          _stackingMode: 0
+        _durationSeconds: 0
+  _passiveAbilities: []

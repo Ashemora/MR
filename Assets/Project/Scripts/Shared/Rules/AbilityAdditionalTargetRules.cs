@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Passives;
 
 namespace Project.Scripts.Shared.Rules
 {
@@ -29,21 +31,27 @@ namespace Project.Scripts.Shared.Rules
     public static class AbilityAdditionalTargetRules
     {
         public static List<UnitDescriptor> SelectTargets(UnitDescriptor source, UnitDescriptor primaryTarget,
-            HeroActionType actionType, int maxTargets, IReadOnlyList<AbilityTargetCandidate> candidates)
+            HeroActionType actionType, int maxTargets, IReadOnlyList<AbilityTargetCandidate> candidates,
+            IReadOnlyList<AbilityEffectEntryDefinition> entries)
         {
             var result = new List<UnitDescriptor>();
             if (maxTargets <= 0 || null == candidates)
                 return result;
 
             var rankedCandidates = new List<AbilityTargetCandidate>();
+            var unitCandidates = ToUnitTargetCandidates(candidates);
             for (var i = 0; i < candidates.Count; i++)
             {
                 var candidate = candidates[i];
                 if (IsSameUnit(candidate.Descriptor, primaryTarget))
                     continue;
 
-                if (false == AbilityTargetRules.IsTargetValid(source, candidate.Descriptor, actionType, true,
-                        candidate.IsAlive, candidate.IsHpFull, candidate.IsExposed))
+                if (false == AbilityTargetRules.IsTargetValid(actionType, true, candidate.IsAlive,
+                        candidate.IsHpFull, candidate.IsExposed))
+                    continue;
+
+                if (false == AbilityTargetRules.IsTargetAllowedByDirectEntries(source, candidate.Descriptor, entries,
+                        unitCandidates))
                     continue;
 
                 rankedCandidates.Add(candidate);
@@ -130,6 +138,19 @@ namespace Project.Scripts.Shared.Rules
             return left.Side == right.Side
                    && left.Kind == right.Kind
                    && left.SlotIndex == right.SlotIndex;
+        }
+
+        private static List<UnitTargetCandidate> ToUnitTargetCandidates(IReadOnlyList<AbilityTargetCandidate> candidates)
+        {
+            var result = new List<UnitTargetCandidate>(candidates.Count);
+            for (var i = 0; i < candidates.Count; i++)
+            {
+                var candidate = candidates[i];
+                result.Add(new UnitTargetCandidate(candidate.Descriptor, candidate.CurrentHP, candidate.MaxHP,
+                    candidate.IsAlive));
+            }
+
+            return result;
         }
     }
 }

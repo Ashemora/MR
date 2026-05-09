@@ -9,8 +9,9 @@ namespace Project.Scripts.Services.Combat
     public interface IBuffService
     {
         IReadOnlyList<BuffRuntimeState> Buffs { get; }
+        bool Tick(float deltaTime);
         bool AddBuff(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind, BuffDefinition definition,
-            int currentRound, BattlePhaseKind currentPhase);
+            int currentRound, BattlePhaseKind currentPhase, float durationSeconds = 0f);
         bool RemoveByUnit(UnitDescriptor unit);
         bool ExpireUntilEndOfNextMainPhaseBuffs(BattlePhaseKind previousPhase, BattlePhaseKind nextPhase);
         bool HasMatchEnergyBuff(BattleSide side, TileKind tileKind);

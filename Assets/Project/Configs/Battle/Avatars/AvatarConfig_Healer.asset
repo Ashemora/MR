@@ -13,8 +13,20 @@ MonoBehaviour:
   m_Name: AvatarConfig_Healer
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.AvatarConfig
   _maxHP: 300
-  _activationEnergyCost: 110
-  _abilityType: 1
-  _abilityPower: 80
+  _activeAbility:
+    _displayName:
+    _activationEnergyCost: 110
+    _activationCooldownSeconds: 3
+    _effectEntries:
+    - _targeting:
+        _scope: 2
+        _relation: 0
+        _unitKind: 0
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: []
+      _directActions:
+      - _kind: 2
+        _value: 80
+      _buffApplications: []
   _portrait: {fileID: 21300000, guid: 02e08ab308c40d14d969abb7c14e50e8, type: 3}
-  _activationCooldownSeconds: 3

@@ -20,19 +20,22 @@ MonoBehaviour:
     - _kind: 1
       _subject: 0
       _requiredCount: 1
-  _effectEntries:
-  - _effectRecipients:
+  _abilityEffectEntries:
+  - _targeting:
       _scope: 0
       _relation: 0
       _unitKind: 0
       _includeOwner: 1
       _selectionMode: 0
       _filters: []
-    _buff:
-      _kind: 7
-      _operation: 1
-      _value: 1
-      _lifetimeKind: 4
-      _stackingMode: 1
+    _directActions: []
+    _buffApplications:
+    - _buff:
+        _kind: 7
+        _operation: 1
+        _value: 1
+        _lifetimeKind: 4
+        _stackingMode: 1
+      _durationSeconds: 0
   _canActivateWhileActive: 0
   _maxActivations: 0

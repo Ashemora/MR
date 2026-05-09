@@ -18,7 +18,7 @@ namespace Project.Scripts.Shared.Passives
 
 
         public bool AddBuff(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind, BuffDefinition definition,
-            int currentRound, BattlePhaseKind currentPhase)
+            int currentRound, BattlePhaseKind currentPhase, float durationSeconds = 0f)
         {
             if (false == definition.IsConfigured)
                 return false;
@@ -31,14 +31,40 @@ namespace Project.Scripts.Shared.Passives
                 if (definition.StackingMode == BuffStackingMode.IgnoreNew)
                     return false;
 
-                _buffs[i] = _buffs[i].WithStackAdded(1, currentRound, currentPhase);
+                _buffs[i] = _buffs[i].WithStackAdded(1, currentRound, currentPhase, durationSeconds);
                 return true;
             }
 
             _buffs.Add(new BuffRuntimeState(source, target, sourceSlotKind, definition, 1, currentRound,
-                currentPhase));
+                currentPhase, durationSeconds));
             
             return true;
+        }
+
+        public bool Tick(float deltaTime)
+        {
+            if (deltaTime <= 0f)
+                return false;
+
+            var removed = false;
+            for (var i = _buffs.Count - 1; i >= 0; i--)
+            {
+                var buff = _buffs[i];
+                if (false == buff.UsesDuration)
+                    continue;
+
+                var nextBuff = buff.WithDurationTicked(deltaTime);
+                if (nextBuff.UsesDuration)
+                {
+                    _buffs[i] = nextBuff;
+                    continue;
+                }
+
+                _buffs.RemoveAt(i);
+                removed = true;
+            }
+
+            return removed;
         }
 
         public bool RemoveByUnit(UnitDescriptor unit)
@@ -59,7 +85,7 @@ namespace Project.Scripts.Shared.Passives
 
         public bool ExpireUntilEndOfNextMainPhaseBuffs(BattlePhaseKind previousPhase, BattlePhaseKind nextPhase)
         {
-            if (IsMainPhase(previousPhase) == false || previousPhase == nextPhase)
+            if (false == IsMainPhase(previousPhase) || previousPhase == nextPhase)
                 return false;
 
             var removed = false;

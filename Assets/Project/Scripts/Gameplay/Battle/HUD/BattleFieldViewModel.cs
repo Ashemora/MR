@@ -5,7 +5,6 @@ using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.Battle.Units;
-using Project.Scripts.Services.Board;
 using Project.Scripts.Services.BattleFlow;
 using Project.Scripts.Services.Combat;
 using Project.Scripts.Services.Events;
@@ -35,9 +34,6 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         public string EnemyName => _levelConfig.BotConfig ? _levelConfig.BotConfig.OpponentName : string.Empty;
         public BattleAnimationConfig BattleAnimConfig => _battleAnimationConfig;
         public UnitDeathConfig DeathConfig { get; private set; }
-        public float BoardTopWorldY => _boardBounds.BoardTopWorldY;
-        public float BoardHalfWidth => _boardBounds.BoardHalfWidth;
-        public float BoardCenterX => _boardBounds.BoardCenterX;
         public ReadOnlyReactiveProperty<int> TimerSeconds => _timerSeconds;
         public ReadOnlyReactiveProperty<int> CurrentRound => _currentRound;
         public ReadOnlyReactiveProperty<bool> IsInteractionOverlayVisible => _isInteractionOverlayVisible;
@@ -57,7 +53,6 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         private readonly TileKindPaletteConfig _palette;
         private readonly LevelConfig _levelConfig;
         private readonly SlotLayoutConfig _slotLayoutConfig;
-        private readonly IBoardBoundsProvider _boardBounds;
         private readonly IGameStateService _gameStateService;
         private readonly IBattleFlowService _battleFlowService;
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
@@ -85,7 +80,6 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             TileKindPaletteConfig palette,
             LevelConfig levelConfig,
             SlotLayoutConfig slotLayoutConfig,
-            IBoardBoundsProvider boardBounds,
             IGameStateService gameStateService,
             IBattleFlowService battleFlowService,
             IBattleActionRuntimeService battleActionRuntimeService,
@@ -106,7 +100,6 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             _palette = palette;
             _levelConfig = levelConfig;
             _slotLayoutConfig = slotLayoutConfig;
-            _boardBounds = boardBounds;
             _gameStateService = gameStateService;
             _battleFlowService = battleFlowService;
             _battleActionRuntimeService = battleActionRuntimeService;
@@ -158,7 +151,6 @@ namespace Project.Scripts.Gameplay.Battle.HUD
                 GetAvatarAbilityPower(BattleSide.Enemy, _levelConfig.EnemyAvatarConfig),
                 _unitActivationCooldownService,
                 _battleActionRuntimeService);
-
 
             _playerHeroSlots = CreateHeroSlotViewModels(
                 BattleSide.Player,
@@ -286,9 +278,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             return false == _battleActionRuntimeService.CanAcceptNormalActions;
         }
 
-        private HeroSlotViewModel[] CreateHeroSlotViewModels(
-            BattleSide side,
-            IReadOnlyList<HeroSlotState> states,
+        private HeroSlotViewModel[] CreateHeroSlotViewModels(BattleSide side, IReadOnlyList<HeroSlotState> states,
             HeroConfig[] configs)
         {
             var slots = new HeroSlotViewModel[4];
@@ -296,21 +286,14 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             for (var i = 0; i < 4; i++)
             {
                 var state = states[i];
-                var config = (null != configs && i < configs.Length) ? configs[i] : null;
+                var config = null != configs && i < configs.Length ? configs[i] : null;
                 var color = state.IsAssigned
                     ? _palette.GetColor(state.SlotKind, Color.gray)
                     : Color.gray;
                 var portrait = config ? config.Portrait : null;
 
-                slots[i] = new HeroSlotViewModel(
-                    i,
-                    side,
-                    state,
-                    color,
-                    portrait,
-                    _eventBus,
-                    _unitActivationCooldownService,
-                    _battleActionRuntimeService);
+                slots[i] = new HeroSlotViewModel(i, side, state, color, portrait, _eventBus,
+                    _unitActivationCooldownService, _battleActionRuntimeService);
             }
 
             return slots;
@@ -318,8 +301,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
         private int GetAvatarAbilityPower(BattleSide side, AvatarConfig config)
         {
-            return _abilityPowerModifierService.GetAbilityPower(
-                UnitDescriptor.Avatar(side, config.AbilityType),
+            return _abilityPowerModifierService.GetAbilityPower(UnitDescriptor.Avatar(side, config.AbilityType),
                 config.AbilityPower);
         }
     }

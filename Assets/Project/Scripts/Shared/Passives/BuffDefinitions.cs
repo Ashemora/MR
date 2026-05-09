@@ -33,25 +33,55 @@ namespace Project.Scripts.Shared.Passives
         public BuffDefinition Definition { get; }
         public int StackCount { get; }
         public BattlePhaseKind ExpiresAfterMainPhase { get; }
+        public float RemainingDurationSeconds { get; }
+        public bool UsesDuration => RemainingDurationSeconds > 0f;
 
 
         public BuffRuntimeState(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind,
-            BuffDefinition definition, int stackCount, int currentRound, BattlePhaseKind currentPhase)
+            BuffDefinition definition, int stackCount, int currentRound, BattlePhaseKind currentPhase,
+            float durationSeconds = 0f)
+            : this(source, target, sourceSlotKind, definition, stackCount,
+                definition.LifetimeKind == BuffLifetimeKind.UntilEndOfNextMainPhase
+                    ? GetNextMainPhase(currentPhase)
+                    : default,
+                durationSeconds)
+        {
+        }
+
+        private BuffRuntimeState(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind,
+            BuffDefinition definition, int stackCount, BattlePhaseKind expiresAfterMainPhase, float durationSeconds)
         {
             Source = source;
             Target = target;
             SourceSlotKind = sourceSlotKind;
             Definition = definition;
             StackCount = stackCount < 1 ? 1 : stackCount;
-            ExpiresAfterMainPhase = definition.LifetimeKind == BuffLifetimeKind.UntilEndOfNextMainPhase
-                ? GetNextMainPhase(currentPhase)
-                : default;
+            ExpiresAfterMainPhase = expiresAfterMainPhase;
+            RemainingDurationSeconds = durationSeconds < 0f ? 0f : durationSeconds;
         }
 
-        public BuffRuntimeState WithStackAdded(int amount, int currentRound, BattlePhaseKind currentPhase)
+        public BuffRuntimeState WithStackAdded(int amount, int currentRound, BattlePhaseKind currentPhase,
+            float durationSeconds = 0f)
         {
+            var nextDuration = RemainingDurationSeconds;
+            if (durationSeconds > nextDuration)
+                nextDuration = durationSeconds;
+
             return new BuffRuntimeState(Source, Target, SourceSlotKind, Definition, StackCount + amount,
-                currentRound, currentPhase);
+                currentRound, currentPhase, nextDuration);
+        }
+
+        public BuffRuntimeState WithDurationTicked(float deltaTime)
+        {
+            if (RemainingDurationSeconds <= 0f || deltaTime <= 0f)
+                return this;
+
+            var nextDuration = RemainingDurationSeconds - deltaTime;
+            if (nextDuration < 0f)
+                nextDuration = 0f;
+
+            return new BuffRuntimeState(Source, Target, SourceSlotKind, Definition, StackCount,
+                ExpiresAfterMainPhase, nextDuration);
         }
 
         private static BattlePhaseKind GetNextMainPhase(BattlePhaseKind currentPhase)
@@ -76,7 +106,9 @@ namespace Project.Scripts.Shared.Passives
         NextAttackDamage,
         ApplyAbilityToAdditionalTargets,
         ModifyLineRuneThickness,
-        ResurrectOnDeath
+        ResurrectOnDeath,
+        Shield,
+        Stun
     }
 
     public enum BuffModifierOperation
