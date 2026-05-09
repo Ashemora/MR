@@ -32,6 +32,7 @@ namespace Project.Scripts.DI
             builder.RegisterInstance(levelConfig);
 
             builder.RegisterComponentInHierarchy<GameplayEntryPoint>();
+            builder.Register<BoardSystemsFactory>(Lifetime.Singleton);
 
             builder.Register<IGameStateService, GameStateService>(Lifetime.Singleton);
             builder.RegisterEntryPoint<BattleClockService>().As<IBattleClock>();
