@@ -1,7 +1,7 @@
 using System;
 using Project.Scripts.Configs.Battle;
-using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Events;
+using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.GroupDefense;
 using Project.Scripts.Shared.Heroes;
 using R3;
@@ -26,14 +26,14 @@ namespace Project.Scripts.Services.Combat
         public ReadOnlyReactiveProperty<AvatarDefenseSnapshot> EnemyDefense => _enemyDefense;
 
 
-        public AvatarGroupDefenseService(LevelConfig levelConfig, SlotLayoutConfig slotLayoutConfig,
+        public AvatarGroupDefenseService(BattleSetup battleSetup, SlotLayoutConfig slotLayoutConfig,
             EventBus eventBus)
         {
             _slotLayoutConfig = slotLayoutConfig;
             _eventBus = eventBus;
 
-            InitDefending(_playerDefending, levelConfig.PlayerHeroes);
-            InitDefending(_enemyDefending, levelConfig.EnemyHeroes);
+            InitDefending(_playerDefending, battleSetup, BattleSide.Player);
+            InitDefending(_enemyDefending, battleSetup, BattleSide.Enemy);
 
             _playerDefense = new ReactiveProperty<AvatarDefenseSnapshot>(ComputeSnapshot(_playerDefending));
             _enemyDefense = new ReactiveProperty<AvatarDefenseSnapshot>(ComputeSnapshot(_enemyDefending));
@@ -104,10 +104,10 @@ namespace Project.Scripts.Services.Combat
             return true;
         }
 
-        private static void InitDefending(bool[] defending, HeroConfig[] configs)
+        private static void InitDefending(bool[] defending, BattleSetup battleSetup, BattleSide side)
         {
             for (var i = 0; i < SlotCount; i++)
-                defending[i] = configs != null && i < configs.Length && configs[i];
+                defending[i] = battleSetup.GetHero(side, i).IsAssigned;
         }
     }
 }

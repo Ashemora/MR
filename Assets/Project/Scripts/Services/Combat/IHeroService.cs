@@ -6,10 +6,6 @@ namespace Project.Scripts.Services.Combat
     public interface IHeroService
     {
         IReadOnlyList<HeroSlotState> GetSlots(BattleSide side);
-        bool CanActivate(BattleSide side, int slotIndex);
-        void TryActivate(int slotIndex);
-        void TryActivate(BattleSide side, int slotIndex);
-        bool TryDischargeHero(BattleSide side, int slotIndex, out HeroActionType actionType, out int actionValue);
         void ApplyDamageToHero(BattleSide side, int slotIndex, int amount, bool silent = false);
         void ApplyHealToHero(BattleSide side, int slotIndex, int amount);
     }

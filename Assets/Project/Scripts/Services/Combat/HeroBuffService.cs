@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using Project.Scripts.Configs.Levels;
-using Project.Scripts.Configs.Battle;
 using Project.Scripts.Services.Events;
+using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Energy;
 using Project.Scripts.Shared.Heroes;
@@ -22,14 +21,14 @@ namespace Project.Scripts.Services.Combat
 
 
         private readonly EventBus _eventBus;
-        private readonly LevelConfig _levelConfig;
+        private readonly BattleSetup _battleSetup;
         private readonly BuffEngine _engine = new();
 
 
-        public HeroBuffService(EventBus eventBus, LevelConfig levelConfig)
+        public HeroBuffService(EventBus eventBus, BattleSetup battleSetup)
         {
             _eventBus = eventBus;
-            _levelConfig = levelConfig;
+            _battleSetup = battleSetup;
         }
 
 
@@ -185,38 +184,23 @@ namespace Project.Scripts.Services.Combat
 
         private void PublishHeroAbilityStatsChanged(BattleSide side, int slotIndex)
         {
-            var heroConfig = GetHeroConfig(side, slotIndex);
-            if (!heroConfig)
+            var unit = _battleSetup.GetHero(side, slotIndex);
+            if (false == unit.IsAssigned)
                 return;
 
             _eventBus.Publish(new HeroAbilityStatsChangedEvent(side, slotIndex,
-                GetActivationEnergyCost(side, slotIndex, heroConfig.ActivationEnergyCost),
-                GetAbilityPower(UnitDescriptor.Hero(side, slotIndex, heroConfig.AbilityType),
-                    heroConfig.AbilityPower)));
+                GetActivationEnergyCost(side, slotIndex, unit.BaseActivationEnergyCost),
+                GetAbilityPower(unit.Unit, unit.BaseAbilityPower)));
         }
 
         private void PublishAvatarAbilityPowerChanged(BattleSide side)
         {
-            var config = side == BattleSide.Player
-                ? _levelConfig.PlayerAvatarConfig
-                : _levelConfig.EnemyAvatarConfig;
-            if (!config)
+            var unit = side == BattleSide.Player ? _battleSetup.PlayerAvatar : _battleSetup.EnemyAvatar;
+            if (false == unit.IsAssigned)
                 return;
 
-            var target = UnitDescriptor.Avatar(side, config.AbilityType);
-            _eventBus.Publish(new AvatarAbilityPowerChangedEvent(side, GetAbilityPower(target, config.AbilityPower)));
-        }
-
-        private HeroConfig GetHeroConfig(BattleSide side, int slotIndex)
-        {
-            if (slotIndex is < 0 or >= SlotCount)
-                return null;
-
-            var heroes = side == BattleSide.Player
-                ? _levelConfig.PlayerHeroes
-                : _levelConfig.EnemyHeroes;
-
-            return null != heroes && slotIndex < heroes.Length ? heroes[slotIndex] : null;
+            _eventBus.Publish(new AvatarAbilityPowerChangedEvent(side,
+                GetAbilityPower(unit.Unit, unit.BaseAbilityPower)));
         }
     }
 }

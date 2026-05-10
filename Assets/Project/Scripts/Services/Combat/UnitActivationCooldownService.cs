@@ -1,7 +1,7 @@
 using System;
 using Project.Scripts.Configs.Battle;
-using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Events;
+using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Rules;
 
@@ -39,16 +39,16 @@ namespace Project.Scripts.Services.Combat
         private IDisposable _burndownStartedSubscription;
 
 
-        public UnitActivationCooldownService(EventBus eventBus, LevelConfig levelConfig, BattleFlowConfig battleFlowConfig,
+        public UnitActivationCooldownService(EventBus eventBus, BattleSetup battleSetup, BattleFlowConfig battleFlowConfig,
             IHeroCooldownModifierService heroCooldownModifierService)
         {
             _eventBus = eventBus;
             _heroCooldownModifierService = heroCooldownModifierService;
             _minUnitActivationCooldownSeconds = battleFlowConfig.MinUnitActivationCooldownSeconds;
-            FillHeroDurations(_playerHeroDurations, levelConfig.PlayerHeroes);
-            FillHeroDurations(_enemyHeroDurations, levelConfig.EnemyHeroes);
-            _playerAvatarDuration = levelConfig.PlayerAvatarConfig ? levelConfig.PlayerAvatarConfig.ActivationCooldownSeconds : 0f;
-            _enemyAvatarDuration = levelConfig.EnemyAvatarConfig ? levelConfig.EnemyAvatarConfig.ActivationCooldownSeconds : 0f;
+            FillHeroDurations(_playerHeroDurations, battleSetup, BattleSide.Player);
+            FillHeroDurations(_enemyHeroDurations, battleSetup, BattleSide.Enemy);
+            _playerAvatarDuration = battleSetup.PlayerAvatar.BaseActivationCooldownSeconds;
+            _enemyAvatarDuration = battleSetup.EnemyAvatar.BaseActivationCooldownSeconds;
 
             _heroDefeatedSubscription = _eventBus.Subscribe<HeroDefeatedEvent>(OnHeroDefeated);
             _heroResurrectedSubscription = _eventBus.Subscribe<HeroResurrectedEvent>(OnHeroResurrected);
@@ -81,9 +81,27 @@ namespace Project.Scripts.Services.Combat
             return GetHeroRemaining(side)[slotIndex] > 0f;
         }
 
+        public bool IsOnCooldown(UnitDescriptor unit)
+        {
+            return unit.Kind == UnitKind.Avatar
+                ? IsAvatarOnCooldown(unit.Side)
+                : IsHeroOnCooldown(unit.Side, unit.SlotIndex);
+        }
+
         public bool IsAvatarOnCooldown(BattleSide side)
         {
             return side == BattleSide.Player ? _playerAvatarRemaining > 0f : _enemyAvatarRemaining > 0f;
+        }
+
+        public void StartCooldown(UnitDescriptor unit)
+        {
+            if (unit.Kind == UnitKind.Avatar)
+            {
+                StartAvatarCooldown(unit.Side);
+                return;
+            }
+
+            StartHeroCooldown(unit.Side, unit.SlotIndex);
         }
 
         public void StartHeroCooldown(BattleSide side, int slotIndex)
@@ -276,10 +294,10 @@ namespace Project.Scripts.Services.Combat
             return CooldownRules.ApplyMinimumUnitActivationCooldown(baseDuration, _minUnitActivationCooldownSeconds);
         }
 
-        private static void FillHeroDurations(float[] target, Project.Scripts.Configs.Battle.HeroConfig[] configs)
+        private static void FillHeroDurations(float[] target, BattleSetup battleSetup, BattleSide side)
         {
             for (var i = 0; i < target.Length; i++)
-                target[i] = configs != null && i < configs.Length && configs[i] ? configs[i].ActivationCooldownSeconds : 0f;
+                target[i] = battleSetup.GetHero(side, i).BaseActivationCooldownSeconds;
         }
 
         private static float Abs(float value)

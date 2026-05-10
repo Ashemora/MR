@@ -1,8 +1,7 @@
+using System;
 using System.Collections.Generic;
-using Project.Scripts.Configs.Battle;
-using Project.Scripts.Configs.Levels;
-using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.Abilities;
+using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Passives;
@@ -15,21 +14,97 @@ namespace Project.Scripts.Services.Combat
     {
         AbilityEffectApplicationResult Apply(UnitDescriptor source, UnitDescriptor selectedTarget,
             IReadOnlyList<AbilityEffectEntryDefinition> entries, TileKind sourceSlotKind, int currentRound,
-            BattlePhaseKind currentPhase, long occurredAtTick, int applicationIndexOffset = 0, bool isRepeat = false,
-            float presentationDelaySeconds = 0f);
+            BattlePhaseKind currentPhase, long occurredAtTick, int applicationIndexOffset = 0, bool isRepeat = false);
+    }
+
+    public readonly struct AbilityDirectApplicationResult
+    {
+        public UnitDescriptor Source { get; }
+        public UnitDescriptor Target { get; }
+        public HeroActionType ActionType { get; }
+        public int Value { get; }
+        public int ApplicationIndex { get; }
+        public bool IsRepeat { get; }
+        public long OccurredAtTick { get; }
+
+
+        public AbilityDirectApplicationResult(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType,
+            int value, int applicationIndex, bool isRepeat, long occurredAtTick)
+        {
+            Source = source;
+            Target = target;
+            ActionType = actionType;
+            Value = value < 0 ? 0 : value;
+            ApplicationIndex = applicationIndex < 0 ? 0 : applicationIndex;
+            IsRepeat = isRepeat;
+            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
+        }
     }
 
     public readonly struct AbilityEffectApplicationResult
     {
         public int DirectActionCount { get; }
         public int BuffApplicationCount { get; }
+        public IReadOnlyList<AbilityDirectApplicationResult> DirectApplications =>
+            _directApplications ?? Array.Empty<AbilityDirectApplicationResult>();
+        public IReadOnlyList<AbilityStatsChangeResult> AbilityStatsChanges =>
+            _abilityStatsChanges ?? Array.Empty<AbilityStatsChangeResult>();
         public bool WasChanged => DirectActionCount > 0 || BuffApplicationCount > 0;
 
 
-        public AbilityEffectApplicationResult(int directActionCount, int buffApplicationCount)
+        private readonly AbilityDirectApplicationResult[] _directApplications;
+        private readonly AbilityStatsChangeResult[] _abilityStatsChanges;
+
+
+        public AbilityEffectApplicationResult(int buffApplicationCount,
+            IReadOnlyList<AbilityDirectApplicationResult> directApplications,
+            IReadOnlyList<AbilityStatsChangeResult> abilityStatsChanges)
         {
-            DirectActionCount = directActionCount < 0 ? 0 : directActionCount;
             BuffApplicationCount = buffApplicationCount < 0 ? 0 : buffApplicationCount;
+            _directApplications = CopyDirectApplications(directApplications);
+            _abilityStatsChanges = CopyAbilityStatsChanges(abilityStatsChanges);
+            DirectActionCount = _directApplications.Length;
+        }
+
+        private static AbilityDirectApplicationResult[] CopyDirectApplications(
+            IReadOnlyList<AbilityDirectApplicationResult> directApplications)
+        {
+            if (directApplications == null || directApplications.Count == 0)
+                return Array.Empty<AbilityDirectApplicationResult>();
+
+            var result = new AbilityDirectApplicationResult[directApplications.Count];
+            for (var i = 0; i < directApplications.Count; i++)
+                result[i] = directApplications[i];
+
+            return result;
+        }
+
+        private static AbilityStatsChangeResult[] CopyAbilityStatsChanges(
+            IReadOnlyList<AbilityStatsChangeResult> abilityStatsChanges)
+        {
+            if (abilityStatsChanges == null || abilityStatsChanges.Count == 0)
+                return Array.Empty<AbilityStatsChangeResult>();
+
+            var result = new AbilityStatsChangeResult[abilityStatsChanges.Count];
+            for (var i = 0; i < abilityStatsChanges.Count; i++)
+                result[i] = abilityStatsChanges[i];
+
+            return result;
+        }
+    }
+
+    public readonly struct AbilityStatsChangeResult
+    {
+        public UnitDescriptor Target { get; }
+        public int ActivationEnergyCost { get; }
+        public int AbilityPower { get; }
+
+
+        public AbilityStatsChangeResult(UnitDescriptor target, int activationEnergyCost, int abilityPower)
+        {
+            Target = target;
+            ActivationEnergyCost = activationEnergyCost < 0 ? 0 : activationEnergyCost;
+            AbilityPower = abilityPower < 0 ? 0 : abilityPower;
         }
     }
 
@@ -38,38 +113,37 @@ namespace Project.Scripts.Services.Combat
         private const int SlotCount = 4;
 
 
-        private readonly LevelConfig _levelConfig;
+        private readonly BattleSetup _battleSetup;
+        private readonly IUnitStateService _unitStateService;
         private readonly IHeroService _heroService;
-        private readonly IPlayerStateService _playerState;
-        private readonly IEnemyStateService _enemyState;
+        private readonly IAvatarService _avatarService;
         private readonly IAvatarGroupDefenseService _groupDefense;
         private readonly IBuffService _buffService;
-        private readonly EventBus _eventBus;
 
 
-        public AbilityEffectApplicationService(LevelConfig levelConfig, IHeroService heroService,
-            IPlayerStateService playerState, IEnemyStateService enemyState, IAvatarGroupDefenseService groupDefense,
-            IBuffService buffService, EventBus eventBus)
+        public AbilityEffectApplicationService(BattleSetup battleSetup, IUnitStateService unitStateService,
+            IHeroService heroService,
+            IAvatarService avatarService, IAvatarGroupDefenseService groupDefense,
+            IBuffService buffService)
         {
-            _levelConfig = levelConfig;
+            _battleSetup = battleSetup;
+            _unitStateService = unitStateService;
             _heroService = heroService;
-            _playerState = playerState;
-            _enemyState = enemyState;
+            _avatarService = avatarService;
             _groupDefense = groupDefense;
             _buffService = buffService;
-            _eventBus = eventBus;
         }
 
 
         public AbilityEffectApplicationResult Apply(UnitDescriptor source, UnitDescriptor selectedTarget,
             IReadOnlyList<AbilityEffectEntryDefinition> entries, TileKind sourceSlotKind, int currentRound,
-            BattlePhaseKind currentPhase, long occurredAtTick, int applicationIndexOffset = 0, bool isRepeat = false,
-            float presentationDelaySeconds = 0f)
+            BattlePhaseKind currentPhase, long occurredAtTick, int applicationIndexOffset = 0, bool isRepeat = false)
         {
             if (entries == null || entries.Count == 0)
                 return default;
 
-            var directActionCount = 0;
+            var directApplications = new List<AbilityDirectApplicationResult>();
+            var abilityStatsChanges = new List<AbilityStatsChangeResult>();
             var buffApplicationCount = 0;
             var candidates = CollectCandidates();
 
@@ -83,27 +157,23 @@ namespace Project.Scripts.Services.Combat
                 for (var targetIndex = 0; targetIndex < targets.Count; targetIndex++)
                 {
                     var target = targets[targetIndex];
-                    directActionCount += ApplyDirectActions(source, target, entry.DirectActions, occurredAtTick,
-                        applicationIndexOffset, isRepeat, presentationDelaySeconds);
+                    ApplyDirectActions(source, target, entry.DirectActions, occurredAtTick, applicationIndexOffset,
+                        isRepeat, directApplications);
                     buffApplicationCount += ApplyBuffApplications(source, target, sourceSlotKind, entry.BuffApplications,
-                        currentRound, currentPhase);
+                        currentRound, currentPhase, abilityStatsChanges);
                 }
             }
 
-            if (buffApplicationCount > 0)
-                _eventBus.Publish(new BuffsChangedEvent());
-
-            return new AbilityEffectApplicationResult(directActionCount, buffApplicationCount);
+            return new AbilityEffectApplicationResult(buffApplicationCount, directApplications, abilityStatsChanges);
         }
 
-        private int ApplyDirectActions(UnitDescriptor source, UnitDescriptor target,
+        private void ApplyDirectActions(UnitDescriptor source, UnitDescriptor target,
             IReadOnlyList<DirectActionDefinition> actions, long occurredAtTick, int applicationIndexOffset,
-            bool isRepeat, float presentationDelaySeconds)
+            bool isRepeat, List<AbilityDirectApplicationResult> directApplications)
         {
             if (null == actions || actions.Count == 0)
-                return 0;
+                return;
 
-            var appliedCount = 0;
             for (var i = 0; i < actions.Count; i++)
             {
                 var action = actions[i];
@@ -111,18 +181,14 @@ namespace Project.Scripts.Services.Combat
                     continue;
 
                 if (ApplyDirectAction(target, action))
-                {
-                    _eventBus.Publish(new AbilityApplicationEvent(source, target, ToHeroActionType(action.Kind),
-                        action.Value, applicationIndexOffset + i, isRepeat, presentationDelaySeconds, occurredAtTick));
-                    appliedCount++;
-                }
+                    directApplications.Add(new AbilityDirectApplicationResult(source, target, ToHeroActionType(action.Kind),
+                        action.Value, applicationIndexOffset + i, isRepeat, occurredAtTick));
             }
-
-            return appliedCount;
         }
 
         private int ApplyBuffApplications(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind,
-            IReadOnlyList<BuffApplicationDefinition> applications, int currentRound, BattlePhaseKind currentPhase)
+            IReadOnlyList<BuffApplicationDefinition> applications, int currentRound, BattlePhaseKind currentPhase,
+            List<AbilityStatsChangeResult> abilityStatsChanges)
         {
             if (null == applications || applications.Count == 0)
                 return 0;
@@ -137,7 +203,8 @@ namespace Project.Scripts.Services.Combat
                 if (_buffService.AddBuff(source, target, sourceSlotKind, application.Buff, currentRound, currentPhase,
                         application.DurationSeconds))
                 {
-                    PublishAbilityStatsChanged(target);
+                    if (TryCreateAbilityStatsChange(target, out var change))
+                        abilityStatsChanges.Add(change);
                     appliedCount++;
                 }
             }
@@ -166,11 +233,7 @@ namespace Project.Scripts.Services.Combat
         {
             if (target.Kind == UnitKind.Avatar)
             {
-                if (target.Side == BattleSide.Player)
-                    _playerState.TakeDamage(value);
-                else
-                    _enemyState.ApplyDamage(value);
-
+                _avatarService.ApplyDamage(target.Side, value);
                 return;
             }
 
@@ -181,11 +244,7 @@ namespace Project.Scripts.Services.Combat
         {
             if (target.Kind == UnitKind.Avatar)
             {
-                if (target.Side == BattleSide.Player)
-                    _playerState.Heal(value);
-                else
-                    _enemyState.ApplyHeal(value);
-
+                _avatarService.ApplyHeal(target.Side, value);
                 return;
             }
 
@@ -206,107 +265,84 @@ namespace Project.Scripts.Services.Combat
             isHpFull = false;
             isExposed = true;
 
-            if (target.Kind == UnitKind.Avatar)
-            {
-                if (target.Side == BattleSide.Player)
-                {
-                    isAlive = _playerState.CurrentHP > 0;
-                    isHpFull = _playerState.CurrentHP >= _playerState.MaxHP;
-                }
-                else
-                {
-                    isAlive = _enemyState.CurrentHP > 0;
-                    isHpFull = _enemyState.CurrentHP >= _enemyState.MaxHP;
-                }
-
-                isExposed = _groupDefense.IsExposed(target.Side);
-                
-                return true;
-            }
-
-            var slots = _heroService.GetSlots(target.Side);
-            if (target.SlotIndex < 0 || target.SlotIndex >= slots.Count)
+            if (false == _unitStateService.TryGetUnit(target, out var state))
                 return false;
 
-            var slot = slots[target.SlotIndex];
-            if (false == slot.IsAssigned)
+            if (false == state.IsAssigned)
                 return false;
 
-            isAlive = slot.IsAlive;
-            isHpFull = slot.CurrentHP >= slot.MaxHP;
+            isAlive = state.IsAlive;
+            isHpFull = state.IsHpFull;
+            isExposed = target.Kind != UnitKind.Avatar || _groupDefense.IsExposed(target.Side);
             
             return true;
         }
 
         private List<UnitTargetCandidate> CollectCandidates()
         {
-            var playerAvatarActionType = _levelConfig.PlayerAvatarConfig
-                ? _levelConfig.PlayerAvatarConfig.AbilityType
-                : HeroActionType.DealDamage;
-            var enemyAvatarActionType = _levelConfig.EnemyAvatarConfig
-                ? _levelConfig.EnemyAvatarConfig.AbilityType
-                : HeroActionType.DealDamage;
-            var result = new List<UnitTargetCandidate>(10)
-            {
-                new(UnitDescriptor.Avatar(BattleSide.Player, playerAvatarActionType),
-                    _playerState.CurrentHP,
-                    _playerState.MaxHP,
-                    _playerState.CurrentHP > 0),
-                new(UnitDescriptor.Avatar(BattleSide.Enemy, enemyAvatarActionType),
-                    _enemyState.CurrentHP,
-                    _enemyState.MaxHP,
-                    _enemyState.CurrentHP > 0)
-            };
-
+            var result = new List<UnitTargetCandidate>(10);
+            AddAvatarCandidate(result, BattleSide.Player);
+            AddAvatarCandidate(result, BattleSide.Enemy);
             AddHeroCandidates(result, BattleSide.Player);
             AddHeroCandidates(result, BattleSide.Enemy);
 
             return result;
         }
 
+        private void AddAvatarCandidate(List<UnitTargetCandidate> result, BattleSide side)
+        {
+            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, HeroActionType.DealDamage),
+                    out var state))
+                return;
+
+            result.Add(new UnitTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+                state.IsAssigned && state.IsAlive));
+        }
+
         private void AddHeroCandidates(List<UnitTargetCandidate> result, BattleSide side)
         {
-            var slots = _heroService.GetSlots(side);
-            for (var i = 0; i < SlotCount && i < slots.Count; i++)
+            for (var i = 0; i < SlotCount; i++)
             {
-                var slot = slots[i];
-                result.Add(new UnitTargetCandidate(UnitDescriptor.Hero(side, i, slot.ActionType),
-                    slot.CurrentHP, slot.MaxHP, slot is { IsAssigned: true, IsAlive: true }));
+                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, HeroActionType.DealDamage),
+                        out var state))
+                    continue;
+
+                result.Add(new UnitTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+                    state.IsAssigned && state.IsAlive));
             }
         }
 
-        private void PublishAbilityStatsChanged(UnitDescriptor target)
+        private bool TryCreateAbilityStatsChange(UnitDescriptor target, out AbilityStatsChangeResult change)
         {
+            change = default;
             if (target.Kind == UnitKind.Hero)
-            {
-                PublishHeroAbilityStatsChanged(target.Side, target.SlotIndex);
-                return;
-            }
+                return TryCreateHeroAbilityStatsChange(target.Side, target.SlotIndex, out change);
 
-            PublishAvatarAbilityPowerChanged(target.Side);
+            return TryCreateAvatarAbilityPowerChange(target.Side, out change);
         }
 
-        private void PublishHeroAbilityStatsChanged(BattleSide side, int slotIndex)
+        private bool TryCreateHeroAbilityStatsChange(BattleSide side, int slotIndex, out AbilityStatsChangeResult change)
         {
-            var heroConfig = GetHeroConfig(side, slotIndex);
-            if (!heroConfig)
-                return;
+            change = default;
+            var unit = _battleSetup.GetHero(side, slotIndex);
+            if (false == unit.IsAssigned)
+                return false;
 
-            _eventBus.Publish(new HeroAbilityStatsChangedEvent(side, slotIndex,
-                GetActivationEnergyCost(side, slotIndex, heroConfig.ActivationEnergyCost),
-                GetAbilityPower(UnitDescriptor.Hero(side, slotIndex, heroConfig.AbilityType), heroConfig.AbilityPower)));
+            change = new AbilityStatsChangeResult(unit.Unit,
+                GetActivationEnergyCost(side, slotIndex, unit.BaseActivationEnergyCost),
+                GetAbilityPower(unit.Unit, unit.BaseAbilityPower));
+            return true;
         }
 
-        private void PublishAvatarAbilityPowerChanged(BattleSide side)
+        private bool TryCreateAvatarAbilityPowerChange(BattleSide side, out AbilityStatsChangeResult change)
         {
-            var config = side == BattleSide.Player
-                ? _levelConfig.PlayerAvatarConfig
-                : _levelConfig.EnemyAvatarConfig;
-            if (!config)
-                return;
+            change = default;
+            var unit = side == BattleSide.Player ? _battleSetup.PlayerAvatar : _battleSetup.EnemyAvatar;
+            if (false == unit.IsAssigned)
+                return false;
 
-            var target = UnitDescriptor.Avatar(side, config.AbilityType);
-            _eventBus.Publish(new AvatarAbilityPowerChangedEvent(side, GetAbilityPower(target, config.AbilityPower)));
+            change = new AbilityStatsChangeResult(unit.Unit, 0, GetAbilityPower(unit.Unit, unit.BaseAbilityPower));
+            return true;
         }
 
         private int GetActivationEnergyCost(BattleSide side, int slotIndex, int baseCost)
@@ -319,18 +355,6 @@ namespace Project.Scripts.Services.Combat
         {
             return (_buffService as IAbilityPowerModifierService)?.GetAbilityPower(target, basePower)
                    ?? basePower;
-        }
-
-        private HeroConfig GetHeroConfig(BattleSide side, int slotIndex)
-        {
-            if (slotIndex is < 0 or >= SlotCount)
-                return null;
-
-            var heroes = side == BattleSide.Player
-                ? _levelConfig.PlayerHeroes
-                : _levelConfig.EnemyHeroes;
-
-            return heroes != null && slotIndex < heroes.Length ? heroes[slotIndex] : null;
         }
 
         private static HeroActionType ToHeroActionType(DirectActionKind actionKind)

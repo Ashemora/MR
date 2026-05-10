@@ -13,8 +13,7 @@ namespace Project.Scripts.Services.Timer
     {
         private readonly BurndownConfig _config;
         private readonly IHeroService _heroService;
-        private readonly IPlayerStateService _playerState;
-        private readonly IEnemyStateService _enemyState;
+        private readonly IAvatarService _avatarService;
         private readonly EventBus _eventBus;
         private readonly IGameStateService _gameStateService;
 
@@ -32,15 +31,13 @@ namespace Project.Scripts.Services.Timer
         public BurndownService(
             BurndownConfig config,
             IHeroService heroService,
-            IPlayerStateService playerState,
-            IEnemyStateService enemyState,
+            IAvatarService avatarService,
             EventBus eventBus,
             IGameStateService gameStateService)
         {
             _config = config;
             _heroService = heroService;
-            _playerState = playerState;
-            _enemyState = enemyState;
+            _avatarService = avatarService;
             _eventBus = eventBus;
             _gameStateService = gameStateService;
         }
@@ -81,14 +78,14 @@ namespace Project.Scripts.Services.Timer
             var heroDamage = (int)Math.Ceiling(_config.HeroDrainPerSecond * _config.DrainTickInterval * ticks);
             var avatarDamage = (int)Math.Ceiling(_config.AvatarDrainPerSecond * _config.DrainTickInterval * ticks);
 
-            var playerHpBefore = _playerState.CurrentHP;
-            var enemyHpBefore = _enemyState.CurrentHP;
+            var playerHpBefore = _avatarService.GetAvatar(BattleSide.Player).CurrentHP;
+            var enemyHpBefore = _avatarService.GetAvatar(BattleSide.Enemy).CurrentHP;
 
             DrainSide(BattleSide.Player, ref _playerCursor, heroDamage, avatarDamage);
             DrainSide(BattleSide.Enemy, ref _enemyCursor, heroDamage, avatarDamage);
 
-            var playerDied = playerHpBefore > 0 && _playerState.CurrentHP <= 0;
-            var enemyDied = enemyHpBefore > 0 && _enemyState.CurrentHP <= 0;
+            var playerDied = playerHpBefore > 0 && _avatarService.GetAvatar(BattleSide.Player).CurrentHP <= 0;
+            var enemyDied = enemyHpBefore > 0 && _avatarService.GetAvatar(BattleSide.Enemy).CurrentHP <= 0;
 
             if (playerDied && enemyDied)
                 ResolveSimultaneousDeath(playerHpBefore, enemyHpBefore);
@@ -122,10 +119,7 @@ namespace Project.Scripts.Services.Timer
 
             if (cursor.IsDrainingAvatar)
             {
-                if (side == BattleSide.Player)
-                    _playerState.ForceApplyDamage(avatarDamage, suppressDefeatedEvent: true);
-                else
-                    _enemyState.ForceApplyDamage(avatarDamage, suppressDefeatedEvent: true);
+                _avatarService.ForceApplyDamage(side, avatarDamage, suppressDefeatedEvent: true);
                 return;
             }
 

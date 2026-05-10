@@ -1,3 +1,4 @@
+using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
 
@@ -8,10 +9,10 @@ namespace Project.Scripts.Shared.Passives
         public BattleSide Side { get; }
         public int SlotIndex { get; }
         public TileKind SlotKind { get; }
-        public HeroPassiveDefinition Definition { get; }
+        public PassiveAbilityDefinition Definition { get; }
 
 
-        public HeroPassiveSetup(BattleSide side, int slotIndex, TileKind slotKind, HeroPassiveDefinition definition)
+        public HeroPassiveSetup(BattleSide side, int slotIndex, TileKind slotKind, PassiveAbilityDefinition definition)
         {
             Side = side;
             SlotIndex = slotIndex;

@@ -28,13 +28,7 @@ namespace Project.Scripts.Configs.Battle
         [Tooltip("Максимум активаций за бой. Ноль означает без ограничений")]
         [SerializeField] private int _maxActivations;
 
-        public HeroPassiveDefinition ToDefinition()
-        {
-            return new HeroPassiveDefinition(_displayName, ToActivationConditionGroupDefinition(),
-                ToAbilityEffectEntryDefinitions(), _canActivateWhileActive, _maxActivations);
-        }
-
-        public PassiveAbilityDefinition ToPassiveAbilityDefinition()
+        public PassiveAbilityDefinition ToDefinition()
         {
             return new PassiveAbilityDefinition(_displayName, ToActivationConditionGroupDefinition(),
                 ToAbilityEffectEntryDefinitions(), _canActivateWhileActive, _maxActivations);

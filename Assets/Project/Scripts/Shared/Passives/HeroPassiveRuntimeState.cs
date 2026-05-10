@@ -1,3 +1,4 @@
+using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
 
@@ -8,7 +9,7 @@ namespace Project.Scripts.Shared.Passives
         public BattleSide Side { get; }
         public int SlotIndex { get; }
         public TileKind SlotKind { get; }
-        public HeroPassiveDefinition Definition { get; }
+        public PassiveAbilityDefinition Definition { get; }
         public bool IsDisabled { get; }
         public int TotalActivationCount { get; }
         public int ConditionCount => _conditionProgress?.Length ?? 0;
@@ -23,7 +24,7 @@ namespace Project.Scripts.Shared.Passives
 
 
         public HeroPassiveRuntimeState(BattleSide side, int slotIndex, TileKind slotKind, 
-            HeroPassiveDefinition definition, bool isDisabled = false, int totalActivationCount = 0, 
+            PassiveAbilityDefinition definition, bool isDisabled = false, int totalActivationCount = 0, 
             float[] conditionProgress = null, long[][] conditionOccurrenceTicks = null)
         {
             Side = side;
@@ -136,7 +137,7 @@ namespace Project.Scripts.Shared.Passives
                 TotalActivationCount, _conditionProgress, _conditionOccurrenceTicks);
         }
 
-        private static float[] CopyConditionProgress(HeroPassiveDefinition definition, float[] source)
+        private static float[] CopyConditionProgress(PassiveAbilityDefinition definition, float[] source)
         {
             var conditions = definition.ActivationConditions.Conditions;
             if (conditions.Count == 0)
@@ -152,7 +153,7 @@ namespace Project.Scripts.Shared.Passives
             return result;
         }
 
-        private static long[][] CopyConditionOccurrenceTicks(HeroPassiveDefinition definition, long[][] source)
+        private static long[][] CopyConditionOccurrenceTicks(PassiveAbilityDefinition definition, long[][] source)
         {
             var conditions = definition.ActivationConditions.Conditions;
             if (conditions.Count == 0)
@@ -161,7 +162,7 @@ namespace Project.Scripts.Shared.Passives
             var result = new long[conditions.Count][];
             for (var i = 0; i < result.Length; i++)
             {
-                if (source == null || i >= source.Length || source[i] == null || source[i].Length == 0)
+                if (null == source || i >= source.Length || null == source[i] || source[i].Length == 0)
                 {
                     result[i] = System.Array.Empty<long>();
                     continue;

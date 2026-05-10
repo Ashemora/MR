@@ -1,21 +1,19 @@
 using System;
 using System.Collections.Generic;
-using Project.Scripts.Configs.Battle;
-using Project.Scripts.Configs.Levels;
 using Project.Scripts.Shared.Abilities;
+using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.Heroes;
 
 namespace Project.Scripts.Services.Combat
 {
     internal static class AbilityRuntimeDefinitionResolver
     {
-        private const int SlotCount = 4;
-
-
-        public static IReadOnlyList<AbilityEffectEntryDefinition> CreateCommittedEntries(LevelConfig levelConfig,
+        public static IReadOnlyList<AbilityEffectEntryDefinition> CreateCommittedEntries(BattleSetup battleSetup,
             UnitDescriptor source, HeroActionType committedActionType, int committedActionValue)
         {
-            var definition = GetActiveAbilityDefinition(levelConfig, source);
+            var definition = battleSetup.TryGetUnit(source, out var unitSetup)
+                ? unitSetup.ActiveAbility
+                : default;
             var entries = definition.EffectEntries;
             if (entries.Count == 0)
                 return Array.Empty<AbilityEffectEntryDefinition>();
@@ -25,34 +23,6 @@ namespace Project.Scripts.Services.Combat
                 result[i] = CreateCommittedEntry(entries[i], committedActionType, committedActionValue);
 
             return result;
-        }
-
-        private static ActiveAbilityDefinition GetActiveAbilityDefinition(LevelConfig levelConfig, UnitDescriptor source)
-        {
-            if (source.Kind == UnitKind.Avatar)
-            {
-                var avatar = source.Side == BattleSide.Player
-                    ? levelConfig.PlayerAvatarConfig
-                    : levelConfig.EnemyAvatarConfig;
-
-                return avatar ? avatar.ToActiveAbilityDefinition() : default;
-            }
-
-            var hero = GetHeroConfig(levelConfig, source.Side, source.SlotIndex);
-            
-            return hero ? hero.ToActiveAbilityDefinition() : default;
-        }
-
-        private static HeroConfig GetHeroConfig(LevelConfig levelConfig, BattleSide side, int slotIndex)
-        {
-            if (slotIndex is < 0 or >= SlotCount)
-                return null;
-
-            var heroes = side == BattleSide.Player
-                ? levelConfig.PlayerHeroes
-                : levelConfig.EnemyHeroes;
-
-            return heroes != null && slotIndex < heroes.Length ? heroes[slotIndex] : null;
         }
 
         private static AbilityEffectEntryDefinition CreateCommittedEntry(AbilityEffectEntryDefinition entry,
@@ -66,7 +36,7 @@ namespace Project.Scripts.Services.Combat
         private static DirectActionDefinition[] CreateCommittedDirectActions(IReadOnlyList<DirectActionDefinition> directActions, 
             HeroActionType committedActionType, int committedActionValue)
         {
-            if (directActions == null || directActions.Count == 0)
+            if (null == directActions || directActions.Count == 0)
                 return Array.Empty<DirectActionDefinition>();
 
             var committedKind = ToDirectActionKind(committedActionType);

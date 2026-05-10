@@ -5,6 +5,7 @@ using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Timer;
 using Project.Scripts.Shared.BattleFlow;
+using Project.Scripts.Shared.Heroes;
 using VContainer.Unity;
 using R3;
 
@@ -18,8 +19,7 @@ namespace Project.Scripts.Services.BattleFlow
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
         private readonly IGameStateService _gameStateService;
         private readonly IBurndownTransitionCoordinator _burndownTransitionCoordinator;
-        private readonly IPlayerStateService _playerStateService;
-        private readonly IEnemyStateService _enemyStateService;
+        private readonly IAvatarService _avatarService;
         private IDisposable _phaseChangedSubscription;
         private IDisposable _boardResolvingSubscription;
         private IDisposable _gameStateSubscription;
@@ -33,8 +33,7 @@ namespace Project.Scripts.Services.BattleFlow
             IBattleActionRuntimeService battleActionRuntimeService,
             IGameStateService gameStateService,
             IBurndownTransitionCoordinator burndownTransitionCoordinator,
-            IPlayerStateService playerStateService,
-            IEnemyStateService enemyStateService)
+            IAvatarService avatarService)
         {
             _eventBus = eventBus;
             _battleFlowService = battleFlowService;
@@ -42,8 +41,7 @@ namespace Project.Scripts.Services.BattleFlow
             _battleActionRuntimeService = battleActionRuntimeService;
             _gameStateService = gameStateService;
             _burndownTransitionCoordinator = burndownTransitionCoordinator;
-            _playerStateService = playerStateService;
-            _enemyStateService = enemyStateService;
+            _avatarService = avatarService;
         }
 
 
@@ -105,8 +103,8 @@ namespace Project.Scripts.Services.BattleFlow
             _boardRuntimeService.ApplyBattleFlowPhase(phase);
             _battleActionRuntimeService.ApplyBattleFlowPhase(phase);
 
-            if (phase == BattlePhaseKind.PendingBurndown && _playerStateService.CurrentHP > 0
-                                                         && _enemyStateService.CurrentHP > 0)
+            if (phase == BattlePhaseKind.PendingBurndown && _avatarService.IsAlive(BattleSide.Player)
+                                                         && _avatarService.IsAlive(BattleSide.Enemy))
             {
                 _burndownTransitionCoordinator.RequestStart();
             }

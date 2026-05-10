@@ -13,7 +13,7 @@ namespace Project.Scripts.Services.Game
 
 
         private readonly EventBus _eventBus;
-        private readonly IPlayerStateService _playerState;
+        private readonly IAvatarService _avatarService;
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
         private readonly ReactiveProperty<GameState> _state = new(GameState.Playing);
         private IDisposable _winSub;
@@ -22,11 +22,11 @@ namespace Project.Scripts.Services.Game
 
         public GameStateService(
             EventBus eventBus,
-            IPlayerStateService playerState,
+            IAvatarService avatarService,
             IBattleActionRuntimeService battleActionRuntimeService)
         {
             _eventBus = eventBus;
-            _playerState = playerState;
+            _avatarService = avatarService;
             _battleActionRuntimeService = battleActionRuntimeService;
             _winSub = _eventBus.Subscribe<EnemyDefeatedEvent>(OnEnemyDefeated);
             _loseSub = _eventBus.Subscribe<PlayerDefeatedEvent>(OnPlayerDefeated);
@@ -52,7 +52,7 @@ namespace Project.Scripts.Services.Game
                 return;
 
             _battleActionRuntimeService.MarkBlocked();
-            var isFlawless = _playerState.CurrentHP >= _playerState.MaxHP;
+            var isFlawless = _avatarService.IsHpFull(BattleSide.Player);
             _eventBus.Publish(new GameResultEvent(BattleSide.Player, isFlawless));
             SetState(GameState.Win);
         }

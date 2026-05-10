@@ -1,3 +1,4 @@
+using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Gameplay;
 using Project.Scripts.Gameplay.Battle.HUD;
@@ -30,6 +31,8 @@ namespace Project.Scripts.DI
             var levelDatabase = Parent.Container.Resolve<LevelDatabase>();
             var levelConfig = levelDatabase.GetById(LevelProgressionService.CurrentLevelId);
             builder.RegisterInstance(levelConfig);
+            var slotLayoutConfig = Parent.Container.Resolve<SlotLayoutConfig>();
+            builder.RegisterInstance(BattleSetupFactory.Create(levelConfig, slotLayoutConfig));
 
             builder.RegisterComponentInHierarchy<GameplayEntryPoint>();
             builder.Register<BoardSystemsFactory>(Lifetime.Singleton);
@@ -39,8 +42,8 @@ namespace Project.Scripts.DI
             builder.Register<IBattleActionRuntimeService, BattleActionRuntimeService>(Lifetime.Singleton);
             builder.Register<IMoveCounterService, MoveCounterService>(Lifetime.Singleton);
             builder.Register<IAvatarGroupDefenseService, AvatarGroupDefenseService>(Lifetime.Singleton);
-            builder.Register<IEnemyStateService, EnemyStateService>(Lifetime.Singleton);
-            builder.Register<IPlayerStateService, PlayerStateService>(Lifetime.Singleton);
+            builder.Register<IAvatarService, AvatarService>(Lifetime.Singleton);
+            builder.Register<IUnitStateService, UnitStateService>(Lifetime.Singleton);
             builder.Register<ILevelProgressionService, LevelProgressionService>(Lifetime.Singleton);
             builder.Register<IMoveBarService, MoveBarService>(Lifetime.Singleton);
             builder.Register<IHeroService, HeroService>(Lifetime.Singleton);
@@ -60,8 +63,6 @@ namespace Project.Scripts.DI
             builder.RegisterEntryPoint<HeroPassiveService>().As<IHeroPassiveService>();
             builder.RegisterEntryPoint<BattleSideEnergyService>().As<IBattleSideEnergyService>();
             builder.Register<IUnitActivationCooldownService, UnitActivationCooldownService>(Lifetime.Singleton);
-            builder.RegisterEntryPoint<PlayerAvatarChargeService>().As<IPlayerAvatarChargeService>();
-            builder.RegisterEntryPoint<EnemyAvatarChargeService>().As<IEnemyAvatarChargeService>();
             builder.RegisterEntryPoint<AutoEnergyTickService>();
 
             if (EnableEscalationModule)
@@ -77,6 +78,7 @@ namespace Project.Scripts.DI
                     .As<IBattleEconomyModifierService>();
             }
             builder.Register<IAbilityEffectApplicationService, AbilityEffectApplicationService>(Lifetime.Singleton);
+            builder.Register<IUnitAbilityActivationService, UnitAbilityActivationService>(Lifetime.Singleton);
             builder.Register<IAbilityExecutionService, AbilityExecutionService>(Lifetime.Singleton);
 
             builder.Register<MoveBarViewModel>(Lifetime.Singleton);

@@ -43,8 +43,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
 
         private readonly EventBus _eventBus;
-        private readonly IEnemyStateService _enemyState;
-        private readonly IPlayerStateService _playerState;
+        private readonly IAvatarService _avatarService;
         private readonly BattleAnimationConfig _battleAnimationConfig;
         private readonly IHeroService _heroService;
         private readonly IBattleSideEnergyService _battleSideEnergyService;
@@ -70,8 +69,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
         public BattleFieldViewModel(
             EventBus eventBus,
-            IEnemyStateService enemyState,
-            IPlayerStateService playerState,
+            IAvatarService avatarService,
             BattleAnimationConfig battleAnimationConfig,
             IHeroService heroService,
             IBattleSideEnergyService battleSideEnergyService,
@@ -90,8 +88,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             UnitDeathConfig unitDeathConfig)
         {
             _eventBus = eventBus;
-            _enemyState = enemyState;
-            _playerState = playerState;
+            _avatarService = avatarService;
             _battleAnimationConfig = battleAnimationConfig;
             _heroService = heroService;
             _battleSideEnergyService = battleSideEnergyService;
@@ -123,14 +120,16 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         {
             DeathConfig = _unitDeathConfig;
             var avatarColor = _palette.GetColor(_slotLayoutConfig.AvatarSlotKind, Color.gray);
+            var playerAvatar = _avatarService.GetAvatar(BattleSide.Player);
+            var enemyAvatar = _avatarService.GetAvatar(BattleSide.Enemy);
 
             PlayerAvatar = new AvatarSlotViewModel(
                 _eventBus,
                 BattleSide.Player,
                 avatarColor,
                 _levelConfig.PlayerAvatarConfig.Portrait,
-                _playerState.CurrentHP,
-                _playerState.MaxHP,
+                playerAvatar.CurrentHP,
+                playerAvatar.MaxHP,
                 _battleAnimationConfig,
                 _levelConfig.PlayerAvatarConfig.AbilityType,
                 _levelConfig.PlayerAvatarConfig.ActivationEnergyCost,
@@ -143,8 +142,8 @@ namespace Project.Scripts.Gameplay.Battle.HUD
                 BattleSide.Enemy,
                 avatarColor,
                 _levelConfig.EnemyAvatarConfig.Portrait,
-                _enemyState.CurrentHP,
-                _enemyState.MaxHP,
+                enemyAvatar.CurrentHP,
+                enemyAvatar.MaxHP,
                 _battleAnimationConfig,
                 _levelConfig.EnemyAvatarConfig.AbilityType,
                 _levelConfig.EnemyAvatarConfig.ActivationEnergyCost,

@@ -172,26 +172,6 @@ namespace Project.Scripts.Services.Events
         }
     }
 
-    public readonly struct HeroActivatedEvent
-    {
-        public BattleSide Side { get; }
-        public int SlotIndex { get; }
-        public HeroActionType ActionType { get; }
-        public int ActionValue { get; }
-        public long OccurredAtTick { get; }
-
-
-        public HeroActivatedEvent(BattleSide side, int slotIndex, HeroActionType actionType, int actionValue,
-            long occurredAtTick = 0)
-        {
-            Side = side;
-            SlotIndex = slotIndex;
-            ActionType = actionType;
-            ActionValue = actionValue;
-            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
-        }
-    }
-
     public readonly struct HeroPassiveActivatedEvent
     {
         public HeroPassiveRuntimeState State { get; }
@@ -310,19 +290,6 @@ namespace Project.Scripts.Services.Events
             Side = side;
             Current = current;
             EnergyCap = energyCap;
-        }
-    }
-
-    public readonly struct EnemyAvatarActivatedEvent
-    {
-        public HeroActionType ActionType { get; }
-        public int ActionValue { get; }
-
-
-        public EnemyAvatarActivatedEvent(HeroActionType actionType, int actionValue)
-        {
-            ActionType = actionType;
-            ActionValue = actionValue;
         }
     }
 

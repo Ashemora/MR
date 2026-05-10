@@ -36,14 +36,6 @@ namespace Project.Scripts.Services.Audio
                 _audioService.Play(AudioTags.Group_Gameplay, sound);
             }).AddTo(_disposables);
 
-            eventBus.Subscribe<HeroActivatedEvent>(e =>
-            {
-                var sound = e.ActionType == HeroActionType.HealAlly
-                    ? AudioTags.Sound_Heal_01
-                    : AudioTags.Sound_Laser_01;
-                _audioService.Play(AudioTags.Group_Gameplay, sound);
-            }).AddTo(_disposables);
-
             eventBus.Subscribe<MatchPlayedEvent>(e =>
             {
                 var pitch = Mathf.Clamp(1f + e.CascadeIndex * 0.1f, 1f, 2f);
