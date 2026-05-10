@@ -1,6 +1,12 @@
 using System;
 using Project.Scripts.Configs.Battle;
-using Project.Scripts.Services.Combat;
+using Project.Scripts.Services.Combat.Abilities;
+using Project.Scripts.Services.Combat.Buffs;
+using Project.Scripts.Services.Combat.Passives;
+using Project.Scripts.Services.Combat.Units;
+using Project.Scripts.Services.Combat.Energy;
+using Project.Scripts.Services.Combat.Economy;
+using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleFlow;
 using VContainer.Unity;

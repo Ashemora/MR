@@ -1,0 +1,10 @@
+using Project.Scripts.Shared.Energy;
+using Project.Scripts.Shared.Heroes;
+
+namespace Project.Scripts.Services.Combat.Energy
+{
+    public interface IEnergyGainModifierService
+    {
+        float CalculateEnergy(BattleSide side, EnergyGainBreakdown breakdown);
+    }
+}
