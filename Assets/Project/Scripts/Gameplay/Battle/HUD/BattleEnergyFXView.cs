@@ -1,5 +1,5 @@
 using System;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Visuals;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Gameplay.Battle.FX;
 using Project.Scripts.Services.Events;

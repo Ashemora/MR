@@ -1,7 +1,7 @@
 using Project.Scripts.Shared.Energy;
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Energy
 {
     [CreateAssetMenu(fileName = "CascadeEnergyConfig", menuName = "Configs/Battle/Cascade Energy Config")]
     public class CascadeEnergyConfig : ScriptableObject

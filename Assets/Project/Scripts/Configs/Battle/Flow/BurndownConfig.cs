@@ -1,7 +1,7 @@
 using DG.Tweening;
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Flow
 {
     [CreateAssetMenu(fileName = "BurndownConfig", menuName = "Configs/Battle/Burndown Config")]
     public class BurndownConfig : ScriptableObject

@@ -1,6 +1,6 @@
 using System;
 using Project.Scripts.Services.BattleFlow;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Energy;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using R3;

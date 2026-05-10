@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Energy
 {
     [CreateAssetMenu(fileName = "AutoEnergyConfig", menuName = "Configs/Battle/Auto Energy Config")]
     public class AutoEnergyConfig : ScriptableObject

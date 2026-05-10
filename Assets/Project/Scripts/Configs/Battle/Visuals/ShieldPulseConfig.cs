@@ -2,7 +2,7 @@ using System;
 using DG.Tweening;
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Visuals
 {
     [Serializable]
     public class ShieldPulseConfig

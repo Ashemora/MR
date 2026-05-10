@@ -1,5 +1,5 @@
 using System;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Gameplay.Battle.Units;
 using UnityEngine;
 
@@ -69,8 +69,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
         public BattleFieldLayoutSnapshot CaptureLayoutSnapshot(BattleFieldLayoutTargets targets)
         {
-            return new BattleFieldLayoutSnapshot(
-                Mathf.Max(0.01f, _layoutHeight),
+            return new BattleFieldLayoutSnapshot(Mathf.Max(0.01f, _layoutHeight),
                 CapturePose(targets.PlayerAvatarSlot ? targets.PlayerAvatarSlot.transform : null),
                 CapturePose(targets.EnemyAvatarSlot ? targets.EnemyAvatarSlot.transform : null),
                 CaptureHeroSlotPoses(targets.PlayerHeroSlots),
@@ -140,10 +139,8 @@ namespace Project.Scripts.Gameplay.Battle.HUD
                 var renderers = GetComponentsInChildren<SpriteRenderer>(false);
                 var minY = transform.position.y;
                 for (var i = 0; i < renderers.Length; i++)
-                {
                     if (renderers[i].sprite)
                         minY = Mathf.Min(minY, renderers[i].bounds.min.y);
-                }
                 pivotToBottom = transform.position.y - minY;
             }
 
@@ -197,6 +194,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             }
 
             error = string.Empty;
+            
             return true;
         }
 
@@ -231,10 +229,8 @@ namespace Project.Scripts.Gameplay.Battle.HUD
                 var overlayScaleY = CalculateRendererScaleY(_phaseOverlay, safeHeight);
 
                 if (false == Mathf.Approximately(overlayScale.x, overlayScaleX)
-                    || false == Mathf.Approximately(overlayScale.y, overlayScaleY))
-                {
+                    || false == Mathf.Approximately(overlayScale.y, overlayScaleY)) 
                     overlayTransform.localScale = new Vector3(overlayScaleX, overlayScaleY, overlayScale.z);
-                }
             }
 
             var halfHeight = safeHeight * 0.5f;
@@ -296,9 +292,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         {
             if (false == target || compressed == null || full == null
                 || index < 0 || index >= compressed.Length || index >= full.Length)
-            {
                 return;
-            }
 
             ApplyPose(target, BattleFieldUnitPose.Lerp(compressed[index], full[index], t));
         }

@@ -1,7 +1,7 @@
 using Project.Scripts.Shared.Tiles;
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Layout
 {
     [CreateAssetMenu(fileName = "SlotLayoutConfig", menuName = "Configs/Slot Layout Config")]
     public class SlotLayoutConfig : ScriptableObject

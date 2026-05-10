@@ -1,6 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Services.Announcements;
 using Project.Scripts.Services.Events;
@@ -17,10 +17,8 @@ namespace Project.Scripts.Services.Timer
         private readonly IDisposable _timerSub;
 
 
-        public BattleTimerAnnouncementService(
-            BattleFlowConfig battleFlowConfig,
-            BoardAnnouncementConfig announcementConfig,
-            EventBus eventBus,
+        public BattleTimerAnnouncementService(BattleFlowConfig battleFlowConfig,
+            BoardAnnouncementConfig announcementConfig, EventBus eventBus,
             IBoardAnnouncementService announcementService)
         {
             _battleFlowConfig = battleFlowConfig;

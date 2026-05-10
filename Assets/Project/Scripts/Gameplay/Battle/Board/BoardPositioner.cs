@@ -1,4 +1,4 @@
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Gameplay;
 using Project.Scripts.Configs.Grid;
@@ -11,12 +11,13 @@ namespace Project.Scripts.Gameplay.Battle.Board
     [ExecuteAlways]
     public class BoardPositioner : MonoBehaviour
     {
+        private const float MinLayoutCellSize = 0.01f;
+        
+        
         [SerializeField] private BoardConfig _boardConfig;
         [SerializeField] private BattleWorldLayoutConfig _battleWorldLayoutConfig;
         [SerializeField] private GridConfig _gridConfig;
         [SerializeField] private GameplayScreenLayoutConfig _screenLayoutConfig;
-
-        private const float MinLayoutCellSize = 0.01f;
 
 
         private void Update()
@@ -113,6 +114,7 @@ namespace Project.Scripts.Gameplay.Battle.Board
         {
             var width = Screen.width > 0 ? Screen.width : UnityEngine.Device.Screen.width;
             var height = Screen.height > 0 ? Screen.height : UnityEngine.Device.Screen.height;
+            
             return new ScreenLayoutRect(0f, 0f, width, height);
         }
 
@@ -120,6 +122,7 @@ namespace Project.Scripts.Gameplay.Battle.Board
         {
             var min = cam.ScreenToWorldPoint(new Vector3(rect.XMin, rect.YMin, -cam.transform.position.z));
             var max = cam.ScreenToWorldPoint(new Vector3(rect.XMax, rect.YMax, -cam.transform.position.z));
+            
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
@@ -136,6 +139,7 @@ namespace Project.Scripts.Gameplay.Battle.Board
             var playerEnergyHeight = layout.EnergyView ? layout.EnergyView.PlayerEnergyBaseHeight : 0f;
             var enemyEnergyHeight = layout.EnergyView ? layout.EnergyView.EnemyEnergyBaseHeight : 0f;
             var battleFieldHeight = layout.BattleFieldView ? layout.BattleFieldView.BaseLayoutHeight : 0f;
+            
             return playerEnergyHeight + enemyEnergyHeight + battleFieldHeight;
         }
 

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Abilities;
+using Project.Scripts.Configs.Battle.Units;
+using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.Heroes;

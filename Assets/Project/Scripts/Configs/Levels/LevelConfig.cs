@@ -1,4 +1,5 @@
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Units;
+using Project.Scripts.Configs.Battle.Bot;
 using Project.Scripts.Configs.Board;
 using UnityEngine;
 

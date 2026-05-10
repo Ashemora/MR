@@ -2,17 +2,12 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Energy;
 using Project.Scripts.Tiles.Behaviours;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Grid;
 using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
-using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
 using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Input;
 using Project.Scripts.Shared;
@@ -581,6 +576,7 @@ namespace Project.Scripts.Services.Board
                     ?? tileB.Config.Behaviour as BombTileBehaviour;
 
             var baseRadius = bomb?.DoubleRadius ?? 2;
+            
             return BombRadiusRules.GetEffectiveRadius(baseRadius, _bombRadiusModifierService.GetBombRadiusBonus(side));
         }
 
@@ -697,6 +693,7 @@ namespace Project.Scripts.Services.Board
             }
 
             sb.Append($"  Total energy generated: +{total:F2}");
+            
             return sb.ToString();
         }
     }

@@ -3,7 +3,7 @@ using UnityEngine;
 using System;
 #endif
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Layout
 {
     [CreateAssetMenu(fileName = "BattleWorldLayoutConfig", menuName = "Configs/Battle/Battle World Layout Config")]
     public class BattleWorldLayoutConfig : ScriptableObject

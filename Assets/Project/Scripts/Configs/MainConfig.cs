@@ -1,4 +1,8 @@
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Units;
+using Project.Scripts.Configs.Battle.Flow;
+using Project.Scripts.Configs.Battle.Energy;
+using Project.Scripts.Configs.Battle.Layout;
+using Project.Scripts.Configs.Battle.Visuals;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Gameplay;
 using Project.Scripts.Configs.Grid;

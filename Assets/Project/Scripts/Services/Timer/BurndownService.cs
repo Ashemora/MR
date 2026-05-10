@@ -1,12 +1,6 @@
 using System;
-using Project.Scripts.Configs.Battle;
-using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
+using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
-using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Shared.Heroes;
@@ -17,12 +11,14 @@ namespace Project.Scripts.Services.Timer
 {
     public class BurndownService : IBurndownService
     {
+        public bool IsActive => _isActive;
+        
+        
         private readonly BurndownConfig _config;
         private readonly IHeroService _heroService;
         private readonly IAvatarService _avatarService;
         private readonly EventBus _eventBus;
         private readonly IGameStateService _gameStateService;
-
         private readonly Random _random = new();
 
         private bool _isActive;
@@ -31,15 +27,8 @@ namespace Project.Scripts.Services.Timer
         private BurndownDrainCursor _enemyCursor;
 
 
-        public bool IsActive => _isActive;
-
-
-        public BurndownService(
-            BurndownConfig config,
-            IHeroService heroService,
-            IAvatarService avatarService,
-            EventBus eventBus,
-            IGameStateService gameStateService)
+        public BurndownService(BurndownConfig config, IHeroService heroService, IAvatarService avatarService,
+            EventBus eventBus, IGameStateService gameStateService)
         {
             _config = config;
             _heroService = heroService;

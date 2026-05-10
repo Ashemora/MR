@@ -1,6 +1,6 @@
 using System;
 using Project.Scripts.Configs;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Heroes;
@@ -39,8 +39,7 @@ namespace Project.Scripts.Services.Combat.Energy
             _capSchedule = new RoundEnergyCapSchedule(battleFlowConfig.EnergyCaps);
 
             if (false == _capSchedule.HasExplicitCaps)
-                UnityEngine.Debug.LogError(
-                    $"[BattleSideEnergyService] BattleFlowConfig.EnergyCaps is empty. Falling back to RoundEnergyCapSchedule.DefaultCap={RoundEnergyCapSchedule.DefaultCap} for all rounds.");
+                UnityEngine.Debug.LogError($"[BattleSideEnergyService] BattleFlowConfig.EnergyCaps is empty. Falling back to RoundEnergyCapSchedule.DefaultCap={RoundEnergyCapSchedule.DefaultCap} for all rounds.");
 
             var initialCap = _capSchedule.GetCapForRound(_currentRound);
             _playerPool = new SideEnergyPoolEngine(initialCap);
@@ -64,7 +63,6 @@ namespace Project.Scripts.Services.Combat.Energy
             _roundChangedSubscription?.Dispose();
             _roundChangedSubscription = null;
         }
-
 
         public int GetDisplayEnergy(BattleSide side)
         {

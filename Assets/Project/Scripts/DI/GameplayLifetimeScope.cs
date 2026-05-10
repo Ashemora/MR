@@ -1,4 +1,4 @@
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Gameplay;
 using Project.Scripts.Gameplay.Battle.HUD;

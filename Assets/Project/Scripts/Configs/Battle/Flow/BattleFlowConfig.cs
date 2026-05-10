@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Project.Scripts.Shared.BattleFlow;
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Flow
 {
     [CreateAssetMenu(fileName = "BattleFlowConfig", menuName = "Configs/Battle/Battle Flow Config")]
     public class BattleFlowConfig : ScriptableObject

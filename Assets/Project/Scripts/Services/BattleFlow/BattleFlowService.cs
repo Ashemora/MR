@@ -1,4 +1,4 @@
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleFlow;
 

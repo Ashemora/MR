@@ -1,6 +1,6 @@
 using System;
 using DG.Tweening;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Visuals;
 using R3;
 
 namespace Project.Scripts.Gameplay.Battle.Targeting

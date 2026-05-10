@@ -1,7 +1,7 @@
 using Project.Scripts.Shared.Bot;
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Bot
 {
     [CreateAssetMenu(fileName = "BotConfig", menuName = "Configs/Bot Config")]
     public class BotConfig : ScriptableObject
@@ -67,8 +67,6 @@ namespace Project.Scripts.Configs.Battle
         public float GreatCascadeChance => _greatCascadeChance;
         public float GoodCascadeMultiplier => _goodCascadeMultiplier;
         public float GreatCascadeMultiplier => _greatCascadeMultiplier;
-        public float MinAvatarActivationDelay => _minAvatarActivationDelay;
-        public float MaxAvatarActivationDelay => _maxAvatarActivationDelay;
 
         
         public BotSettings ToSettings()

@@ -1,5 +1,5 @@
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Gameplay.Results;
@@ -54,14 +54,14 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         [SerializeField] private GroupShieldView _playerGroup2Shield;
 
 
-        private IInputService _inputService;
-        private TileKindPaletteConfig _tileKindPalette;
-        private Transform _playerEnergyAbsorbTarget;
-
-
         public float BaseLayoutHeight => _layoutController ? _layoutController.BaseLayoutHeight : 0f;
         public float LayoutScale => _layoutController ? _layoutController.LayoutScale : 1f;
         public float LayoutTopWorldY => _layoutController ? _layoutController.LayoutTopWorldY : transform.position.y;
+        
+        
+        private IInputService _inputService;
+        private TileKindPaletteConfig _tileKindPalette;
+        private Transform _playerEnergyAbsorbTarget;
 
 
         public BattleFieldLayoutSnapshot CaptureLayoutSnapshot()
@@ -101,6 +101,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             }
 
             error = string.Empty;
+            
             return true;
         }
 
@@ -255,6 +256,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             }
 
             error = string.Empty;
+            
             return true;
         }
 
@@ -355,12 +357,12 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             if (_enemyAvatarSlot)
                 registry.Register(_enemyAvatarSlot);
 
-            if (_playerHeroSlots != null)
+            if (null != _playerHeroSlots)
                 for (var i = 0; i < _playerHeroSlots.Length; i++)
                     if (_playerHeroSlots[i])
                         registry.Register(_playerHeroSlots[i]);
 
-            if (_enemyHeroSlots != null)
+            if (null != _enemyHeroSlots)
                 for (var i = 0; i < _enemyHeroSlots.Length; i++)
                     if (_enemyHeroSlots[i])
                         registry.Register(_enemyHeroSlots[i]);

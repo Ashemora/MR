@@ -1,6 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Grid;
 using VContainer.Unity;

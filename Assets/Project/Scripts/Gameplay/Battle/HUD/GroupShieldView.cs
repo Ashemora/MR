@@ -1,5 +1,5 @@
 using DG.Tweening;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Visuals;
 using R3;
 using UnityEngine;
 

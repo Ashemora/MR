@@ -1,5 +1,6 @@
 using DG.Tweening;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Units;
+using Project.Scripts.Configs.Battle.Visuals;
 using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.UI;
 using Project.Scripts.Shared.Heroes;
@@ -128,7 +129,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         public bool IsValidTarget(UnitDescriptor source)
         {
-            if (_viewModel == null || false == _viewModel.IsAssigned || _viewModel.IsDefeated.CurrentValue)
+            if (null == _viewModel || false == _viewModel.IsAssigned || _viewModel.IsDefeated.CurrentValue)
                 return false;
 
             if (source.ActionType == HeroActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
@@ -330,7 +331,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         private static void SetObjectsActive(GameObject[] gameObjects, bool active)
         {
-            if (gameObjects == null)
+            if (null == gameObjects)
                 return;
 
             for (var i = 0; i < gameObjects.Length; i++)
@@ -478,7 +479,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         private void CacheDeathColors()
         {
-            if (_deathColoredRenderers == null)
+            if (null == _deathColoredRenderers)
             {
                 _originalDeathColors = null;
                 return;
@@ -492,7 +493,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         private void ApplyDeathColor(bool defeated)
         {
-            if (_deathColoredRenderers == null || _originalDeathColors == null)
+            if (null == _deathColoredRenderers || null == _originalDeathColors)
                 return;
 
             var deathColor = _deathConfig ? _deathConfig.HeroDeathVisuals.DeathColor : Color.white;
@@ -504,7 +505,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         private void ApplySlotColor(Color color)
         {
-            if (_energyColoredRenderers == null)
+            if (null == _energyColoredRenderers)
                 return;
 
             for (var i = 0; i < _energyColoredRenderers.Length; i++)
@@ -522,7 +523,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         private Color GetPortraitBaseColor()
         {
-            if (_viewModel == null || _viewModel.IsDefeated.CurrentValue || false == _isAvailabilityDimmed)
+            if (null == _viewModel || _viewModel.IsDefeated.CurrentValue || false == _isAvailabilityDimmed)
                 return _originalPortraitColor;
 
             return new Color(

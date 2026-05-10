@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Flow
 {
     [CreateAssetMenu(fileName = "EscalationConfig", menuName = "Configs/Battle/Escalation Config")]
     public class EscalationConfig : ScriptableObject

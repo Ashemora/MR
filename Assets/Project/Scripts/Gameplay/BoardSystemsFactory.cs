@@ -1,7 +1,8 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Flow;
+using Project.Scripts.Configs.Battle.Energy;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Grid;
 using Project.Scripts.Configs.Levels;
@@ -11,10 +12,6 @@ using Project.Scripts.Services.Audio.AudioSystem;
 using Project.Scripts.Services.Board;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
-using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
 using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
@@ -27,16 +24,16 @@ namespace Project.Scripts.Gameplay
 {
     public sealed class BoardSystems : IDisposable
     {
-        private readonly HintService _hintService;
-        private readonly PassiveTileGlowService _passiveTileGlowService;
-        private readonly GameAudioController _gameAudioController;
-        private readonly IDisposable _burndownStartedSubscription;
-
-
         public GridManager GridManager { get; }
         public TilePool TilePool { get; }
         public SwapInputHandler SwapHandler { get; }
         public BoardOrchestrator Orchestrator { get; }
+        
+        
+        private readonly HintService _hintService;
+        private readonly PassiveTileGlowService _passiveTileGlowService;
+        private readonly GameAudioController _gameAudioController;
+        private readonly IDisposable _burndownStartedSubscription;
 
 
         public BoardSystems(

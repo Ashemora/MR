@@ -1,6 +1,6 @@
 using System;
 using DG.Tweening;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Visuals;
 using UnityEngine;
 
 namespace Project.Scripts.Gameplay.Battle.FX
@@ -71,7 +71,7 @@ namespace Project.Scripts.Gameplay.Battle.FX
 
         private void ApplyColor(Color color)
         {
-            if (_renderers == null || _renderers.Length == 0)
+            if (null == _renderers || _renderers.Length == 0)
                 return;
 
             _mpb ??= new MaterialPropertyBlock();
@@ -115,7 +115,7 @@ namespace Project.Scripts.Gameplay.Battle.FX
 
         private void SetTrailEmission(bool isEmitting)
         {
-            if (_renderers == null || _renderers.Length == 0)
+            if (null == _renderers || _renderers.Length == 0)
                 return;
 
             for (var i = 0; i < _renderers.Length; i++)
@@ -127,7 +127,7 @@ namespace Project.Scripts.Gameplay.Battle.FX
 
         private void ClearTrails()
         {
-            if (_renderers == null || _renderers.Length == 0)
+            if (null == _renderers || _renderers.Length == 0)
                 return;
 
             for (var i = 0; i < _renderers.Length; i++)

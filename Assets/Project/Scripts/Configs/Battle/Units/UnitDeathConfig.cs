@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Units
 {
     [CreateAssetMenu(fileName = "UnitDeathConfig", menuName = "Configs/Battle/Unit Death Config")]
     public class UnitDeathConfig : ScriptableObject
@@ -31,25 +30,5 @@ namespace Project.Scripts.Configs.Battle
                 DeathColor = new Color(0.298f, 0.298f, 0.298f, 1f)
             };
         }
-    }
-
-    [Serializable]
-    public struct HeroDeathVisuals
-    {
-        [Tooltip("Применять шейдерную заливку портрета при гибели героя.")]
-        public bool ApplyDeathFill;
-
-        [Tooltip("Цвет, в который красятся _deathColoredRenderers при гибели героя.")]
-        public Color DeathColor;
-    }
-
-    [Serializable]
-    public struct AvatarDeathVisuals
-    {
-        [Tooltip("Применять шейдерную заливку портрета при гибели аватара.")]
-        public bool ApplyDeathFill;
-
-        [Tooltip("Цвет, в который красятся _deathColoredRenderers при гибели аватара.")]
-        public Color DeathColor;
     }
 }

@@ -1,6 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Gameplay;
 using Project.Scripts.Configs.Grid;
@@ -15,6 +15,12 @@ namespace Project.Scripts.Gameplay.Battle.Layout
 {
     public class GameplayWorldLayoutController : IDisposable
     {
+        private const float MinLayoutCellSize = 0.01f;
+        
+        
+        public event Action<string> LayoutApplied;
+        
+        
         public struct InitialWorldLayout
         {
             public float TileCellSize;
@@ -23,9 +29,6 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             public Vector3 BoardCenter;
             public Vector3 GridOrigin;
         }
-
-
-        private const float MinLayoutCellSize = 0.01f;
 
 
         private readonly BattleWorldLayout _battleWorldLayout;
@@ -46,8 +49,6 @@ namespace Project.Scripts.Gameplay.Battle.Layout
         private int _delayedTopBarLayoutVersion;
         private bool _editorEventsSubscribed;
 #endif
-
-        public event Action<string> LayoutApplied;
 
 
         public GameplayWorldLayoutController(

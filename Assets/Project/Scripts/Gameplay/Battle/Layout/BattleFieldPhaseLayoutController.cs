@@ -1,6 +1,7 @@
 using System;
 using DG.Tweening;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Flow;
+using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Gameplay.Battle.HUD;
 using Project.Scripts.Services.BattleFlow;
 using Project.Scripts.Services.Board;
@@ -14,13 +15,15 @@ namespace Project.Scripts.Gameplay.Battle.Layout
 {
     public class BattleFieldPhaseLayoutController : IDisposable
     {
+        public event Action LayoutBlendApplied;
+        
+        
         private enum BattleFieldLayoutIntent
         {
             Compressed,
             Full,
             Preserve
         }
-
 
         private readonly EventBus _eventBus;
         private readonly IGameStateService _gameStateService;
@@ -35,8 +38,6 @@ namespace Project.Scripts.Gameplay.Battle.Layout
         private IDisposable _gameStateSubscription;
         private IDisposable _battleFlowPhaseSubscription;
         private Tween _battleFieldLayoutTween;
-
-        public event Action LayoutBlendApplied;
 
 
         public BattleFieldPhaseLayoutController(

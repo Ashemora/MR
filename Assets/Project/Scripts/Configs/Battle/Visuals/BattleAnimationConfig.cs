@@ -1,7 +1,7 @@
 using DG.Tweening;
 using UnityEngine;
 
-namespace Project.Scripts.Configs.Battle
+namespace Project.Scripts.Configs.Battle.Visuals
 {
     [CreateAssetMenu(fileName = "BattleAnimationConfig", menuName = "Configs/Battle Animation Config")]
     public class BattleAnimationConfig : ScriptableObject

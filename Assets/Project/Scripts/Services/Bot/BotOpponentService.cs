@@ -2,15 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Layout;
+using Project.Scripts.Configs.Battle.Bot;
 using Project.Scripts.Services.BattleFlow;
 using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
 using Project.Scripts.Services.Combat.Units;
 using Project.Scripts.Services.Combat.Energy;
 using Project.Scripts.Services.Combat.Economy;
-using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Shared.BattleFlow;
@@ -428,6 +426,5 @@ namespace Project.Scripts.Services.Bot
             Array.Clear(_heroActivationPending, 0, _heroActivationPending.Length);
             _dischargeScheduled = false;
         }
-
     }
 }
