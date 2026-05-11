@@ -26,9 +26,7 @@ namespace Project.Scripts.Shared.Moves
                     fillProgress = (_currentMoves + partial) / _settings.MaxMoves;
                 }
                 else
-                {
                     fillProgress = 0f;
-                }
 
                 return new MoveBarSnapshot(_currentMoves, fillProgress, isAtMax);
             }

@@ -16,6 +16,7 @@ namespace Project.Scripts.Shared.Passives
         {
             return SelectTargets(targeting, owner, selectedTarget, true, candidates);
         }
+        
 
         private static List<UnitDescriptor> SelectTargets(UnitTargetingDefinition targeting, UnitDescriptor owner,
             UnitDescriptor selectedTarget, bool hasSelectedTarget, IReadOnlyList<UnitTargetCandidate> candidates)

@@ -32,6 +32,7 @@ namespace Project.Scripts.Shared.Passives
                     return false;
 
                 _buffs[i] = _buffs[i].WithStackAdded(1, currentRound, currentPhase, durationSeconds);
+                
                 return true;
             }
 

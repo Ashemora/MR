@@ -56,12 +56,8 @@ namespace Project.Scripts.Shared.BattleFlow
             if (false == _initialized)
                 return;
 
-            _snapshot = new BattleFlowSnapshot(
-                _snapshot.CurrentRound,
-                _snapshot.TotalRounds,
-                BattlePhaseKind.Finished,
-                0f,
-                _snapshot.EnergyCarryoverMode);
+            _snapshot = new BattleFlowSnapshot(_snapshot.CurrentRound, _snapshot.TotalRounds,
+                BattlePhaseKind.Finished, 0f, _snapshot.EnergyCarryoverMode);
         }
 
 
@@ -70,17 +66,15 @@ namespace Project.Scripts.Shared.BattleFlow
             if (_snapshot.Phase == BattlePhaseKind.PrePhase)
             {
                 CompletePrePhase();
+                
                 return;
             }
 
             if (_snapshot.Phase == BattlePhaseKind.Match)
             {
-                _snapshot = new BattleFlowSnapshot(
-                    _snapshot.CurrentRound,
-                    _snapshot.TotalRounds,
-                    BattlePhaseKind.PendingHero,
-                    0f,
-                    _snapshot.EnergyCarryoverMode);
+                _snapshot = new BattleFlowSnapshot(_snapshot.CurrentRound, _snapshot.TotalRounds,
+                    BattlePhaseKind.PendingHero, 0f, _snapshot.EnergyCarryoverMode);
+                
                 return;
             }
 
@@ -90,26 +84,18 @@ namespace Project.Scripts.Shared.BattleFlow
                 _snapshot = _settings.PrePhaseDuration > 0
                     ? MakePrePhase(nextRound, BattlePhaseKind.Match)
                     : MakeActionPhase(nextRound, BattlePhaseKind.Match);
+                
                 return;
             }
 
-            _snapshot = new BattleFlowSnapshot(
-                _snapshot.CurrentRound,
-                _snapshot.TotalRounds,
-                BattlePhaseKind.PendingBurndown,
-                0f,
-                _snapshot.EnergyCarryoverMode);
+            _snapshot = new BattleFlowSnapshot(_snapshot.CurrentRound, _snapshot.TotalRounds,
+                BattlePhaseKind.PendingBurndown, 0f, _snapshot.EnergyCarryoverMode);
         }
 
         private BattleFlowSnapshot MakePrePhase(int round, BattlePhaseKind upcomingPhase)
         {
-            return new BattleFlowSnapshot(
-                round,
-                _settings.RoundCount,
-                BattlePhaseKind.PrePhase,
-                _settings.PrePhaseDuration,
-                _settings.EnergyCarryoverMode,
-                upcomingPhase);
+            return new BattleFlowSnapshot(round, _settings.RoundCount, BattlePhaseKind.PrePhase,
+                _settings.PrePhaseDuration, _settings.EnergyCarryoverMode, upcomingPhase);
         }
 
         private BattleFlowSnapshot MakeActionPhase(int round, BattlePhaseKind phase)
@@ -118,11 +104,7 @@ namespace Project.Scripts.Shared.BattleFlow
                 ? _settings.HeroPhaseDuration
                 : _settings.MatchPhaseDuration;
 
-            return new BattleFlowSnapshot(
-                round,
-                _settings.RoundCount,
-                phase,
-                duration,
+            return new BattleFlowSnapshot(round, _settings.RoundCount, phase, duration,
                 _settings.EnergyCarryoverMode);
         }
 

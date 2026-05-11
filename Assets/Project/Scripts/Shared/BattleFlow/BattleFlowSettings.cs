@@ -12,15 +12,9 @@ namespace Project.Scripts.Shared.BattleFlow
         public float MinUnitActivationCooldownSeconds { get; }
 
 
-        public BattleFlowSettings(
-            int roundCount,
-            float matchPhaseDuration,
-            float heroPhaseDuration,
-            int prePhaseDuration,
-            bool enablePrePhaseOnBattleStart,
-            int countdownThreshold,
-            EnergyCarryoverMode energyCarryoverMode,
-            float minUnitActivationCooldownSeconds)
+        public BattleFlowSettings(int roundCount, float matchPhaseDuration, float heroPhaseDuration,
+            int prePhaseDuration, bool enablePrePhaseOnBattleStart, int countdownThreshold,
+            EnergyCarryoverMode energyCarryoverMode, float minUnitActivationCooldownSeconds)
         {
             RoundCount = roundCount < 1 ? 1 : roundCount;
             MatchPhaseDuration = matchPhaseDuration < 0f ? 0f : matchPhaseDuration;

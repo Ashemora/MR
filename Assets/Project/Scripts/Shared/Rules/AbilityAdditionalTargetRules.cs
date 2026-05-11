@@ -5,29 +5,6 @@ using Project.Scripts.Shared.Passives;
 
 namespace Project.Scripts.Shared.Rules
 {
-    public readonly struct AbilityTargetCandidate
-    {
-        public UnitDescriptor Descriptor { get; }
-        public int CurrentHP { get; }
-        public int MaxHP { get; }
-        public bool IsAlive { get; }
-        public bool IsExposed { get; }
-
-
-        public bool IsHpFull => CurrentHP >= MaxHP;
-
-
-        public AbilityTargetCandidate(UnitDescriptor descriptor, int currentHP, int maxHP, bool isAlive,
-            bool isExposed)
-        {
-            Descriptor = descriptor;
-            CurrentHP = currentHP < 0 ? 0 : currentHP;
-            MaxHP = maxHP < 0 ? 0 : maxHP;
-            IsAlive = isAlive;
-            IsExposed = isExposed;
-        }
-    }
-
     public static class AbilityAdditionalTargetRules
     {
         public static List<UnitDescriptor> SelectTargets(UnitDescriptor source, UnitDescriptor primaryTarget,
@@ -64,7 +41,7 @@ namespace Project.Scripts.Shared.Rules
 
             return result;
         }
-        
+
 
         private static int Compare(HeroActionType actionType, AbilityTargetCandidate left, AbilityTargetCandidate right)
         {
@@ -81,7 +58,7 @@ namespace Project.Scripts.Shared.Rules
                 return ratioComparison;
 
             var hpComparison = left.CurrentHP.CompareTo(right.CurrentHP);
-            
+
             return hpComparison != 0 ? hpComparison : CompareStableUnitOrder(left.Descriptor, right.Descriptor);
         }
 
@@ -96,7 +73,7 @@ namespace Project.Scripts.Shared.Rules
                 return missingRatioComparison;
 
             var hpComparison = left.CurrentHP.CompareTo(right.CurrentHP);
-            
+
             return hpComparison != 0 ? hpComparison : CompareStableUnitOrder(left.Descriptor, right.Descriptor);
         }
 

@@ -54,10 +54,8 @@ namespace Project.Scripts.Shared.Bot
         {
             var eligibleCount = 0;
             for (var i = 0; i < slots.Count; i++)
-            {
                 if (slots[i].CanAccumulateEnergy)
                     eligibleCount++;
-            }
 
             if (eligibleCount == 0)
                 return -1;

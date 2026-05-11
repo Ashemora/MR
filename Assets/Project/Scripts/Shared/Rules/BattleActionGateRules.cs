@@ -30,44 +30,4 @@ namespace Project.Scripts.Shared.Rules
             return new BattleActionGateResult(BattleActionBlockReason.None);
         }
     }
-    
-    public readonly struct BattleActionGateResult
-    {
-        public bool IsAllowed => Reason == BattleActionBlockReason.None;
-        public BattleActionBlockReason Reason { get; }
-
-
-        public BattleActionGateResult(BattleActionBlockReason reason)
-        {
-            Reason = reason;
-        }
-    }
-    
-    public enum BattleActionPhase
-    {
-        PrePhase,
-        MatchPhase,
-        HeroPhase,
-        Burndown,
-        Finished
-    }
-
-    public enum BattleActionKind
-    {
-        BoardSwap,
-        AbilitySourceSelect,
-        AbilityCommit,
-        HeroActivation,
-        AvatarActivation
-    }
-
-    public enum BattleActionBlockReason
-    {
-        None,
-        PrePhase,
-        MatchPhase,
-        HeroPhase,
-        Burndown,
-        Finished
-    }
 }

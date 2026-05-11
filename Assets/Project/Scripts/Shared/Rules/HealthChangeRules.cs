@@ -2,21 +2,6 @@ using System;
 
 namespace Project.Scripts.Shared.Rules
 {
-    public readonly struct HealthChangeResult
-    {
-        public int PreviousHP { get; }
-        public int CurrentHP { get; }
-        public bool WasChanged => CurrentHP != PreviousHP;
-        public bool BecameDefeated => PreviousHP > 0 && CurrentHP <= 0;
-
-
-        public HealthChangeResult(int previousHP, int currentHP)
-        {
-            PreviousHP = previousHP;
-            CurrentHP = currentHP;
-        }
-    }
-
     public static class HealthChangeRules
     {
         public static HealthChangeResult Apply(int currentHP, int maxHP, int delta, bool allowChangeWhenDefeated = false)
@@ -33,7 +18,7 @@ namespace Project.Scripts.Shared.Rules
                 return new HealthChangeResult(previousHP, previousHP);
 
             var nextHP = Math.Clamp(previousHP + delta, 0, maxHP);
-            
+
             return new HealthChangeResult(previousHP, nextHP);
         }
     }

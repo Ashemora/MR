@@ -45,6 +45,7 @@ namespace Project.Scripts.Shared.Passives
         public bool ProcessActivationConditionEvent(ActivationConditionEvent e, bool sourceHasActiveBuff = false)
         {
             Func<HeroPassiveRuntimeState, bool> hasActiveBuff = sourceHasActiveBuff ? _ => true : null;
+            
             return ProcessActivationConditionEvent(e, hasActiveBuff);
         }
 
@@ -180,7 +181,8 @@ namespace Project.Scripts.Shared.Passives
             int conditionIndex, int amount)
         {
             if (UsesTickWindow(state.Definition.ActivationConditions.Conditions[conditionIndex]))
-                return state.WithConditionProgress(conditionIndex, 0f)
+                return state
+                    .WithConditionProgress(conditionIndex, 0f)
                     .WithConditionOccurrenceTicksConsumed(conditionIndex, int.MaxValue);
 
             return state.WithConditionProgress(conditionIndex,

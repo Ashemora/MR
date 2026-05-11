@@ -83,10 +83,4 @@ namespace Project.Scripts.Shared.Rules
             return value < 0f ? -value : value;
         }
     }
-
-    public enum LineClearOrientation
-    {
-        Horizontal,
-        Vertical
-    }
 }

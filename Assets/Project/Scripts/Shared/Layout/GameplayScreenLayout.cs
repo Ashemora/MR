@@ -9,12 +9,8 @@ namespace Project.Scripts.Shared.Layout
         public float PixelScale { get; }
 
 
-        public GameplayScreenLayout(
-            ScreenLayoutRect safeAreaRect,
-            ScreenLayoutRect gameplayRect,
-            ScreenLayoutRect topBarRect,
-            ScreenLayoutRect worldRect,
-            float pixelScale)
+        public GameplayScreenLayout(ScreenLayoutRect safeAreaRect, ScreenLayoutRect gameplayRect,
+            ScreenLayoutRect topBarRect, ScreenLayoutRect worldRect, float pixelScale)
         {
             SafeAreaRect = safeAreaRect;
             GameplayRect = gameplayRect;

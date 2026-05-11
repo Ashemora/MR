@@ -13,14 +13,9 @@ namespace Project.Scripts.Shared.Energy
         public float StormEnergyMultiplier { get; }
 
 
-        public CascadeEnergySettings(
-            float cascadeMultiplierStep,
-            float multiMatchMultiplier,
-            float lShapeMultiplier,
-            float tShapeMultiplier,
-            float bombEnergyMultiplier,
-            float lineRuneEnergyMultiplier,
-            float stormEnergyMultiplier)
+        public CascadeEnergySettings(float cascadeMultiplierStep, float multiMatchMultiplier,
+            float lShapeMultiplier, float tShapeMultiplier, float bombEnergyMultiplier,
+            float lineRuneEnergyMultiplier, float stormEnergyMultiplier)
         {
             CascadeMultiplierStep = cascadeMultiplierStep;
             MultiMatchMultiplier = multiMatchMultiplier;

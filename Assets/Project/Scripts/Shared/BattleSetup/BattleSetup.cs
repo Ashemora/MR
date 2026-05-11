@@ -30,6 +30,7 @@ namespace Project.Scripts.Shared.BattleSetup
             if (unit.Kind == UnitKind.Avatar)
             {
                 setup = unit.Side == BattleSide.Player ? PlayerAvatar : EnemyAvatar;
+                
                 return true;
             }
 
@@ -37,6 +38,7 @@ namespace Project.Scripts.Shared.BattleSetup
             if (unit.SlotIndex is < 0 or >= HeroSlotCount || unit.SlotIndex >= heroes.Length)
             {
                 setup = default;
+                
                 return false;
             }
 

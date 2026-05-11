@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Tiles;
 
 namespace Project.Scripts.Shared.Grid

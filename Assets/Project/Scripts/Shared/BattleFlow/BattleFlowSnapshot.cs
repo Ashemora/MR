@@ -11,13 +11,8 @@ namespace Project.Scripts.Shared.BattleFlow
         public bool IsTerminal => Phase == BattlePhaseKind.PendingBurndown || Phase == BattlePhaseKind.Finished;
 
 
-        public BattleFlowSnapshot(
-            int currentRound,
-            int totalRounds,
-            BattlePhaseKind phase,
-            float timeRemaining,
-            EnergyCarryoverMode energyCarryoverMode,
-            BattlePhaseKind? upcomingPhase = null)
+        public BattleFlowSnapshot(int currentRound, int totalRounds, BattlePhaseKind phase,
+            float timeRemaining, EnergyCarryoverMode energyCarryoverMode, BattlePhaseKind? upcomingPhase = null)
         {
             CurrentRound = currentRound;
             TotalRounds = totalRounds;
