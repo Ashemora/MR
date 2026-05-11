@@ -16,10 +16,11 @@ using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.UISystem;
 using Project.Scripts.Shared.BattleFlow;
-using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
 using R3;
 using UnityEngine;
+using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Battle.HUD
 {

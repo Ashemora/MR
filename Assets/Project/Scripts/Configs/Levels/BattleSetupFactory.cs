@@ -4,8 +4,8 @@ using Project.Scripts.Configs.Battle.Units;
 using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.BattleSetup;
-using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Configs.Levels
 {
@@ -84,6 +84,7 @@ namespace Project.Scripts.Configs.Levels
         private static TileKind GetSlotKind(SlotLayoutConfig slotLayoutConfig, int slotIndex)
         {
             var slotKinds = slotLayoutConfig ? slotLayoutConfig.HeroSlotKinds : null;
+            
             return null != slotKinds && slotIndex >= 0 && slotIndex < slotKinds.Length
                 ? slotKinds[slotIndex]
                 : TileKind.None;

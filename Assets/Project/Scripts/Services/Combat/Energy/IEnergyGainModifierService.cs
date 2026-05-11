@@ -1,5 +1,5 @@
 using Project.Scripts.Shared.Energy;
-using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Energy
 {

@@ -1,4 +1,4 @@
-using Project.Scripts.Shared;
+using Project.Scripts.Shared.Grid;
 
 namespace Project.Scripts.Services.Board.Hinting
 {

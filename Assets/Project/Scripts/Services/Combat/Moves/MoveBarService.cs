@@ -1,7 +1,7 @@
 using System;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Services.Events;
-using Project.Scripts.Shared.Moves;
+using Project.Scripts.Shared.MoveBar;
 
 namespace Project.Scripts.Services.Combat.Moves
 {
@@ -53,6 +53,7 @@ namespace Project.Scripts.Services.Combat.Moves
                 return false;
 
             PublishSnapshot();
+            
             return true;
         }
 

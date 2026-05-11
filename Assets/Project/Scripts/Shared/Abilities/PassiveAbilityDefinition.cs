@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Project.Scripts.Shared.Passives;
+using Project.Scripts.Shared.ActivationConditions;
 
 namespace Project.Scripts.Shared.Abilities
 {

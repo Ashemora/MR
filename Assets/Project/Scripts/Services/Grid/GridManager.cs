@@ -6,19 +6,12 @@ using Project.Scripts.Configs.Grid;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Board;
 using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
-using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
-using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Events;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
-using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
 using Project.Scripts.Tiles;
 using UnityEngine;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Grid
 {
@@ -71,6 +64,7 @@ namespace Project.Scripts.Services.Grid
         public GridPoint WorldToGrid(Vector3 worldPos)
         {
             var relative = worldPos - _origin;
+            
             return new GridPoint(
                 Mathf.RoundToInt(relative.x / _cellSize),
                 Mathf.RoundToInt(relative.y / _cellSize)

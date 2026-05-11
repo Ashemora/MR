@@ -1,11 +1,10 @@
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Rules;
-
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Services.Combat.Energy;
+using Project.Scripts.Shared.BattleFlow;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Units
 {

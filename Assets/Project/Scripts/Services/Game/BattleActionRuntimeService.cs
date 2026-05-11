@@ -1,6 +1,5 @@
 using System;
 using Project.Scripts.Shared.BattleFlow;
-using Project.Scripts.Shared.Rules;
 using R3;
 
 namespace Project.Scripts.Services.Game

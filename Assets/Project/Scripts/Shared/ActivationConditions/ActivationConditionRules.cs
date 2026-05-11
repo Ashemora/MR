@@ -1,0 +1,34 @@
+using Project.Scripts.Shared.Tiles;
+using Project.Scripts.Shared.Units;
+
+namespace Project.Scripts.Shared.ActivationConditions
+{
+    public static class ActivationConditionRules
+    {
+        public static bool Matches(ActivationConditionDefinition condition, ActivationConditionEvent e,
+            BattleSide ownerSide, int ownerSlotIndex, TileKind ownerSlotKind)
+        {
+            if (false == condition.IsConfigured || condition.Kind != e.Kind)
+                return false;
+
+            if (condition.Kind == ActivationConditionKind.UnitActivationsInTimeWindow && false == IsActivatableUnit(e.Source))
+                return false;
+
+            if (condition.Kind == ActivationConditionKind.EnemyHeroDefeatsInTimeWindow && e.Source.Kind != UnitKind.Hero)
+                return false;
+
+            return condition.Subject switch
+            {
+                ActivationConditionSubject.OwnerSide => e.Side == ownerSide,
+                ActivationConditionSubject.OwnerSlotKind => e.Side == ownerSide && e.TileKind == ownerSlotKind,
+                ActivationConditionSubject.OpponentSide => e.Side != ownerSide,
+                _ => false
+            };
+        }
+
+        private static bool IsActivatableUnit(UnitDescriptor source)
+        {
+            return source.Kind is UnitKind.Hero or UnitKind.Avatar;
+        }
+    }
+}

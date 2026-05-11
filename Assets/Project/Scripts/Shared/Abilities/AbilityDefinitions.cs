@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Project.Scripts.Shared.Passives;
+using Project.Scripts.Shared.Buffs;
+using Project.Scripts.Shared.Targeting;
 
 namespace Project.Scripts.Shared.Abilities
 {

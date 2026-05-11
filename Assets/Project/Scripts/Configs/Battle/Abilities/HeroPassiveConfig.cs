@@ -1,7 +1,7 @@
 using System;
 using Project.Scripts.Shared.Abilities;
-using Project.Scripts.Shared.Passives;
 using UnityEngine;
+using Project.Scripts.Shared.ActivationConditions;
 
 namespace Project.Scripts.Configs.Battle.Abilities
 {

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Levels;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
 using Project.Scripts.Shared.Tiles;
 using Project.Scripts.Tiles;
@@ -58,7 +57,7 @@ namespace Project.Scripts.Services.Board
 
         private TileConfig FindTileConfig(TileKind kind)
         {
-            if (_levelConfig.SpecialTiles == null)
+            if (null == _levelConfig.SpecialTiles)
                 return null;
 
             for (var i = 0; i < _levelConfig.SpecialTiles.Length; i++)

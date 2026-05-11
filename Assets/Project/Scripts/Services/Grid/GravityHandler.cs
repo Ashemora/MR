@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs.Grid;
 using Project.Scripts.Services.Board;
-using Project.Scripts.Shared;
+using Project.Scripts.Shared.Grid;
 
 namespace Project.Scripts.Services.Grid
 {

@@ -1,6 +1,6 @@
 using System;
-using Project.Scripts.Shared.Passives;
 using UnityEngine;
+using Project.Scripts.Shared.Targeting;
 
 namespace Project.Scripts.Configs.Battle.Abilities
 {

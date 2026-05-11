@@ -7,10 +7,10 @@ using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.Battle.Units;
 using Project.Scripts.Services.Input;
 using Project.Scripts.Services.UISystem;
-using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Utils.Buttons;
 using R3;
 using UnityEngine;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Battle.HUD
 {
@@ -262,7 +262,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
         private static bool HasAllHeroSlots(HeroSlotView[] slots)
         {
-            if (slots == null || slots.Length == 0)
+            if (null == slots || slots.Length == 0)
                 return false;
 
             for (var i = 0; i < slots.Length; i++)

@@ -3,9 +3,9 @@ using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Services.Combat.Units;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Timer;
 using Random = System.Random;
+using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Timer
 {
@@ -115,6 +115,7 @@ namespace Project.Scripts.Services.Timer
             if (cursor.IsDrainingAvatar)
             {
                 _avatarService.ForceApplyDamage(side, avatarDamage, suppressDefeatedEvent: true);
+                
                 return;
             }
 

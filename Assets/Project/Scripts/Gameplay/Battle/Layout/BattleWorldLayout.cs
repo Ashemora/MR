@@ -104,7 +104,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
 
         public void PublishAnnouncementAnchors(IBoardBoundsProvider boardBounds)
         {
-            if (boardBounds == null)
+            if (null == boardBounds)
                 return;
 
             if (_battleFieldAnnouncementAnchor)

@@ -7,10 +7,10 @@ namespace Project.Scripts.Shared.Energy
         public const int DefaultCap = 150;
 
         
-        private readonly IReadOnlyList<int> _caps;
-
-        
         public bool HasExplicitCaps => _caps is { Count: > 0 };
+        
+        
+        private readonly IReadOnlyList<int> _caps;
 
 
         public RoundEnergyCapSchedule(IReadOnlyList<int> caps)

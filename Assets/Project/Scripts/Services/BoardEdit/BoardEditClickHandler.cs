@@ -2,9 +2,9 @@
 using DG.Tweening;
 using Project.Scripts.Configs.Grid;
 using Project.Scripts.Services.Grid;
-using Project.Scripts.Shared;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Project.Scripts.Shared.Grid;
 
 namespace Project.Scripts.Services.BoardEdit
 {
@@ -61,19 +61,22 @@ namespace Project.Scripts.Services.BoardEdit
 
         private static bool TryGetPressPosition(out Vector2 screenPos)
         {
-            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            if (null != Mouse.current && Mouse.current.leftButton.wasPressedThisFrame)
             {
                 screenPos = Mouse.current.position.ReadValue();
+                
                 return true;
             }
 
-            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
+            if (null != Touchscreen.current && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
             {
                 screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+                
                 return true;
             }
 
             screenPos = default;
+            
             return false;
         }
 

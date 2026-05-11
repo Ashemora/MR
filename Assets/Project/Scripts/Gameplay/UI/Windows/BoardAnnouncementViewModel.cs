@@ -26,18 +26,9 @@ namespace Project.Scripts.Gameplay.UI.Windows
         private readonly Func<float> _worldYGetter;
 
 
-        public BoardAnnouncementViewModel(
-            AnnouncementStyle style,
-            string text,
-            Color textColor,
-            float displayDuration,
-            float fadeOutDuration,
-            float flyDistance,
-            float baseScale,
-            float scaleMultiplier,
-            Ease fadeOutEase,
-            float worldY,
-            Func<float> worldYGetter = null)
+        public BoardAnnouncementViewModel(AnnouncementStyle style, string text, Color textColor,
+            float displayDuration, float fadeOutDuration, float flyDistance, float baseScale,
+            float scaleMultiplier, Ease fadeOutEase, float worldY, Func<float> worldYGetter = null)
         {
             Style = style;
             Text = text;

@@ -1,6 +1,6 @@
 using Project.Scripts.Shared.Abilities;
-using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Shared.Passives
 {

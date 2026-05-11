@@ -1,14 +1,8 @@
 using System;
-using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
 using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
-using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Events;
-using Project.Scripts.Shared.Heroes;
 using R3;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Game
 {
@@ -26,9 +20,7 @@ namespace Project.Scripts.Services.Game
         private IDisposable _loseSub;
 
 
-        public GameStateService(
-            EventBus eventBus,
-            IAvatarService avatarService,
+        public GameStateService(EventBus eventBus, IAvatarService avatarService,
             IBattleActionRuntimeService battleActionRuntimeService)
         {
             _eventBus = eventBus;

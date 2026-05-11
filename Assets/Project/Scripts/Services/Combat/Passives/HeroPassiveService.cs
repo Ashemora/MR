@@ -4,13 +4,14 @@ using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Clock;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.BattleSetup;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Passives;
 using Project.Scripts.Shared.Tiles;
 using VContainer.Unity;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Services.Combat.Units;
+using Project.Scripts.Shared.ActivationConditions;
+using Project.Scripts.Shared.Passives;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Passives
 {

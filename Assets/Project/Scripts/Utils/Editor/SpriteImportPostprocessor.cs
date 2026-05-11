@@ -7,7 +7,7 @@ namespace Project.Scripts.Utils.Editor
     {
         private void OnPreprocessTexture()
         {
-            if (!assetImporter.importSettingsMissing)
+            if (false == assetImporter.importSettingsMissing)
                 return;
 
             var importer = (TextureImporter)assetImporter;

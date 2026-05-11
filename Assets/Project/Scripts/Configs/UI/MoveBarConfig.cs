@@ -1,4 +1,4 @@
-using Project.Scripts.Shared.Moves;
+using Project.Scripts.Shared.MoveBar;
 using UnityEngine;
 
 namespace Project.Scripts.Configs.UI

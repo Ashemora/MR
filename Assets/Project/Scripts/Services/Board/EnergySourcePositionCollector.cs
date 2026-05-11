@@ -76,6 +76,7 @@ namespace Project.Scripts.Services.Board
                 accumulator.Sum += position;
                 accumulator.Count++;
                 _positionsByKind[kind] = accumulator;
+                
                 return;
             }
 

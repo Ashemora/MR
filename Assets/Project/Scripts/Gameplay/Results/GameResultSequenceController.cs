@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Services.Announcements;
 using Project.Scripts.Services.Events;
-using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Results
 {
@@ -20,11 +20,8 @@ namespace Project.Scripts.Gameplay.Results
         private bool _isRunning;
 
 
-        public GameResultSequenceController(
-            EventBus eventBus,
-            GameResultSequenceConfig config,
-            GameResultPresenter gameResultPresenter,
-            IBoardAnnouncementService announcementService)
+        public GameResultSequenceController(EventBus eventBus, GameResultSequenceConfig config,
+            GameResultPresenter gameResultPresenter, IBoardAnnouncementService announcementService)
         {
             _eventBus = eventBus;
             _config = config;
@@ -82,7 +79,7 @@ namespace Project.Scripts.Gameplay.Results
 
             if (sequence.WinnerAvatarPulse.Enabled)
             {
-                if (_visuals != null)
+                if (null != _visuals)
                     await _visuals.PlayAvatarPulse(e.Winner, sequence.WinnerAvatarPulse);
 
                 await DelayIfNeeded(sequence.WinnerAvatarPulse.DelayAfterStep, cancellationToken);

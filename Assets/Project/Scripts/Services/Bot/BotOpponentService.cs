@@ -13,10 +13,11 @@ using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Bot;
-using Project.Scripts.Shared.Heroes;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
+using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Bot
 {
@@ -272,7 +273,7 @@ namespace Project.Scripts.Services.Bot
                 {
                     bool hasHealTarget;
 
-                    if (!_groupDefense.IsExposed(BattleSide.Enemy))
+                    if (false == _groupDefense.IsExposed(BattleSide.Enemy))
                     {
                         var t = _engine.PickWeakestGroupHero(
                             currentEnemySlots,
@@ -329,7 +330,7 @@ namespace Project.Scripts.Services.Bot
 
         private void ActivateHeroDamage(int slotIndex, IReadOnlyList<HeroSlotState> enemySlots)
         {
-            if (!_groupDefense.IsExposed(BattleSide.Player))
+            if (false == _groupDefense.IsExposed(BattleSide.Player))
             {
                 var playerSlots = _heroService.GetSlots(BattleSide.Player);
                 var targetIdx = _engine.PickGroupBreakTarget(
@@ -354,7 +355,7 @@ namespace Project.Scripts.Services.Bot
 
         private void ActivateHeroHeal(int slotIndex, IReadOnlyList<HeroSlotState> enemySlots)
         {
-            if (!_groupDefense.IsExposed(BattleSide.Enemy))
+            if (false == _groupDefense.IsExposed(BattleSide.Enemy))
             {
                 var targetIdx = _engine.PickWeakestGroupHero(
                     enemySlots,

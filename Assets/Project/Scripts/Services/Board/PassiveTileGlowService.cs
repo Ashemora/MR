@@ -2,18 +2,13 @@ using System;
 using System.Collections.Generic;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Grid;
-using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
-using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
-using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Grid;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Tiles;
 using UnityEngine;
+using Project.Scripts.Shared.Grid;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Board
 {
@@ -77,7 +72,7 @@ namespace Project.Scripts.Services.Board
                 if (false == kind.IsColor())
                     continue;
 
-                if (_buffService.HasMatchEnergyBuff(Project.Scripts.Shared.Heroes.BattleSide.Player, kind))
+                if (_buffService.HasMatchEnergyBuff(BattleSide.Player, kind))
                     result.Add(kind);
             }
 

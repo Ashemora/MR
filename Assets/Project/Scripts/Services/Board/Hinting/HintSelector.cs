@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Project.Scripts.Configs.Grid;
 using Project.Scripts.Services.Grid;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
 using Project.Scripts.Shared.Tiles;
 using UnityEngine;
@@ -10,11 +9,8 @@ namespace Project.Scripts.Services.Board.Hinting
 {
     public static class HintSelector
     {
-        public static HintCandidate Select(
-            IGridState gridState,
-            IGridView gridView,
-            IMatchFinder matchFinder,
-            GridConfig gridConfig)
+        public static HintCandidate Select(IGridState gridState, IGridView gridView,
+            IMatchFinder matchFinder, GridConfig gridConfig)
         {
             var state = gridState.GetGridState();
             var tier1 = new List<HintCandidate>();
@@ -45,15 +41,9 @@ namespace Project.Scripts.Services.Board.Hinting
         }
 
 
-        private static void TrySwapDirection(
-            int x1, int y1, int x2, int y2,
-            TileKind[,] state,
-            IGridView gridView,
-            IMatchFinder matchFinder,
-            GridConfig gridConfig,
-            List<HintCandidate> tier1,
-            List<HintCandidate> tier2,
-            List<HintCandidate> tier3)
+        private static void TrySwapDirection(int x1, int y1, int x2, int y2,
+            TileKind[,] state, IGridView gridView, IMatchFinder matchFinder, GridConfig gridConfig,
+            List<HintCandidate> tier1, List<HintCandidate> tier2, List<HintCandidate> tier3)
         {
             if (x2 >= gridConfig.Width || y2 >= gridConfig.Height)
                 return;

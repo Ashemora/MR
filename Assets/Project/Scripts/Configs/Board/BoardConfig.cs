@@ -1,6 +1,5 @@
 using Project.Scripts.Tiles;
 using UnityEngine;
-using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using System;
 #endif
@@ -43,7 +42,16 @@ namespace Project.Scripts.Configs.Board
         [Tooltip("Префаб для инстанцирования каждого тайла")]
         [Space(10)]
         [SerializeField] private Tile _tilePrefab;
-
+        
+        
+        public float TilePaddingPercent => _tilePaddingPercent;
+        public float TileFillPercent => _tileFillPercent;
+        public float FramePaddingPercent => _framePaddingPercent;
+        public float FrameExtraHeight => _frameExtraHeight;
+        public float MaskTopPadding => _maskTopPadding;
+        public float MaxAspectRatio => _maxAspectRatio;
+        public Tile TilePrefab => _tilePrefab;
+        
 
 #if UNITY_EDITOR
         public static event Action LayoutChanged;
@@ -66,10 +74,11 @@ namespace Project.Scripts.Configs.Board
         
         private void OnValidate()
         {
-            if (!_hasValidated)
+            if (false == _hasValidated)
             {
                 CaptureValidatedValues();
                 TileLayoutChanged?.Invoke();
+                
                 return;
             }
 
@@ -99,13 +108,5 @@ namespace Project.Scripts.Configs.Board
             _lastMaxAspectRatio = _maxAspectRatio;
         }
 #endif
-
-        public float TilePaddingPercent => _tilePaddingPercent;
-        public float TileFillPercent => _tileFillPercent;
-        public float FramePaddingPercent => _framePaddingPercent;
-        public float FrameExtraHeight => _frameExtraHeight;
-        public float MaskTopPadding => _maskTopPadding;
-        public float MaxAspectRatio => _maxAspectRatio;
-        public Tile TilePrefab => _tilePrefab;
     }
 }

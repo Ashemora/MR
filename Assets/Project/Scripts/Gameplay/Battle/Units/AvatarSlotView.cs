@@ -6,10 +6,10 @@ using Project.Scripts.Configs.UI;
 using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.UI;
 using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Shared.Heroes;
 using R3;
 using TMPro;
 using UnityEngine;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Battle.Units
 {
@@ -172,7 +172,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             if (source.ActionType == HeroActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
             {
-                if (_groupDefense != null && false == _groupDefense.IsExposed(BattleSide.Enemy))
+                if (null != _groupDefense && false == _groupDefense.IsExposed(BattleSide.Enemy))
                     return false;
 
                 return true;

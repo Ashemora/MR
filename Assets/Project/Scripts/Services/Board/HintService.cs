@@ -7,7 +7,6 @@ using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Grid;
 using Project.Scripts.Services.Board.Hinting;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
 using R3;
 
@@ -31,15 +30,9 @@ namespace Project.Scripts.Services.Board
         private Tiles.Tile _secondHintedTile;
 
 
-        public HintService(
-            HintConfig config,
-            IGridState gridState,
-            IGridView gridView,
-            IMatchFinder matchFinder,
-            GridConfig gridConfig,
-            IGameStateService gameStateService,
-            IBoardRuntimeService boardRuntimeService,
-            EventBus eventBus)
+        public HintService(HintConfig config, IGridState gridState, IGridView gridView,
+            IMatchFinder matchFinder, GridConfig gridConfig, IGameStateService gameStateService,
+            IBoardRuntimeService boardRuntimeService, EventBus eventBus)
         {
             _config = config;
             _gridState = gridState;

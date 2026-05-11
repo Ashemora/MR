@@ -3,8 +3,8 @@ using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.GroupDefense;
-using Project.Scripts.Shared.Heroes;
 using R3;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Units
 {
@@ -77,7 +77,7 @@ namespace Project.Scripts.Services.Combat.Units
 
             if (next.IsExposed && false == prev.IsExposed)
             {
-                var groupId = (false == prev.IsGroup1Destroyed && next.IsGroup1Destroyed)
+                var groupId = false == prev.IsGroup1Destroyed && next.IsGroup1Destroyed
                     ? HeroGroupId.Group1
                     : HeroGroupId.Group2;
 
@@ -89,6 +89,7 @@ namespace Project.Scripts.Services.Combat.Units
         {
             var g1 = IsGroupDestroyed(defending, _slotLayoutConfig.Group1SlotIndices);
             var g2 = IsGroupDestroyed(defending, _slotLayoutConfig.Group2SlotIndices);
+            
             return new AvatarDefenseSnapshot(g1, g2);
         }
 

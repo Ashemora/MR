@@ -1,8 +1,6 @@
 using Project.Scripts.Configs.Grid;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
 using Project.Scripts.Shared.Tiles;
-using Project.Scripts.Tiles;
 
 namespace Project.Scripts.Services.Grid
 {

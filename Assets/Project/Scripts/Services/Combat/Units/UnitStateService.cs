@@ -1,6 +1,6 @@
 using Project.Scripts.Shared.BattleSetup;
-using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Tiles;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Units
 {

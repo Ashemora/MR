@@ -3,9 +3,9 @@ using Project.Scripts.Configs.Battle.Visuals;
 using Project.Scripts.Services.Combat.Units;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
-using Project.Scripts.Shared.Heroes;
 using R3;
 using UnityEngine;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Battle.Units
 {

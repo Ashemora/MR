@@ -1,7 +1,7 @@
 using Project.Scripts.Shared.Abilities;
-using Project.Scripts.Shared.Heroes;
 using UnityEngine;
 using Project.Scripts.Configs.Battle.Abilities;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Configs.Battle.Units
 {

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Grid;
 using Project.Scripts.Tiles;
 

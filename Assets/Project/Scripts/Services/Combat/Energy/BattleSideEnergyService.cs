@@ -3,10 +3,10 @@ using Project.Scripts.Configs;
 using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleFlow;
-using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Energy;
 using VContainer.Unity;
 using Project.Scripts.Services.Combat.Economy;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Energy
 {

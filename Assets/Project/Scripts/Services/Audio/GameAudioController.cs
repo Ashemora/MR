@@ -2,10 +2,10 @@ using System;
 using Project.Scripts.Services.Audio.AudioSystem;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
-using Project.Scripts.Shared.Heroes;
 using Scripts.Services.Audio.AudioSystem.Configs;
 using UnityEngine;
 using R3;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Audio
 {

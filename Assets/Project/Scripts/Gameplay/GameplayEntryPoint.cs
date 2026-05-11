@@ -214,26 +214,13 @@ namespace Project.Scripts.Gameplay
                 _battleFieldView);
             _topBarLayout.RegisterView();
 
-            _phaseLayout = new BattleFieldPhaseLayoutController(
-                _eventBus,
-                _gameStateService,
-                _boardRuntimeService,
-                _battleFlowService,
-                _battleFieldLayoutConfig,
-                _battleFlowConfig,
-                _battleWorldLayout,
-                _battleFieldView,
-                _boardBoundsProvider);
+            _phaseLayout = new BattleFieldPhaseLayoutController(_eventBus, _gameStateService,
+                _boardRuntimeService, _battleFlowService, _battleFieldLayoutConfig, _battleFlowConfig,
+                _battleWorldLayout, _battleFieldView, _boardBoundsProvider);
 
-            _worldLayout = new GameplayWorldLayoutController(
-                _battleWorldLayout,
-                _boardConfig,
-                _gridConfig,
-                _battleWorldLayoutConfig,
-                _gameplayScreenLayoutConfig,
-                _gameplayScreenLayoutService,
-                _boardBoundsProvider,
-                _battleFieldView);
+            _worldLayout = new GameplayWorldLayoutController(_battleWorldLayout, _boardConfig,
+                _gridConfig, _battleWorldLayoutConfig, _gameplayScreenLayoutConfig,
+                _gameplayScreenLayoutService, _boardBoundsProvider, _battleFieldView);
 
             _topBarLayout.Subscribe(_worldLayout, _phaseLayout);
 

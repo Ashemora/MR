@@ -1,6 +1,6 @@
 using Project.Scripts.Shared.GroupDefense;
-using Project.Scripts.Shared.Heroes;
 using R3;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Units
 {

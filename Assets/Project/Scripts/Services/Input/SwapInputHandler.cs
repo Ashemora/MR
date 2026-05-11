@@ -1,8 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Project.Scripts.Services.Grid;
-using Project.Scripts.Shared;
-using Project.Scripts.Shared.Input;
+using Project.Scripts.Shared.Grid;
 using UnityEngine;
 
 namespace Project.Scripts.Services.Input

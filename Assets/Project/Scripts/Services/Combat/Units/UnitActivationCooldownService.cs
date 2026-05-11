@@ -2,10 +2,10 @@ using System;
 using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleSetup;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Rules;
 
 using Project.Scripts.Services.Combat.Abilities;
+using Project.Scripts.Shared.Abilities;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Units
 {

@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Energy;
 using Project.Scripts.Shared.GroupDefense;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Passives;
 using Project.Scripts.Shared.Tiles;
+using Project.Scripts.Shared.Passives;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Events
 {

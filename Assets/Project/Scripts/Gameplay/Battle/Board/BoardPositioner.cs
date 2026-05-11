@@ -3,7 +3,7 @@ using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Gameplay;
 using Project.Scripts.Configs.Grid;
 using Project.Scripts.Gameplay.Battle.Layout;
-using Project.Scripts.Shared.Layout;
+using Project.Scripts.Gameplay.Layout;
 using UnityEngine;
 
 namespace Project.Scripts.Gameplay.Battle.Board

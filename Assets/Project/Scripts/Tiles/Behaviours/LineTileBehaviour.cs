@@ -1,7 +1,6 @@
-using Project.Scripts.Shared;
-using Project.Scripts.Shared.Rules;
 using Project.Scripts.Shared.Tiles;
 using UnityEngine;
+using Project.Scripts.Shared.Grid;
 
 namespace Project.Scripts.Tiles.Behaviours
 {

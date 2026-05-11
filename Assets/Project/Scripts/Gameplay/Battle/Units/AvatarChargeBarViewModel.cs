@@ -1,18 +1,11 @@
 using System;
 using Project.Scripts.Services.Events;
-using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
 using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
-using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Game;
-using Project.Scripts.Shared.CombatActivation;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Rules;
 using R3;
 using UnityEngine;
+using Project.Scripts.Shared.BattleFlow;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Battle.Units
 {
@@ -33,12 +26,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
         private bool _isOnCooldown;
 
 
-        public AvatarChargeBarViewModel(
-            EventBus eventBus,
-            BattleSide side,
-            int activationEnergyCost,
-            IUnitActivationCooldownService cooldownService,
-            IBattleActionRuntimeService battleActionRuntimeService)
+        public AvatarChargeBarViewModel(EventBus eventBus, BattleSide side, int activationEnergyCost,
+            IUnitActivationCooldownService cooldownService, IBattleActionRuntimeService battleActionRuntimeService)
         {
             _battleActionRuntimeService = battleActionRuntimeService;
             _side = side;
@@ -79,6 +68,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 IsReady.Value = false;
                 ActivationBlockReason.Value = UnitActivationBlockReason.BlockedByPhase;
                 RefreshAvailabilityVisualState();
+                
                 return;
             }
 
@@ -87,6 +77,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 IsReady.Value = false;
                 ActivationBlockReason.Value = UnitActivationBlockReason.InsufficientEnergy;
                 RefreshAvailabilityVisualState();
+                
                 return;
             }
 
@@ -95,6 +86,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 IsReady.Value = false;
                 ActivationBlockReason.Value = UnitActivationBlockReason.Cooldown;
                 RefreshAvailabilityVisualState();
+                
                 return;
             }
 

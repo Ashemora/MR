@@ -71,10 +71,8 @@ namespace Project.Scripts.Services.Announcements
             _isEnergyTextHidden.Dispose();
 
             for (var i = 0; i < _all.Count; i++)
-            {
                 if (_all[i])
                     UnityEngine.Object.Destroy(_all[i].gameObject);
-            }
 
             _all.Clear();
             _pool.Clear();
@@ -95,17 +93,8 @@ namespace Project.Scripts.Services.Announcements
             var worldY = GetAnchorWorldY(anchor) + _config.VerticalWorldOffset;
             float WorldYGetter() => GetAnchorWorldY(anchor) + _config.VerticalWorldOffset;
 
-            return new BoardAnnouncementViewModel(
-                style,
-                text,
-                textColor,
-                displayDuration,
-                fadeOutDuration,
-                flyDistance,
-                baseScale,
-                scaleMultiplier,
-                fadeOutEase,
-                worldY,
+            return new BoardAnnouncementViewModel(style, text, textColor, displayDuration,
+                fadeOutDuration, flyDistance, baseScale, scaleMultiplier, fadeOutEase, worldY,
                 WorldYGetter);
         }
 

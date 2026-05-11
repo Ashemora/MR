@@ -69,6 +69,21 @@ namespace Project.Scripts.Configs.Gameplay
         [Range(0f, 1f)]
         [SerializeField] private float _worldStackMinGapScale = 0.25f;
 
+        
+        public float ReferenceResolutionWidth => _referenceResolutionWidth;
+        public float ReferenceResolutionHeight => _referenceResolutionHeight;
+        public float GameplayAspect => _gameplayAspectWidth / _gameplayAspectHeight;
+        public float ReferenceOrthographicSize => _referenceOrthographicSize;
+        public bool UseSafeArea => _useSafeArea;
+        public bool WorldExtendsIntoUnsafeBottomArea => _worldExtendsIntoUnsafeBottomArea;
+        public float SafeAreaPadding => _safeAreaPadding;
+        public float TopBarHeight => _topBarHeight;
+        public float TopBarSidePadding => _topBarSidePadding;
+        public float TopBarBottomPadding => _topBarBottomPadding;
+        public float WorldBottomPadding => _worldBottomPadding;
+        public float WorldSidePadding => _worldSidePadding;
+        public float WorldStackMinGapScale => _worldStackMinGapScale;
+        
 #if UNITY_EDITOR
         public static event Action LayoutChanged;
         public static event Action TopBarLayoutChanged;
@@ -96,7 +111,7 @@ namespace Project.Scripts.Configs.Gameplay
 
         private void OnValidate()
         {
-            if (!_hasValidated)
+            if (false == _hasValidated)
             {
                 CaptureValidatedValues();
                 return;
@@ -141,19 +156,5 @@ namespace Project.Scripts.Configs.Gameplay
             _lastWorldSidePadding = _worldSidePadding;
         }
 #endif
-
-        public float ReferenceResolutionWidth => _referenceResolutionWidth;
-        public float ReferenceResolutionHeight => _referenceResolutionHeight;
-        public float GameplayAspect => _gameplayAspectWidth / _gameplayAspectHeight;
-        public float ReferenceOrthographicSize => _referenceOrthographicSize;
-        public bool UseSafeArea => _useSafeArea;
-        public bool WorldExtendsIntoUnsafeBottomArea => _worldExtendsIntoUnsafeBottomArea;
-        public float SafeAreaPadding => _safeAreaPadding;
-        public float TopBarHeight => _topBarHeight;
-        public float TopBarSidePadding => _topBarSidePadding;
-        public float TopBarBottomPadding => _topBarBottomPadding;
-        public float WorldBottomPadding => _worldBottomPadding;
-        public float WorldSidePadding => _worldSidePadding;
-        public float WorldStackMinGapScale => _worldStackMinGapScale;
     }
 }

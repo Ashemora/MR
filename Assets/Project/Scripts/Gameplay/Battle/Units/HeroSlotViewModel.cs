@@ -1,18 +1,12 @@
 using System;
 using Project.Scripts.Services.Events;
-using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
 using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
-using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Game;
-using Project.Scripts.Shared.CombatActivation;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Rules;
 using R3;
 using UnityEngine;
+using Project.Scripts.Shared.BattleFlow;
+using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Battle.Units
 {

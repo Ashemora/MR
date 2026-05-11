@@ -48,6 +48,7 @@ namespace Project.Scripts.Shared.BattleFlow
             _snapshot = _settings.PrePhaseDuration > 0
                 ? MakePrePhase(_snapshot.CurrentRound, BattlePhaseKind.Hero)
                 : MakeActionPhase(_snapshot.CurrentRound, BattlePhaseKind.Hero);
+            
             return true;
         }
 

@@ -16,7 +16,7 @@ namespace Project.Scripts.Utils.Editor.Buttons
 
         public static void DrawButton(Rect rect, UnityEngine.Object[] targets, string methodName)
         {
-            if (targets == null || targets.Length == 0 || string.IsNullOrEmpty(methodName))
+            if (null == targets || targets.Length == 0 || string.IsNullOrEmpty(methodName))
                 return;
 
             var anchor = targets[0];
@@ -40,7 +40,7 @@ namespace Project.Scripts.Utils.Editor.Buttons
                 return;
 
             var targets = serializedObject.targetObjects;
-            if (targets == null || targets.Length == 0 || !targets[0])
+            if (null == targets || targets.Length == 0 || !targets[0])
                 return;
 
             var type = targets[0].GetType();

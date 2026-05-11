@@ -1,5 +1,5 @@
 using System;
-using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Shared.BattleSetup
 {

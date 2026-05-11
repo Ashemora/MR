@@ -3,10 +3,10 @@ using Project.Scripts.Configs.Battle.Units;
 using Project.Scripts.Configs.Battle.Visuals;
 using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.UI;
-using Project.Scripts.Shared.Heroes;
 using R3;
 using TMPro;
 using UnityEngine;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Battle.Units
 {

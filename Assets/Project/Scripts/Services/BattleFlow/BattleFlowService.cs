@@ -154,6 +154,7 @@ namespace Project.Scripts.Services.BattleFlow
             if (after.Phase == BattlePhaseKind.PrePhase && before.Phase != BattlePhaseKind.PrePhase)
             {
                 _eventBus.Publish(new BattlePrePhaseStartedEvent(after.UpcomingPhase ?? BattlePhaseKind.Match));
+                
                 return;
             }
 

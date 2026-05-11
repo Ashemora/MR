@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Buffs
 {

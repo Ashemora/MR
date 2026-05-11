@@ -85,7 +85,6 @@ namespace Project.Scripts.Gameplay.Battle.Layout
         {
             _battleFieldLayoutTween?.Kill();
             _battleFieldLayoutTween = null;
-
             _boardRuntimeSubscription?.Dispose();
             _boardRuntimeSubscription = null;
             _gameStateSubscription?.Dispose();
@@ -171,6 +170,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             if (Mathf.Approximately(current, target) || _battleFieldLayoutConfig.TransitionDuration <= 0f)
             {
                 ApplyBattleFieldLayoutBlend(target);
+                
                 return;
             }
 

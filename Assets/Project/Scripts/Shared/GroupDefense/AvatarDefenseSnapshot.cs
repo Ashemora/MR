@@ -4,7 +4,6 @@ namespace Project.Scripts.Shared.GroupDefense
     {
         public bool IsGroup1Destroyed { get; }
         public bool IsGroup2Destroyed { get; }
-
         public bool IsExposed => IsGroup1Destroyed || IsGroup2Destroyed;
 
 

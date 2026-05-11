@@ -64,6 +64,7 @@ namespace Project.Scripts.Gameplay.UI
             rectTransform.sizeDelta = new Vector2(
                 rightBottomLocal.x - leftBottomLocal.x - sidePadding * 2f,
                 height);
+            
             return true;
         }
 

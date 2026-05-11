@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Project.Scripts.Gameplay.UI
+namespace Project.Scripts.Gameplay.UI.Windows
 {
     public class LoseView : BaseView<LoseViewModel>
     {

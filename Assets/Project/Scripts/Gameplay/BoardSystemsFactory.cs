@@ -18,7 +18,6 @@ using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Grid;
 using Project.Scripts.Services.Input;
 using Project.Scripts.Shared.Grid;
-using Project.Scripts.Shared.Rules;
 
 namespace Project.Scripts.Gameplay
 {
@@ -36,15 +35,9 @@ namespace Project.Scripts.Gameplay
         private readonly IDisposable _burndownStartedSubscription;
 
 
-        public BoardSystems(
-            GridManager gridManager,
-            TilePool tilePool,
-            SwapInputHandler swapHandler,
-            BoardOrchestrator orchestrator,
-            HintService hintService,
-            PassiveTileGlowService passiveTileGlowService,
-            GameAudioController gameAudioController,
-            IDisposable burndownStartedSubscription)
+        public BoardSystems(GridManager gridManager, TilePool tilePool, SwapInputHandler swapHandler,
+            BoardOrchestrator orchestrator, HintService hintService, PassiveTileGlowService passiveTileGlowService,
+            GameAudioController gameAudioController, IDisposable burndownStartedSubscription)
         {
             GridManager = gridManager;
             TilePool = tilePool;

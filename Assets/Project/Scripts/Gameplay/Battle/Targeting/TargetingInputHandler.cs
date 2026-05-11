@@ -1,17 +1,11 @@
 using System;
 using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
-using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
-using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Input;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Rules;
 using R3;
 using UnityEngine;
+using Project.Scripts.Shared.BattleFlow;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Gameplay.Battle.Targeting
 {
@@ -46,12 +40,8 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
         }
 
 
-        public void Init(
-            IInputService input,
-            TargetingRegistry registry,
-            IAbilityExecutionService abilityExecution,
-            IGameStateService gameStateService,
-            IBattleActionRuntimeService battleActionRuntimeService,
+        public void Init(IInputService input, TargetingRegistry registry, IAbilityExecutionService abilityExecution,
+            IGameStateService gameStateService, IBattleActionRuntimeService battleActionRuntimeService,
             Camera cam)
         {
             Unsubscribe();
@@ -79,7 +69,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
 
             var unit = _registry.FindAtPosition(screenPos, _cam, OffsetPx);
 
-            if (unit == null || false == unit.IsReadySource || unit.Descriptor.Side != BattleSide.Player)
+            if (null == unit || false == unit.IsReadySource || unit.Descriptor.Side != BattleSide.Player)
                 return;
 
             _actionSessionVersion = _battleActionRuntimeService.CaptureVersion();
@@ -101,11 +91,11 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
             _currentScreenPos += screenDelta;
 
             var candidate = _registry.FindAtPosition(_currentScreenPos, _cam, OffsetPx);
-            var valid = candidate != null
+            var valid = null != candidate
                         && candidate != _source
                         && candidate.IsValidTarget(_source.Descriptor);
 
-            if (_target != null && _target != candidate)
+            if (null != _target && _target != candidate)
             {
                 _target.SetTargetHighlight(false, default);
                 _target = null;
@@ -117,7 +107,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
                 _target.SetTargetHighlight(true, _source.Descriptor.ActionType);
             }
 
-            _isHoveringBlockedAvatar.Value = candidate != null
+            _isHoveringBlockedAvatar.Value = null != candidate
                 && false == valid
                 && candidate.Descriptor.Kind == UnitKind.Avatar
                 && candidate.Descriptor.Side == BattleSide.Enemy
@@ -126,7 +116,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
 
         private void HandleDragCanceled()
         {
-            if (_source != null && _target != null && CanCommitSelection())
+            if (null != _source && null != _target && CanCommitSelection())
                 _abilityExecution.Execute(_source.Descriptor, _target.Descriptor);
 
             ClearSelection();
@@ -188,7 +178,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
 
         private void OnRuntimeStateChanged()
         {
-            if (_source == null && _target == null)
+            if (null == _source && null == _target)
                 return;
 
             if (false == _battleActionRuntimeService.CanAcceptNormalActions)

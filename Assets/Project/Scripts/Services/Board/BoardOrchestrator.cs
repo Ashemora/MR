@@ -10,15 +10,12 @@ using Project.Scripts.Services.Grid;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Input;
-using Project.Scripts.Shared;
 using Project.Scripts.Shared.Energy;
 using Project.Scripts.Shared.Grid;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Input;
-using Project.Scripts.Shared.Rules;
 using Project.Scripts.Shared.Tiles;
 using Project.Scripts.Tiles;
 using UnityEngine;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Board
 {

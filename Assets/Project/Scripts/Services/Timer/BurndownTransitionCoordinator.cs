@@ -16,11 +16,8 @@ namespace Project.Scripts.Services.Timer
         private readonly IBurndownService _burndownService;
 
 
-        public BurndownTransitionCoordinator(
-            EventBus eventBus,
-            IBoardRuntimeService boardRuntimeService,
-            IBattleActionRuntimeService battleActionRuntimeService,
-            IGameStateService gameStateService,
+        public BurndownTransitionCoordinator(EventBus eventBus, IBoardRuntimeService boardRuntimeService,
+            IBattleActionRuntimeService battleActionRuntimeService, IGameStateService gameStateService,
             IBurndownService burndownService)
         {
             _eventBus = eventBus;

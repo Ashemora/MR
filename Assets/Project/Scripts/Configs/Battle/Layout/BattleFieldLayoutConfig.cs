@@ -111,12 +111,14 @@ namespace Project.Scripts.Configs.Battle.Layout
             if (false == _compressedBattleFieldPrefab)
             {
                 error = "Compressed BattleField prefab is not assigned.";
+                
                 return false;
             }
 
             if (false == _fullBattleFieldPrefab)
             {
                 error = "Full BattleField prefab is not assigned.";
+                
                 return false;
             }
 
@@ -125,12 +127,14 @@ namespace Project.Scripts.Configs.Battle.Layout
             if (false == compressedView)
             {
                 error = "Compressed BattleField prefab does not contain BattleFieldView.";
+                
                 return false;
             }
 
             if (false == fullView)
             {
                 error = "Full BattleField prefab does not contain BattleFieldView.";
+                
                 return false;
             }
 
@@ -162,7 +166,7 @@ namespace Project.Scripts.Configs.Battle.Layout
 
         private void ApplyScenePreview(BattleFieldLayoutSnapshot snapshot, float boardAndEnergyYOffset, string undoName)
         {
-            var layout = UnityEngine.Object.FindFirstObjectByType<BattleWorldLayout>();
+            var layout = FindFirstObjectByType<BattleWorldLayout>();
             if (false == layout || false == layout.BattleFieldView)
             {
                 Debug.LogError("BattleFieldLayoutConfig preview failed: BattleWorldLayout with BattleFieldView was not found in the open scene.", this);
@@ -181,7 +185,7 @@ namespace Project.Scripts.Configs.Battle.Layout
 
         private float CalculateHeroPhaseBoardOffset()
         {
-            var layout = UnityEngine.Object.FindFirstObjectByType<BattleWorldLayout>();
+            var layout = FindFirstObjectByType<BattleWorldLayout>();
             if (false == layout || false == layout.BattleFieldView)
                 return 0f;
 

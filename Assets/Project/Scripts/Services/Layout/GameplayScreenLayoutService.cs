@@ -1,5 +1,5 @@
 using Project.Scripts.Configs.Gameplay;
-using Project.Scripts.Shared.Layout;
+using Project.Scripts.Gameplay.Layout;
 using UnityEngine;
 
 namespace Project.Scripts.Services.Layout

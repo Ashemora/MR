@@ -1,13 +1,6 @@
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Configs;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Services.Board;
-using Project.Scripts.Services.Combat.Abilities;
-using Project.Scripts.Services.Combat.Buffs;
-using Project.Scripts.Services.Combat.Passives;
-using Project.Scripts.Services.Combat.Units;
-using Project.Scripts.Services.Combat.Energy;
-using Project.Scripts.Services.Combat.Economy;
 using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.UISystem;

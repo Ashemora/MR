@@ -2,9 +2,9 @@ using System;
 using Project.Scripts.Configs;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleSetup;
-using Project.Scripts.Shared.Heroes;
-using Project.Scripts.Shared.Rules;
 using UnityEngine;
+using Project.Scripts.Shared.Heroes;
+using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Units
 {

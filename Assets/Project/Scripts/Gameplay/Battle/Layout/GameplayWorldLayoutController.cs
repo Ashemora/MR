@@ -8,7 +8,7 @@ using Project.Scripts.Gameplay.Battle.HUD;
 using Project.Scripts.Services.Board;
 using Project.Scripts.Services.Grid;
 using Project.Scripts.Services.Layout;
-using Project.Scripts.Shared.Layout;
+using Project.Scripts.Gameplay.Layout;
 using UnityEngine;
 
 namespace Project.Scripts.Gameplay.Battle.Layout

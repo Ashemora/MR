@@ -16,9 +16,7 @@ namespace Project.Scripts.Services.Timer
         private bool _escalationTriggered;
 
 
-        public BattleEscalationController(
-            EscalationConfig config,
-            IEscalationModifierService escalationModifierService,
+        public BattleEscalationController(EscalationConfig config, IEscalationModifierService escalationModifierService,
             EventBus eventBus)
         {
             _config = config;

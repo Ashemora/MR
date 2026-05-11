@@ -78,7 +78,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             Cleanup();
             _disposables = new CompositeDisposable();
 
-            if (viewModel == null)
+            if (null == viewModel)
                 return;
 
             _playerBar?.SetMaxValue(viewModel.EnergyCap.CurrentValue);
