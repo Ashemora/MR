@@ -20,7 +20,7 @@ namespace Project.Scripts.Configs.Battle.Units
 
         public int MaxHP => _maxHP;
         public int ActivationEnergyCost => _activeAbility?.ActivationEnergyCost ?? 0;
-        public HeroActionType AbilityType => ToHeroActionType(GetPrimaryDirectAction().Kind);
+        public UnitActionType AbilityType => UnitActionTypeMapping.FromDirectActionKind(GetPrimaryDirectAction().Kind);
         public int AbilityPower => GetPrimaryDirectAction().Value;
         public Sprite Portrait => _portrait;
         public float ActivationCooldownSeconds => _activeAbility?.ActivationCooldownSeconds ?? 0f;
@@ -44,11 +44,6 @@ namespace Project.Scripts.Configs.Battle.Units
             }
 
             return default;
-        }
-
-        private static HeroActionType ToHeroActionType(DirectActionKind actionKind)
-        {
-            return actionKind == DirectActionKind.Heal ? HeroActionType.HealAlly : HeroActionType.DealDamage;
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Project.Scripts.Services.Combat.Abilities
     internal static class AbilityRuntimeDefinitionResolver
     {
         public static IReadOnlyList<AbilityEffectEntryDefinition> CreateCommittedEntries(BattleSetup battleSetup,
-            UnitDescriptor source, HeroActionType committedActionType, int committedActionValue)
+            UnitDescriptor source, UnitActionType committedActionType, int committedActionValue)
         {
             var definition = battleSetup.TryGetUnit(source, out var unitSetup)
                 ? unitSetup.ActiveAbility
@@ -26,7 +26,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         }
 
         private static AbilityEffectEntryDefinition CreateCommittedEntry(AbilityEffectEntryDefinition entry,
-            HeroActionType committedActionType, int committedActionValue)
+            UnitActionType committedActionType, int committedActionValue)
         {
             return new AbilityEffectEntryDefinition(entry.Targeting,
                 CreateCommittedDirectActions(entry.DirectActions, committedActionType, committedActionValue),
@@ -34,12 +34,12 @@ namespace Project.Scripts.Services.Combat.Abilities
         }
 
         private static DirectActionDefinition[] CreateCommittedDirectActions(IReadOnlyList<DirectActionDefinition> directActions, 
-            HeroActionType committedActionType, int committedActionValue)
+            UnitActionType committedActionType, int committedActionValue)
         {
             if (null == directActions || directActions.Count == 0)
                 return Array.Empty<DirectActionDefinition>();
 
-            var committedKind = ToDirectActionKind(committedActionType);
+            var committedKind = UnitActionTypeMapping.ToDirectActionKind(committedActionType);
             var result = new DirectActionDefinition[directActions.Count];
             for (var i = 0; i < directActions.Count; i++)
             {
@@ -50,11 +50,6 @@ namespace Project.Scripts.Services.Combat.Abilities
             }
 
             return result;
-        }
-
-        private static DirectActionKind ToDirectActionKind(HeroActionType actionType)
-        {
-            return actionType == HeroActionType.HealAlly ? DirectActionKind.Heal : DirectActionKind.Damage;
         }
     }
 }

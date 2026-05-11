@@ -1,8 +1,9 @@
 namespace Project.Scripts.Shared.Units
 {
-    public enum HeroActionType
+    public enum UnitActionType
     {
         DealDamage,
-        HealAlly
+        HealAlly,
+        SupportAlly
     }
 }

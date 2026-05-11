@@ -7,7 +7,7 @@ namespace Project.Scripts.Shared.Abilities
     public static class AbilityAdditionalTargetRules
     {
         public static List<UnitDescriptor> SelectTargets(UnitDescriptor source, UnitDescriptor primaryTarget,
-            HeroActionType actionType, int maxTargets, IReadOnlyList<AbilityTargetCandidate> candidates,
+            UnitActionType actionType, int maxTargets, IReadOnlyList<AbilityTargetCandidate> candidates,
             IReadOnlyList<AbilityEffectEntryDefinition> entries)
         {
             var result = new List<UnitDescriptor>();
@@ -26,7 +26,7 @@ namespace Project.Scripts.Shared.Abilities
                         candidate.IsHpFull, candidate.IsExposed))
                     continue;
 
-                if (false == AbilityTargetRules.IsTargetAllowedByDirectEntries(source, candidate.Descriptor, entries,
+                if (false == AbilityTargetRules.IsTargetAllowedByEntries(source, candidate.Descriptor, entries,
                         unitCandidates))
                     continue;
 
@@ -42,9 +42,9 @@ namespace Project.Scripts.Shared.Abilities
         }
 
 
-        private static int Compare(HeroActionType actionType, AbilityTargetCandidate left, AbilityTargetCandidate right)
+        private static int Compare(UnitActionType actionType, AbilityTargetCandidate left, AbilityTargetCandidate right)
         {
-            if (actionType == HeroActionType.HealAlly)
+            if (actionType == UnitActionType.HealAlly)
                 return CompareHealTarget(left, right);
 
             return CompareDamageTarget(left, right);

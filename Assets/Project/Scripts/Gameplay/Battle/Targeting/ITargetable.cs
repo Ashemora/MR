@@ -10,6 +10,6 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
         Bounds WorldBounds { get; }
         bool IsValidTarget(UnitDescriptor source);
         void SetSourceHighlight(bool active);
-        void SetTargetHighlight(bool active, HeroActionType actionType);
+        void SetTargetHighlight(bool active, UnitActionType actionType);
     }
 }

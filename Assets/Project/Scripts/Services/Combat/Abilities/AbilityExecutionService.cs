@@ -74,7 +74,7 @@ namespace Project.Scripts.Services.Combat.Abilities
             if (false == _unitAbilityActivationService.TryPreview(source, out var sourceState))
                 return false;
 
-            if (sourceState.ActionValue <= 0)
+            if (sourceState.ActionType != UnitActionType.SupportAlly && sourceState.ActionValue <= 0)
                 return false;
 
             var previewEntries = AbilityRuntimeDefinitionResolver.CreateCommittedEntries(_battleSetup, source,
@@ -87,7 +87,7 @@ namespace Project.Scripts.Services.Combat.Abilities
                     isTargetHpFull, isTargetExposed))
                 return false;
 
-            if (false == AbilityTargetRules.IsTargetAllowedByDirectEntries(source, target, previewEntries,
+            if (false == AbilityTargetRules.IsTargetAllowedByEntries(source, target, previewEntries,
                     CollectUnitTargetCandidates()))
                 return false;
 
@@ -113,7 +113,7 @@ namespace Project.Scripts.Services.Combat.Abilities
             return true;
         }
 
-        private void ApplyPrimaryTarget(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType,
+        private void ApplyPrimaryTarget(UnitDescriptor source, UnitDescriptor target, UnitActionType actionType,
             int actionValue, int repeatCount, long occurredAtTick,
             List<AbilityExecutionApplicationResult> directApplications,
             List<AbilityStatsChangeResult> abilityStatsChanges, ref bool buffsChanged)
@@ -133,7 +133,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         }
 
         private void ApplyAdditionalTargets(UnitDescriptor source, IReadOnlyList<UnitDescriptor> targets,
-            HeroActionType actionType, int actionValue, long occurredAtTick,
+            UnitActionType actionType, int actionValue, long occurredAtTick,
             List<AbilityExecutionApplicationResult> directApplications,
             List<AbilityStatsChangeResult> abilityStatsChanges, ref bool buffsChanged)
         {
@@ -242,7 +242,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         }
 
         private List<UnitDescriptor> SelectAdditionalTargets(UnitDescriptor source, UnitDescriptor primaryTarget,
-            HeroActionType actionType, IReadOnlyList<AbilityEffectEntryDefinition> entries)
+            UnitActionType actionType, IReadOnlyList<AbilityEffectEntryDefinition> entries)
         {
             return AbilityAdditionalTargetRules.SelectTargets(source, primaryTarget, actionType,
                 GetAdditionalTargetCount(source), CollectTargetCandidates(), entries);
@@ -261,7 +261,7 @@ namespace Project.Scripts.Services.Combat.Abilities
 
         private void AddAvatarTargetCandidate(List<AbilityTargetCandidate> result, BattleSide side)
         {
-            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, HeroActionType.DealDamage),
+            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, UnitActionType.DealDamage),
                     out var state))
                 return;
 
@@ -273,7 +273,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         {
             for (var i = 0; i < 4; i++)
             {
-                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, HeroActionType.DealDamage),
+                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, UnitActionType.DealDamage),
                         out var state))
                     continue;
 

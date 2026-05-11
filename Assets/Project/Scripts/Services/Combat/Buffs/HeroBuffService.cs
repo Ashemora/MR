@@ -105,7 +105,7 @@ namespace Project.Scripts.Services.Combat.Buffs
 
         public int GetAbilityPower(BattleSide side, int slotIndex, int basePower)
         {
-            return GetAbilityPower(UnitDescriptor.Hero(side, slotIndex, HeroActionType.DealDamage), basePower);
+            return GetAbilityPower(UnitDescriptor.Hero(side, slotIndex, UnitActionType.DealDamage), basePower);
         }
 
         public int GetAbilityPower(UnitDescriptor target, int basePower)

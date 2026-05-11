@@ -4,26 +4,12 @@ using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Abilities
 {
-    public readonly struct AbilityExecutionApplicationResult
-    {
-        public AbilityDirectApplicationResult Application { get; }
-        public float PresentationDelaySeconds { get; }
-
-
-        public AbilityExecutionApplicationResult(AbilityDirectApplicationResult application,
-            float presentationDelaySeconds)
-        {
-            Application = application;
-            PresentationDelaySeconds = presentationDelaySeconds < 0f ? 0f : presentationDelaySeconds;
-        }
-    }
-
     public readonly struct AbilityExecutionResult
     {
         public bool WasExecuted { get; }
         public UnitDescriptor Source { get; }
         public UnitDescriptor PrimaryTarget { get; }
-        public HeroActionType ActionType { get; }
+        public UnitActionType ActionType { get; }
         public int ActionValue { get; }
         public long OccurredAtTick { get; }
         public bool BuffsChanged { get; }
@@ -38,7 +24,7 @@ namespace Project.Scripts.Services.Combat.Abilities
 
 
         public AbilityExecutionResult(bool wasExecuted, UnitDescriptor source, UnitDescriptor primaryTarget,
-            HeroActionType actionType, int actionValue, long occurredAtTick, bool buffsChanged,
+            UnitActionType actionType, int actionValue, long occurredAtTick, bool buffsChanged,
             IReadOnlyList<AbilityExecutionApplicationResult> directApplications,
             IReadOnlyList<AbilityStatsChangeResult> abilityStatsChanges)
         {
@@ -56,7 +42,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         private static AbilityExecutionApplicationResult[] CopyDirectApplications(
             IReadOnlyList<AbilityExecutionApplicationResult> directApplications)
         {
-            if (directApplications == null || directApplications.Count == 0)
+            if (null == directApplications || directApplications.Count == 0)
                 return Array.Empty<AbilityExecutionApplicationResult>();
 
             var result = new AbilityExecutionApplicationResult[directApplications.Count];
@@ -69,7 +55,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         private static AbilityStatsChangeResult[] CopyAbilityStatsChanges(
             IReadOnlyList<AbilityStatsChangeResult> abilityStatsChanges)
         {
-            if (abilityStatsChanges == null || abilityStatsChanges.Count == 0)
+            if (null == abilityStatsChanges || abilityStatsChanges.Count == 0)
                 return Array.Empty<AbilityStatsChangeResult>();
 
             var result = new AbilityStatsChangeResult[abilityStatsChanges.Count];

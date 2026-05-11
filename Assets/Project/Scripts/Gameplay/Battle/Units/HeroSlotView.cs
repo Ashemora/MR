@@ -132,16 +132,19 @@ namespace Project.Scripts.Gameplay.Battle.Units
             if (null == _viewModel || false == _viewModel.IsAssigned || _viewModel.IsDefeated.CurrentValue)
                 return false;
 
-            if (source.ActionType == HeroActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
+            if (source.ActionType == UnitActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
                 return true;
 
-            if (source.ActionType == HeroActionType.HealAlly && _viewModel.Side == BattleSide.Player)
+            if (source.ActionType == UnitActionType.HealAlly && _viewModel.Side == BattleSide.Player)
             {
                 if (source.Kind == UnitKind.Hero && source.SlotIndex == _viewModel.SlotIndex)
                     return false;
 
                 return _viewModel.HPFill.CurrentValue < 1f;
             }
+
+            if (source.ActionType == UnitActionType.SupportAlly && _viewModel.Side == BattleSide.Player)
+                return true;
 
             return false;
         }
@@ -157,13 +160,13 @@ namespace Project.Scripts.Gameplay.Battle.Units
             _glow.gameObject.SetActive(active);
         }
 
-        public void SetTargetHighlight(bool active, HeroActionType actionType)
+        public void SetTargetHighlight(bool active, UnitActionType actionType)
         {
             if (false == _glow)
                 return;
 
             if (active && _config)
-                _glow.color = actionType == HeroActionType.HealAlly
+                _glow.color = actionType is UnitActionType.HealAlly or UnitActionType.SupportAlly
                     ? _config.HealTargetColor
                     : _config.AttackTargetColor;
 

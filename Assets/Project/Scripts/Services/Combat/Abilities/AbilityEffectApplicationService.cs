@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.BattleSetup;
@@ -11,104 +10,6 @@ using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Abilities
 {
-    public interface IAbilityEffectApplicationService
-    {
-        AbilityEffectApplicationResult Apply(UnitDescriptor source, UnitDescriptor selectedTarget,
-            IReadOnlyList<AbilityEffectEntryDefinition> entries, TileKind sourceSlotKind, int currentRound,
-            BattlePhaseKind currentPhase, long occurredAtTick, int applicationIndexOffset = 0, bool isRepeat = false);
-    }
-
-    public readonly struct AbilityDirectApplicationResult
-    {
-        public UnitDescriptor Source { get; }
-        public UnitDescriptor Target { get; }
-        public HeroActionType ActionType { get; }
-        public int Value { get; }
-        public int ApplicationIndex { get; }
-        public bool IsRepeat { get; }
-        public long OccurredAtTick { get; }
-
-
-        public AbilityDirectApplicationResult(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType,
-            int value, int applicationIndex, bool isRepeat, long occurredAtTick)
-        {
-            Source = source;
-            Target = target;
-            ActionType = actionType;
-            Value = value < 0 ? 0 : value;
-            ApplicationIndex = applicationIndex < 0 ? 0 : applicationIndex;
-            IsRepeat = isRepeat;
-            OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
-        }
-    }
-
-    public readonly struct AbilityEffectApplicationResult
-    {
-        public int DirectActionCount { get; }
-        public int BuffApplicationCount { get; }
-        public IReadOnlyList<AbilityDirectApplicationResult> DirectApplications =>
-            _directApplications ?? Array.Empty<AbilityDirectApplicationResult>();
-        public IReadOnlyList<AbilityStatsChangeResult> AbilityStatsChanges =>
-            _abilityStatsChanges ?? Array.Empty<AbilityStatsChangeResult>();
-        public bool WasChanged => DirectActionCount > 0 || BuffApplicationCount > 0;
-
-
-        private readonly AbilityDirectApplicationResult[] _directApplications;
-        private readonly AbilityStatsChangeResult[] _abilityStatsChanges;
-
-
-        public AbilityEffectApplicationResult(int buffApplicationCount,
-            IReadOnlyList<AbilityDirectApplicationResult> directApplications,
-            IReadOnlyList<AbilityStatsChangeResult> abilityStatsChanges)
-        {
-            BuffApplicationCount = buffApplicationCount < 0 ? 0 : buffApplicationCount;
-            _directApplications = CopyDirectApplications(directApplications);
-            _abilityStatsChanges = CopyAbilityStatsChanges(abilityStatsChanges);
-            DirectActionCount = _directApplications.Length;
-        }
-
-        private static AbilityDirectApplicationResult[] CopyDirectApplications(
-            IReadOnlyList<AbilityDirectApplicationResult> directApplications)
-        {
-            if (directApplications == null || directApplications.Count == 0)
-                return Array.Empty<AbilityDirectApplicationResult>();
-
-            var result = new AbilityDirectApplicationResult[directApplications.Count];
-            for (var i = 0; i < directApplications.Count; i++)
-                result[i] = directApplications[i];
-
-            return result;
-        }
-
-        private static AbilityStatsChangeResult[] CopyAbilityStatsChanges(
-            IReadOnlyList<AbilityStatsChangeResult> abilityStatsChanges)
-        {
-            if (abilityStatsChanges == null || abilityStatsChanges.Count == 0)
-                return Array.Empty<AbilityStatsChangeResult>();
-
-            var result = new AbilityStatsChangeResult[abilityStatsChanges.Count];
-            for (var i = 0; i < abilityStatsChanges.Count; i++)
-                result[i] = abilityStatsChanges[i];
-
-            return result;
-        }
-    }
-
-    public readonly struct AbilityStatsChangeResult
-    {
-        public UnitDescriptor Target { get; }
-        public int ActivationEnergyCost { get; }
-        public int AbilityPower { get; }
-
-
-        public AbilityStatsChangeResult(UnitDescriptor target, int activationEnergyCost, int abilityPower)
-        {
-            Target = target;
-            ActivationEnergyCost = activationEnergyCost < 0 ? 0 : activationEnergyCost;
-            AbilityPower = abilityPower < 0 ? 0 : abilityPower;
-        }
-    }
-
     public class AbilityEffectApplicationService : IAbilityEffectApplicationService
     {
         private const int SlotCount = 4;
@@ -182,7 +83,7 @@ namespace Project.Scripts.Services.Combat.Abilities
                     continue;
 
                 if (ApplyDirectAction(target, action))
-                    directApplications.Add(new AbilityDirectApplicationResult(source, target, ToHeroActionType(action.Kind),
+                    directApplications.Add(new AbilityDirectApplicationResult(source, target, UnitActionTypeMapping.FromDirectActionKind(action.Kind),
                         action.Value, applicationIndexOffset + i, isRepeat, occurredAtTick));
             }
         }
@@ -259,7 +160,7 @@ namespace Project.Scripts.Services.Combat.Abilities
                     out var isExposed))
                 return false;
 
-            return AbilityTargetRules.IsTargetValid(ToHeroActionType(action.Kind), true, isAlive, isHpFull, isExposed);
+            return AbilityTargetRules.IsTargetValid(UnitActionTypeMapping.FromDirectActionKind(action.Kind), true, isAlive, isHpFull, isExposed);
         }
 
         private bool TryGetTargetState(UnitDescriptor target, bool ignoresAvatarGroupDefense, out bool isAlive,
@@ -295,7 +196,7 @@ namespace Project.Scripts.Services.Combat.Abilities
 
         private void AddAvatarCandidate(List<UnitTargetCandidate> result, BattleSide side)
         {
-            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, HeroActionType.DealDamage),
+            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, UnitActionType.DealDamage),
                     out var state))
                 return;
 
@@ -307,7 +208,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         {
             for (var i = 0; i < SlotCount; i++)
             {
-                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, HeroActionType.DealDamage),
+                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, UnitActionType.DealDamage),
                         out var state))
                     continue;
 
@@ -359,11 +260,6 @@ namespace Project.Scripts.Services.Combat.Abilities
         {
             return (_buffService as IAbilityPowerModifierService)?.GetAbilityPower(target, basePower)
                    ?? basePower;
-        }
-
-        private static HeroActionType ToHeroActionType(DirectActionKind actionKind)
-        {
-            return actionKind == DirectActionKind.Heal ? HeroActionType.HealAlly : HeroActionType.DealDamage;
         }
     }
 }

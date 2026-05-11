@@ -16,7 +16,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
         public Sprite Portrait { get; }
         public BattleAnimationConfig AnimConfig { get; }
         public EventBus EventBus { get; }
-        public HeroActionType AbilityType { get; }
+        public UnitActionType AbilityType { get; }
         public int ActivationEnergyCost { get; }
         public int AbilityPower => AbilityPowerChanged.Value;
         public ReactiveProperty<int> AbilityPowerChanged { get; }
@@ -38,7 +38,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
 
         public AvatarSlotViewModel(EventBus eventBus, BattleSide side, Color slotColor, Sprite portrait,
-            int initialHP, int maxHP, BattleAnimationConfig animConfig, HeroActionType abilityType,
+            int initialHP, int maxHP, BattleAnimationConfig animConfig, UnitActionType abilityType,
             int activationEnergyCost, int abilityPower,
             IUnitActivationCooldownService cooldownService,
             IBattleActionRuntimeService battleActionRuntimeService)

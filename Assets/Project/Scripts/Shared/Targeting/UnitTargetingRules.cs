@@ -126,7 +126,7 @@ namespace Project.Scripts.Shared.Targeting
                 return true;
 
             for (var i = 0; i < filters.Count; i++)
-                if (filters[i] == UnitTargetFilter.CanDealDamage && candidate.Descriptor.ActionType != HeroActionType.DealDamage)
+                if (filters[i] == UnitTargetFilter.CanDealDamage && candidate.Descriptor.ActionType != UnitActionType.DealDamage)
                     return false;
 
             return true;

@@ -17,7 +17,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
         public Sprite Portrait { get; }
         public int SlotIndex { get; }
         public BattleSide Side { get; }
-        public HeroActionType ActionType { get; }
+        public UnitActionType ActionType { get; }
         public int ActivationEnergyCost => ActivationEnergyCostChanged.Value;
         public int AbilityPower => AbilityPowerChanged.Value;
         public bool IsPlayerSlot => Side == BattleSide.Player;

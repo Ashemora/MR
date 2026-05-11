@@ -109,7 +109,7 @@ namespace Project.Scripts.Shared.Buffs
 
         public float GetModifiedAbilityPower(float basePower, BattleSide side, int slotIndex)
         {
-            return GetModifiedAbilityPower(basePower, UnitDescriptor.Hero(side, slotIndex, HeroActionType.DealDamage));
+            return GetModifiedAbilityPower(basePower, UnitDescriptor.Hero(side, slotIndex, UnitActionType.DealDamage));
         }
 
         public float GetModifiedAbilityPower(float basePower, UnitDescriptor target)
@@ -350,7 +350,7 @@ namespace Project.Scripts.Shared.Buffs
 
         private float GetModifiedHeroValue(float baseValue, BattleSide side, int slotIndex, BuffKind kind)
         {
-            return GetModifiedUnitValue(baseValue, UnitDescriptor.Hero(side, slotIndex, HeroActionType.DealDamage), kind);
+            return GetModifiedUnitValue(baseValue, UnitDescriptor.Hero(side, slotIndex, UnitActionType.DealDamage), kind);
         }
 
         private float GetModifiedUnitValue(float baseValue, UnitDescriptor target, BuffKind kind)

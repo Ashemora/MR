@@ -5,10 +5,10 @@ namespace Project.Scripts.Shared.Units
         public BattleSide Side { get; }
         public UnitKind Kind { get; }
         public int SlotIndex { get; }
-        public HeroActionType ActionType { get; }
+        public UnitActionType ActionType { get; }
 
         
-        public UnitDescriptor(BattleSide side, UnitKind kind, int slotIndex, HeroActionType actionType)
+        public UnitDescriptor(BattleSide side, UnitKind kind, int slotIndex, UnitActionType actionType)
         {
             Side = side;
             Kind = kind;
@@ -16,12 +16,12 @@ namespace Project.Scripts.Shared.Units
             ActionType = actionType;
         }
 
-        public static UnitDescriptor Avatar(BattleSide side, HeroActionType actionType)
+        public static UnitDescriptor Avatar(BattleSide side, UnitActionType actionType)
         {
             return new UnitDescriptor(side, UnitKind.Avatar, -1, actionType);
         }
 
-        public static UnitDescriptor Hero(BattleSide side, int slotIndex, HeroActionType actionType)
+        public static UnitDescriptor Hero(BattleSide side, int slotIndex, UnitActionType actionType)
         {
             return new UnitDescriptor(side, UnitKind.Hero, slotIndex, actionType);
         }

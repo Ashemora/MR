@@ -152,7 +152,7 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == state.IsAssigned || false == state.IsAlive)
                 return false;
 
-            if (state.Unit.ActionType == HeroActionType.HealAlly && false == HasHeroHealTarget(state))
+            if (state.Unit.ActionType == UnitActionType.HealAlly && false == HasHeroHealTarget(state))
                 return false;
 
             if (_unitActivationCooldownService.IsOnCooldown(state.Unit))
@@ -163,7 +163,7 @@ namespace Project.Scripts.Services.Combat.Units
 
         private bool HasHeroHealTarget(UnitRuntimeState source)
         {
-            if (_unitStateService.TryGetUnit(UnitDescriptor.Avatar(source.Unit.Side, HeroActionType.HealAlly),
+            if (_unitStateService.TryGetUnit(UnitDescriptor.Avatar(source.Unit.Side, UnitActionType.HealAlly),
                     out var avatar) && false == avatar.IsHpFull)
                 return true;
 
@@ -172,7 +172,7 @@ namespace Project.Scripts.Services.Combat.Units
                 if (i == source.Unit.SlotIndex)
                     continue;
 
-                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(source.Unit.Side, i, HeroActionType.HealAlly),
+                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(source.Unit.Side, i, UnitActionType.HealAlly),
                         out var target))
                     continue;
 
@@ -205,19 +205,19 @@ namespace Project.Scripts.Services.Combat.Units
                 GetHeroActivationEnergyCost(state), GetHeroAbilityPower(state)));
         }
 
-        private int GetActionValueWithNextAttackBuffPreview(UnitDescriptor source, HeroActionType actionType,
+        private int GetActionValueWithNextAttackBuffPreview(UnitDescriptor source, UnitActionType actionType,
             int baseActionValue)
         {
-            if (actionType != HeroActionType.DealDamage)
+            if (actionType != UnitActionType.DealDamage)
                 return baseActionValue;
 
             return baseActionValue + _nextAttackBuffService.Get(source);
         }
 
-        private int GetActionValueWithNextAttackBuff(UnitDescriptor source, HeroActionType actionType,
+        private int GetActionValueWithNextAttackBuff(UnitDescriptor source, UnitActionType actionType,
             int baseActionValue)
         {
-            if (actionType != HeroActionType.DealDamage)
+            if (actionType != UnitActionType.DealDamage)
                 return baseActionValue;
 
             return baseActionValue + _nextAttackBuffService.Consume(source);

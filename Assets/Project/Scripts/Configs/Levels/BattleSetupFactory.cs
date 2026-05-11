@@ -24,7 +24,7 @@ namespace Project.Scripts.Configs.Levels
         private static BattleUnitSetup CreateAvatar(BattleSide side, AvatarConfig config)
         {
             if (!config)
-                return new BattleUnitSetup(UnitDescriptor.Avatar(side, HeroActionType.DealDamage), false,
+                return new BattleUnitSetup(UnitDescriptor.Avatar(side, UnitActionType.DealDamage), false,
                     0, 0, 0, 0f, default, TileKind.None);
 
             return new BattleUnitSetup(UnitDescriptor.Avatar(side, config.AbilityType), true,
@@ -46,7 +46,7 @@ namespace Project.Scripts.Configs.Levels
         private static BattleUnitSetup CreateHero(BattleSide side, int slotIndex, HeroConfig config, TileKind slotKind)
         {
             if (!config)
-                return new BattleUnitSetup(UnitDescriptor.Hero(side, slotIndex, HeroActionType.DealDamage), false,
+                return new BattleUnitSetup(UnitDescriptor.Hero(side, slotIndex, UnitActionType.DealDamage), false,
                     0, 0, 0, 0f, default, slotKind);
 
             return new BattleUnitSetup(UnitDescriptor.Hero(side, slotIndex, config.AbilityType), true,

@@ -556,18 +556,18 @@ namespace Project.Scripts.Services.Combat.Passives
             return false;
         }
 
-        private HeroActionType GetSourceActionType(BattleSide side, int slotIndex)
+        private UnitActionType GetSourceActionType(BattleSide side, int slotIndex)
         {
             var hero = _battleSetup.GetHero(side, slotIndex);
             
-            return hero.IsAssigned ? hero.Unit.ActionType : HeroActionType.DealDamage;
+            return hero.IsAssigned ? hero.Unit.ActionType : UnitActionType.DealDamage;
         }
 
         private UnitDescriptor GetAvatarUnit(BattleSide side)
         {
             var avatar = side == BattleSide.Player ? _battleSetup.PlayerAvatar : _battleSetup.EnemyAvatar;
             
-            return avatar.IsAssigned ? avatar.Unit : UnitDescriptor.Avatar(side, HeroActionType.DealDamage);
+            return avatar.IsAssigned ? avatar.Unit : UnitDescriptor.Avatar(side, UnitActionType.DealDamage);
         }
 
         private static int GetSideIndex(BattleSide side)

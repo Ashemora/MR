@@ -24,7 +24,7 @@ namespace Project.Scripts.Configs.Battle.Units
         [SerializeField] private HeroPassiveConfig[] _passiveAbilities;
 
 
-        public HeroActionType AbilityType => ToHeroActionType(GetPrimaryDirectAction().Kind);
+        public UnitActionType AbilityType => ResolveAbilityType();
         public int AbilityPower => GetPrimaryDirectAction().Value;
         public int MaxHP => _maxHP;
         public Sprite Portrait => _portrait;
@@ -53,9 +53,27 @@ namespace Project.Scripts.Configs.Battle.Units
             return default;
         }
 
-        private static HeroActionType ToHeroActionType(DirectActionKind actionKind)
+        private UnitActionType ResolveAbilityType()
         {
-            return actionKind == DirectActionKind.Heal ? HeroActionType.HealAlly : HeroActionType.DealDamage;
+            var primary = GetPrimaryDirectAction();
+            if (primary.IsConfigured)
+                return UnitActionTypeMapping.FromDirectActionKind(primary.Kind);
+
+            return HasConfiguredBuffApplications() ? UnitActionType.SupportAlly : UnitActionType.DealDamage;
+        }
+
+        private bool HasConfiguredBuffApplications()
+        {
+            var entries = ToActiveAbilityDefinition().EffectEntries;
+            for (var i = 0; i < entries.Count; i++)
+            {
+                var buffApplications = entries[i].BuffApplications;
+                for (var j = 0; j < buffApplications.Count; j++)
+                    if (buffApplications[j].IsConfigured)
+                        return true;
+            }
+
+            return false;
         }
     }
 }

@@ -312,12 +312,12 @@ namespace Project.Scripts.Services.Events
     {
         public UnitDescriptor Source { get; }
         public UnitDescriptor Target { get; }
-        public HeroActionType ActionType { get; }
+        public UnitActionType ActionType { get; }
         public int Value { get; }
         public long OccurredAtTick { get; }
 
 
-        public AbilityExecutedEvent(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType, int value,
+        public AbilityExecutedEvent(UnitDescriptor source, UnitDescriptor target, UnitActionType actionType, int value,
             long occurredAtTick = 0)
         {
             Source = source;
@@ -332,7 +332,7 @@ namespace Project.Scripts.Services.Events
     {
         public UnitDescriptor Source { get; }
         public UnitDescriptor Target { get; }
-        public HeroActionType ActionType { get; }
+        public UnitActionType ActionType { get; }
         public int Value { get; }
         public int ApplicationIndex { get; }
         public bool IsRepeat { get; }
@@ -340,7 +340,7 @@ namespace Project.Scripts.Services.Events
         public long OccurredAtTick { get; }
 
 
-        public AbilityApplicationEvent(UnitDescriptor source, UnitDescriptor target, HeroActionType actionType,
+        public AbilityApplicationEvent(UnitDescriptor source, UnitDescriptor target, UnitActionType actionType,
             int value, int applicationIndex, bool isRepeat, float presentationDelaySeconds, long occurredAtTick = 0)
         {
             Source = source;

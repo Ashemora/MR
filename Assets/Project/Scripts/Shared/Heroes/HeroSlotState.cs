@@ -8,7 +8,7 @@ namespace Project.Scripts.Shared.Heroes
         public TileKind SlotKind;
         public bool IsAssigned;
         public int ActivationEnergyCost;
-        public HeroActionType ActionType;
+        public UnitActionType ActionType;
         public int ActionValue;
         public int CurrentHP;
         public int MaxHP;

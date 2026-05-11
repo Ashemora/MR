@@ -111,7 +111,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
                 && false == valid
                 && candidate.Descriptor.Kind == UnitKind.Avatar
                 && candidate.Descriptor.Side == BattleSide.Enemy
-                && _source.Descriptor.ActionType == HeroActionType.DealDamage;
+                && _source.Descriptor.ActionType == UnitActionType.DealDamage;
         }
 
         private void HandleDragCanceled()

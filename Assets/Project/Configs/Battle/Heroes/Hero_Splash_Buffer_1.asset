@@ -10,26 +10,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c1fea825070002c449f9d0545ccf77bb, type: 3}
-  m_Name: Hero_Splash_Damager_1
+  m_Name: Hero_Splash_Buffer_1
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
   _maxHP: 50
-  _displayName: Hero_Splash_Damager_1
+  _displayName: Hero_Splash_Buffer_1
   _portrait: {fileID: 0}
   _activeAbility:
-    _displayName: Splash Damage
+    _displayName: Splash Buff
     _activationEnergyCost: 20
     _activationCooldownSeconds: 8
     _effectEntries:
     - _targeting:
         _scope: 1
-        _relation: 1
+        _relation: 0
         _unitKind: 0
         _includeOwner: 0
         _selectionMode: 0
-        _filters: 
-      _directActions:
-      - _kind: 1
-        _value: 5
-      _buffApplications: []
-      _ignoresAvatarGroupDefense: 1
+        _filters: []
+      _directActions: []
+      _buffApplications:
+      - _buff:
+          _kind: 8
+          _operation: 1
+          _value: 5
+          _lifetimeKind: 2
+          _stackingMode: 0
+        _durationSeconds: 0
+      _ignoresAvatarGroupDefense: 0
   _passiveAbilities: []
