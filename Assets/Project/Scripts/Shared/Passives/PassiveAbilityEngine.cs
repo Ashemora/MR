@@ -10,30 +10,30 @@ namespace Project.Scripts.Shared.Passives
         private const int DefaultTickRate = 30;
 
 
-        public IReadOnlyList<HeroPassiveRuntimeState> States => _states;
+        public IReadOnlyList<UnitPassiveRuntimeState> States => _states;
 
 
-        private HeroPassiveRuntimeState[] _states = Array.Empty<HeroPassiveRuntimeState>();
+        private UnitPassiveRuntimeState[] _states = Array.Empty<UnitPassiveRuntimeState>();
         private int _tickRate = DefaultTickRate;
 
         
-        public void Initialize(IReadOnlyList<HeroPassiveSetup> setups, int tickRate = DefaultTickRate)
+        public void Initialize(IReadOnlyList<UnitPassiveSetup> setups, int tickRate = DefaultTickRate)
         {
             _tickRate = tickRate < 1 ? DefaultTickRate : tickRate;
             if (null == setups || setups.Count == 0)
             {
-                _states = Array.Empty<HeroPassiveRuntimeState>();
+                _states = Array.Empty<UnitPassiveRuntimeState>();
                 return;
             }
 
-            var states = new List<HeroPassiveRuntimeState>(setups.Count);
+            var states = new List<UnitPassiveRuntimeState>(setups.Count);
             for (var i = 0; i < setups.Count; i++)
             {
                 var setup = setups[i];
                 if (false == setup.Definition.IsConfigured)
                     continue;
 
-                states.Add(new HeroPassiveRuntimeState(
+                states.Add(new UnitPassiveRuntimeState(
                     setup.Side,
                     setup.SlotIndex,
                     setup.SlotKind,
@@ -45,12 +45,12 @@ namespace Project.Scripts.Shared.Passives
 
         public bool ProcessActivationConditionEvent(ActivationConditionEvent e, bool sourceHasActiveBuff = false)
         {
-            Func<HeroPassiveRuntimeState, bool> hasActiveBuff = sourceHasActiveBuff ? _ => true : null;
+            Func<UnitPassiveRuntimeState, bool> hasActiveBuff = sourceHasActiveBuff ? _ => true : null;
             
             return ProcessActivationConditionEvent(e, hasActiveBuff);
         }
 
-        public bool ProcessActivationConditionEvent(ActivationConditionEvent e, Func<HeroPassiveRuntimeState, bool> hasActiveBuff)
+        public bool ProcessActivationConditionEvent(ActivationConditionEvent e, Func<UnitPassiveRuntimeState, bool> hasActiveBuff)
         {
             if (e.Kind == ActivationConditionKind.None || e.Amount <= 0)
                 return false;
@@ -110,8 +110,8 @@ namespace Project.Scripts.Shared.Passives
             return changed;
         }
 
-        private static bool TryAddConditionProgress(HeroPassiveRuntimeState state, ActivationConditionEvent e,
-            int tickRate, out HeroPassiveRuntimeState nextState)
+        private static bool TryAddConditionProgress(UnitPassiveRuntimeState state, ActivationConditionEvent e,
+            int tickRate, out UnitPassiveRuntimeState nextState)
         {
             nextState = state;
             var changed = false;
@@ -134,7 +134,7 @@ namespace Project.Scripts.Shared.Passives
             return changed;
         }
 
-        private static bool IsConditionGroupSatisfied(HeroPassiveRuntimeState state)
+        private static bool IsConditionGroupSatisfied(UnitPassiveRuntimeState state)
         {
             var group = state.Definition.ActivationConditions;
             var conditions = group.Conditions;
@@ -154,7 +154,7 @@ namespace Project.Scripts.Shared.Passives
             return group.Operator == ActivationConditionGroupOperator.All;
         }
 
-        private static HeroPassiveRuntimeState ConsumeSatisfiedConditionProgress(HeroPassiveRuntimeState state)
+        private static UnitPassiveRuntimeState ConsumeSatisfiedConditionProgress(UnitPassiveRuntimeState state)
         {
             var group = state.Definition.ActivationConditions;
             var conditions = group.Conditions;
@@ -178,7 +178,7 @@ namespace Project.Scripts.Shared.Passives
             return state;
         }
 
-        private static HeroPassiveRuntimeState ConsumeConditionProgress(HeroPassiveRuntimeState state,
+        private static UnitPassiveRuntimeState ConsumeConditionProgress(UnitPassiveRuntimeState state,
             int conditionIndex, int amount)
         {
             if (UsesTickWindow(state.Definition.ActivationConditions.Conditions[conditionIndex]))
@@ -208,7 +208,7 @@ namespace Project.Scripts.Shared.Passives
             return amount <= 0f ? 0 : (int)Math.Floor(amount);
         }
 
-        private static float[] CopyConditionProgress(HeroPassiveRuntimeState state)
+        private static float[] CopyConditionProgress(UnitPassiveRuntimeState state)
         {
             var result = new float[state.ConditionCount];
             for (var i = 0; i < result.Length; i++)

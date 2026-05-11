@@ -11,7 +11,7 @@ using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Buffs
 {
-    public class HeroBuffService : IBuffService, IEnergyGainModifierService, IHeroAbilityModifierService,
+    public class BuffService : IBuffService, IEnergyGainModifierService, IHeroAbilityModifierService,
         IAbilityPowerModifierService, INextAttackBuffService, IBombRadiusModifierService,
         IHeroCooldownModifierService, INextActivationBuffService, IAbilityRepeatModifierService,
         IAbilityAdditionalTargetModifierService, ILineRuneModifierService, IResurrectOnDeathBuffService
@@ -27,7 +27,7 @@ namespace Project.Scripts.Services.Combat.Buffs
         private readonly BuffEngine _engine = new();
 
 
-        public HeroBuffService(EventBus eventBus, BattleSetup battleSetup)
+        public BuffService(EventBus eventBus, BattleSetup battleSetup)
         {
             _eventBus = eventBus;
             _battleSetup = battleSetup;

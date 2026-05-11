@@ -20,7 +20,7 @@ namespace Project.Scripts.Services.Combat.Passives
         private const int SlotCount = 4;
         
         
-        public IReadOnlyList<HeroPassiveRuntimeState> States => _engine.States;
+        public IReadOnlyList<UnitPassiveRuntimeState> States => _engine.States;
 
 
         private readonly EventBus _eventBus;
@@ -100,14 +100,14 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private void InitializePassives()
         {
-            var setups = new List<HeroPassiveSetup>();
+            var setups = new List<UnitPassiveSetup>();
             AddSidePassives(setups, BattleSide.Player);
             AddSidePassives(setups, BattleSide.Enemy);
             _engine.Initialize(setups, _battleClock.TickRate);
             _pendingActivationCounts = new int[_engine.States.Count];
         }
 
-        private void AddSidePassives(List<HeroPassiveSetup> setups, BattleSide side)
+        private void AddSidePassives(List<UnitPassiveSetup> setups, BattleSide side)
         {
             for (var slotIndex = 0; slotIndex < SlotCount; slotIndex++)
             {
@@ -125,7 +125,7 @@ namespace Project.Scripts.Services.Combat.Passives
                     if (false == definition.IsConfigured)
                         continue;
 
-                    setups.Add(new HeroPassiveSetup(side, slotIndex, hero.SlotKind, definition));
+                    setups.Add(new UnitPassiveSetup(side, slotIndex, hero.SlotKind, definition));
                 }
             }
         }
@@ -321,7 +321,7 @@ namespace Project.Scripts.Services.Combat.Passives
             PublishNewActivations(activationCounts);
         }
 
-        private bool HasActiveBuffForPassiveOwner(HeroPassiveRuntimeState state)
+        private bool HasActiveBuffForPassiveOwner(UnitPassiveRuntimeState state)
         {
             return _buffService.HasBuffFromSource(UnitDescriptor.Hero(state.Side, state.SlotIndex, GetSourceActionType(state.Side, state.SlotIndex)));
         }
@@ -392,7 +392,7 @@ namespace Project.Scripts.Services.Combat.Passives
             }
         }
 
-        private void PublishActivationRepeated(HeroPassiveRuntimeState state, int activationCount)
+        private void PublishActivationRepeated(UnitPassiveRuntimeState state, int activationCount)
         {
             for (var i = 0; i < activationCount; i++)
             {
@@ -423,7 +423,7 @@ namespace Project.Scripts.Services.Combat.Passives
             Array.Resize(ref _pendingActivationCounts, stateCount);
         }
 
-        private void ApplyPassiveEffects(HeroPassiveRuntimeState state)
+        private void ApplyPassiveEffects(UnitPassiveRuntimeState state)
         {
             var source = UnitDescriptor.Hero(state.Side, state.SlotIndex, GetSourceActionType(state.Side, state.SlotIndex));
             var result = _abilityEffectApplicationService.Apply(source, default, state.Definition.EffectEntries,

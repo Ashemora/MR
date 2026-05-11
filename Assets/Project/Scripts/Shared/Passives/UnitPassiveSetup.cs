@@ -4,7 +4,7 @@ using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Shared.Passives
 {
-    public readonly struct HeroPassiveSetup
+    public readonly struct UnitPassiveSetup
     {
         public BattleSide Side { get; }
         public int SlotIndex { get; }
@@ -12,7 +12,7 @@ namespace Project.Scripts.Shared.Passives
         public PassiveAbilityDefinition Definition { get; }
 
 
-        public HeroPassiveSetup(BattleSide side, int slotIndex, TileKind slotKind, PassiveAbilityDefinition definition)
+        public UnitPassiveSetup(BattleSide side, int slotIndex, TileKind slotKind, PassiveAbilityDefinition definition)
         {
             Side = side;
             SlotIndex = slotIndex;

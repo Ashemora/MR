@@ -53,7 +53,7 @@ namespace Project.Scripts.DI
             builder.Register<ILevelProgressionService, LevelProgressionService>(Lifetime.Singleton);
             builder.Register<IMoveBarService, MoveBarService>(Lifetime.Singleton);
             builder.Register<IHeroService, HeroService>(Lifetime.Singleton);
-            builder.Register<HeroBuffService>(Lifetime.Singleton)
+            builder.Register<BuffService>(Lifetime.Singleton)
                 .As<IBuffService>()
                 .As<IEnergyGainModifierService>()
                 .As<IHeroAbilityModifierService>()

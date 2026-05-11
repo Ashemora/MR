@@ -174,10 +174,10 @@ namespace Project.Scripts.Services.Events
 
     public readonly struct HeroPassiveActivatedEvent
     {
-        public HeroPassiveRuntimeState State { get; }
+        public UnitPassiveRuntimeState State { get; }
 
 
-        public HeroPassiveActivatedEvent(HeroPassiveRuntimeState state)
+        public HeroPassiveActivatedEvent(UnitPassiveRuntimeState state)
         {
             State = state;
         }
@@ -198,10 +198,10 @@ namespace Project.Scripts.Services.Events
 
     public readonly struct HeroPassiveExpiredEvent
     {
-        public HeroPassiveRuntimeState State { get; }
+        public UnitPassiveRuntimeState State { get; }
 
 
-        public HeroPassiveExpiredEvent(HeroPassiveRuntimeState state)
+        public HeroPassiveExpiredEvent(UnitPassiveRuntimeState state)
         {
             State = state;
         }

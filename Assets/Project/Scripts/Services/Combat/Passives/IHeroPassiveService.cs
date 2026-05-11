@@ -5,6 +5,6 @@ namespace Project.Scripts.Services.Combat.Passives
 {
     public interface IHeroPassiveService
     {
-        IReadOnlyList<HeroPassiveRuntimeState> States { get; }
+        IReadOnlyList<UnitPassiveRuntimeState> States { get; }
     }
 }

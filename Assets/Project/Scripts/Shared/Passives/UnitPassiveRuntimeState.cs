@@ -4,7 +4,7 @@ using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Shared.Passives
 {
-    public readonly struct HeroPassiveRuntimeState
+    public readonly struct UnitPassiveRuntimeState
     {
         public BattleSide Side { get; }
         public int SlotIndex { get; }
@@ -23,7 +23,7 @@ namespace Project.Scripts.Shared.Passives
         private readonly long[][] _conditionOccurrenceTicks;
 
 
-        public HeroPassiveRuntimeState(BattleSide side, int slotIndex, TileKind slotKind, 
+        public UnitPassiveRuntimeState(BattleSide side, int slotIndex, TileKind slotKind, 
             PassiveAbilityDefinition definition, bool isDisabled = false, int totalActivationCount = 0, 
             float[] conditionProgress = null, long[][] conditionOccurrenceTicks = null)
         {
@@ -44,7 +44,7 @@ namespace Project.Scripts.Shared.Passives
                 : 0f;
         }
 
-        public HeroPassiveRuntimeState WithConditionProgress(int conditionIndex, float progress)
+        public UnitPassiveRuntimeState WithConditionProgress(int conditionIndex, float progress)
         {
             if (null == _conditionProgress || conditionIndex < 0 || conditionIndex >= _conditionProgress.Length)
                 return this;
@@ -52,11 +52,11 @@ namespace Project.Scripts.Shared.Passives
             var nextProgress = CopyConditionProgress(Definition, _conditionProgress);
             nextProgress[conditionIndex] = progress < 0 ? 0 : progress;
 
-            return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
                 TotalActivationCount, nextProgress, _conditionOccurrenceTicks);
         }
 
-        public HeroPassiveRuntimeState WithConditionOccurrenceTicksAdded(int conditionIndex, long occurredAtTick,
+        public UnitPassiveRuntimeState WithConditionOccurrenceTicksAdded(int conditionIndex, long occurredAtTick,
             int windowTicks, int occurrenceCount)
         {
             if (null == _conditionOccurrenceTicks || conditionIndex < 0 ||
@@ -90,11 +90,11 @@ namespace Project.Scripts.Shared.Passives
             var nextProgress = CopyConditionProgress(Definition, _conditionProgress);
             nextProgress[conditionIndex] = ticks.Length;
 
-            return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
                 TotalActivationCount, nextProgress, nextOccurrences);
         }
 
-        public HeroPassiveRuntimeState WithConditionOccurrenceTicksConsumed(int conditionIndex, int amount)
+        public UnitPassiveRuntimeState WithConditionOccurrenceTicksConsumed(int conditionIndex, int amount)
         {
             if (null == _conditionOccurrenceTicks || conditionIndex < 0 ||
                 conditionIndex >= _conditionOccurrenceTicks.Length || amount <= 0)
@@ -115,25 +115,25 @@ namespace Project.Scripts.Shared.Passives
             var nextProgress = CopyConditionProgress(Definition, _conditionProgress);
             nextProgress[conditionIndex] = ticks.Length;
 
-            return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
                 TotalActivationCount, nextProgress, nextOccurrences);
         }
 
-        public HeroPassiveRuntimeState WithActivated()
+        public UnitPassiveRuntimeState WithActivated()
         {
-            return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
                 TotalActivationCount + 1, _conditionProgress, _conditionOccurrenceTicks);
         }
 
-        public HeroPassiveRuntimeState WithActivatedAndProgress(float[] conditionProgress)
+        public UnitPassiveRuntimeState WithActivatedAndProgress(float[] conditionProgress)
         {
-            return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
                 TotalActivationCount + 1, conditionProgress, _conditionOccurrenceTicks);
         }
 
-        public HeroPassiveRuntimeState WithDisabled()
+        public UnitPassiveRuntimeState WithDisabled()
         {
-            return new HeroPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, true,
+            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, true,
                 TotalActivationCount, _conditionProgress, _conditionOccurrenceTicks);
         }
 
