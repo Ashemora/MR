@@ -12,6 +12,7 @@ namespace Project.Scripts.Shared.Abilities
             _directActions ?? Array.Empty<DirectActionDefinition>();
         public IReadOnlyList<BuffApplicationDefinition> BuffApplications =>
             _buffApplications ?? Array.Empty<BuffApplicationDefinition>();
+        public bool IgnoresAvatarGroupDefense { get; }
         public bool IsConfigured => HasConfiguredDirectActions() || HasConfiguredBuffApplications();
 
 
@@ -21,11 +22,13 @@ namespace Project.Scripts.Shared.Abilities
 
         public AbilityEffectEntryDefinition(UnitTargetingDefinition targeting,
             IReadOnlyList<DirectActionDefinition> directActions,
-            IReadOnlyList<BuffApplicationDefinition> buffApplications)
+            IReadOnlyList<BuffApplicationDefinition> buffApplications,
+            bool ignoresAvatarGroupDefense = false)
         {
             Targeting = targeting;
             _directActions = CopyConfiguredDirectActions(directActions);
             _buffApplications = CopyConfiguredBuffApplications(buffApplications);
+            IgnoresAvatarGroupDefense = ignoresAvatarGroupDefense;
         }
 
         private bool HasConfiguredDirectActions()

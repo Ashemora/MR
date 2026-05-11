@@ -16,6 +16,9 @@ namespace Project.Scripts.Configs.Battle.Abilities
         [Tooltip("Наложение длящихся бафов, статусов и модификаторов")]
         [SerializeField] private BuffApplicationConfig[] _buffApplications;
 
+        [Tooltip("Если включено, прямые действия из этой записи попадают по вражескому аватару даже когда он защищен живой группой героев. На выбор primary-цели игроком не влияет")]
+        [SerializeField] private bool _ignoresAvatarGroupDefense;
+
 
         public bool IsConfigured => HasConfiguredDirectActions() || HasConfiguredBuffApplications();
 
@@ -25,7 +28,8 @@ namespace Project.Scripts.Configs.Battle.Abilities
             return new AbilityEffectEntryDefinition(
                 null != _targeting ? _targeting.ToDefinition() : default,
                 ToDirectActionDefinitions(),
-                ToBuffApplicationDefinitions());
+                ToBuffApplicationDefinitions(),
+                _ignoresAvatarGroupDefense);
         }
 
         private DirectActionDefinition[] ToDirectActionDefinitions()

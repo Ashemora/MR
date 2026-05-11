@@ -30,7 +30,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         {
             return new AbilityEffectEntryDefinition(entry.Targeting,
                 CreateCommittedDirectActions(entry.DirectActions, committedActionType, committedActionValue),
-                entry.BuffApplications);
+                entry.BuffApplications, entry.IgnoresAvatarGroupDefense);
         }
 
         private static DirectActionDefinition[] CreateCommittedDirectActions(IReadOnlyList<DirectActionDefinition> directActions, 

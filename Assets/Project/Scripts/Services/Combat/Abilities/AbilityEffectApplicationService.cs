@@ -158,8 +158,8 @@ namespace Project.Scripts.Services.Combat.Abilities
                 for (var targetIndex = 0; targetIndex < targets.Count; targetIndex++)
                 {
                     var target = targets[targetIndex];
-                    ApplyDirectActions(source, target, entry.DirectActions, occurredAtTick, applicationIndexOffset,
-                        isRepeat, directApplications);
+                    ApplyDirectActions(source, target, entry.DirectActions, entry.IgnoresAvatarGroupDefense,
+                        occurredAtTick, applicationIndexOffset, isRepeat, directApplications);
                     buffApplicationCount += ApplyBuffApplications(source, target, sourceSlotKind, entry.BuffApplications,
                         currentRound, currentPhase, abilityStatsChanges);
                 }
@@ -169,8 +169,8 @@ namespace Project.Scripts.Services.Combat.Abilities
         }
 
         private void ApplyDirectActions(UnitDescriptor source, UnitDescriptor target,
-            IReadOnlyList<DirectActionDefinition> actions, long occurredAtTick, int applicationIndexOffset,
-            bool isRepeat, List<AbilityDirectApplicationResult> directApplications)
+            IReadOnlyList<DirectActionDefinition> actions, bool ignoresAvatarGroupDefense, long occurredAtTick,
+            int applicationIndexOffset, bool isRepeat, List<AbilityDirectApplicationResult> directApplications)
         {
             if (null == actions || actions.Count == 0)
                 return;
@@ -178,7 +178,7 @@ namespace Project.Scripts.Services.Combat.Abilities
             for (var i = 0; i < actions.Count; i++)
             {
                 var action = actions[i];
-                if (false == action.IsConfigured || false == CanApplyDirectAction(action, target))
+                if (false == action.IsConfigured || false == CanApplyDirectAction(action, target, ignoresAvatarGroupDefense))
                     continue;
 
                 if (ApplyDirectAction(target, action))
@@ -252,15 +252,18 @@ namespace Project.Scripts.Services.Combat.Abilities
             _heroService.ApplyHealToHero(target.Side, target.SlotIndex, value);
         }
 
-        private bool CanApplyDirectAction(DirectActionDefinition action, UnitDescriptor target)
+        private bool CanApplyDirectAction(DirectActionDefinition action, UnitDescriptor target,
+            bool ignoresAvatarGroupDefense)
         {
-            if (false == TryGetTargetState(target, out var isAlive, out var isHpFull, out var isExposed))
+            if (false == TryGetTargetState(target, ignoresAvatarGroupDefense, out var isAlive, out var isHpFull,
+                    out var isExposed))
                 return false;
 
             return AbilityTargetRules.IsTargetValid(ToHeroActionType(action.Kind), true, isAlive, isHpFull, isExposed);
         }
 
-        private bool TryGetTargetState(UnitDescriptor target, out bool isAlive, out bool isHpFull, out bool isExposed)
+        private bool TryGetTargetState(UnitDescriptor target, bool ignoresAvatarGroupDefense, out bool isAlive,
+            out bool isHpFull, out bool isExposed)
         {
             isAlive = false;
             isHpFull = false;
@@ -274,8 +277,8 @@ namespace Project.Scripts.Services.Combat.Abilities
 
             isAlive = state.IsAlive;
             isHpFull = state.IsHpFull;
-            isExposed = target.Kind != UnitKind.Avatar || _groupDefense.IsExposed(target.Side);
-            
+            isExposed = target.Kind != UnitKind.Avatar || ignoresAvatarGroupDefense || _groupDefense.IsExposed(target.Side);
+
             return true;
         }
 
