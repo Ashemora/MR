@@ -119,7 +119,7 @@ namespace Project.Scripts.Shared.Abilities
             {
                 var candidate = candidates[i];
                 result.Add(new UnitTargetCandidate(candidate.Descriptor, candidate.ActionType, candidate.CurrentHP,
-                    candidate.MaxHP, candidate.IsAlive));
+                    candidate.MaxHP, candidate.IsAlive, candidate.IsAssigned));
             }
 
             return result;

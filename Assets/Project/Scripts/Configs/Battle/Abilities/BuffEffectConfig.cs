@@ -11,7 +11,7 @@ namespace Project.Scripts.Configs.Battle.Abilities
         [SerializeField] private BuffKind _kind;
 
         [Tooltip("Как именно меняется числовой параметр")]
-        [SerializeField] private BuffModifierOperation _operation;
+        [SerializeField] private ValueModifierOperation _operation;
 
         [Tooltip("Значение бафа")]
         [SerializeField] private float _value;

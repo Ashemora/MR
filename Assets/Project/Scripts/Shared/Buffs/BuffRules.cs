@@ -12,9 +12,9 @@ namespace Project.Scripts.Shared.Buffs
             var result = currentValue;
             for (var i = 0; i < stackCount; i++)
             {
-                if (buff.Operation == BuffModifierOperation.AddFlat)
+                if (buff.Operation == ValueModifierOperation.AddFlat)
                     result += buff.Value;
-                else if (buff.Operation == BuffModifierOperation.AddPercent)
+                else if (buff.Operation == ValueModifierOperation.AddPercent)
                     result *= 1f + buff.Value / 100f;
             }
 
@@ -24,6 +24,16 @@ namespace Project.Scripts.Shared.Buffs
         public static int ToDisplayInt(float value)
         {
             return value <= 0f ? 0 : (int)Math.Ceiling(value);
+        }
+
+        public static int ResolveAdditiveValue(ValueModifierOperation operation, float value, int baseValue)
+        {
+            if (baseValue <= 0 || value <= 0f)
+                return 0;
+
+            return operation == ValueModifierOperation.AddPercent
+                ? ToDisplayInt(baseValue * value / 100f)
+                : ToDisplayInt(value);
         }
     }
 }

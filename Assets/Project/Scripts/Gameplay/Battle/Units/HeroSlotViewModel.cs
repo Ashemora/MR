@@ -90,8 +90,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
             {
                 _healthBarUpdated.OnNext(new HealthBarUpdate(fill, HealthBarUpdateMode.Snap, current, max));
 
-                if (current <= 0)
-                    IsDefeated.Value = true;
+                IsDefeated.Value = current <= 0;
+                RefreshActivatable();
 
                 return;
             }
@@ -109,8 +109,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
             else
                 _healthBarUpdated.OnNext(new HealthBarUpdate(fill, HealthBarUpdateMode.Snap, current, max));
 
-            if (current <= 0)
-                IsDefeated.Value = true;
+            IsDefeated.Value = current <= 0;
+            RefreshActivatable();
         }
 
         public void SetSlotKindPassiveActive(bool active)
@@ -152,6 +152,15 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 ActivationBlockReason.Value = UnitActivationBlockReason.None;
                 RefreshAvailabilityVisualState();
                 
+                return;
+            }
+
+            if (MaxHP > 0 && CurrentHP <= 0)
+            {
+                IsActivatable.Value = false;
+                ActivationBlockReason.Value = UnitActivationBlockReason.None;
+                RefreshAvailabilityVisualState();
+
                 return;
             }
 

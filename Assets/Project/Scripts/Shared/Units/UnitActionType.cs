@@ -4,6 +4,7 @@ namespace Project.Scripts.Shared.Units
     {
         DealDamage,
         HealAlly,
-        SupportAlly
+        SupportAlly,
+        ResurrectAlly
     }
 }

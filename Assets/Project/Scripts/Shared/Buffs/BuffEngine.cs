@@ -298,10 +298,8 @@ namespace Project.Scripts.Shared.Buffs
                 if (BattleUnitKey.FromDescriptor(buff.Target) != targetKey)
                     continue;
 
-                if (buff.Definition.Operation == BuffModifierOperation.AddPercent)
-                    total += maxHP * buff.Definition.Value * buff.StackCount / 100f;
-                else
-                    total += buff.Definition.Value * buff.StackCount;
+                total += BuffRules.ResolveAdditiveValue(buff.Definition.Operation, buff.Definition.Value, maxHP)
+                         * buff.StackCount;
             }
 
             return BuffRules.ToDisplayInt(total);

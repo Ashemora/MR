@@ -147,6 +147,11 @@ namespace Project.Scripts.Shared.Passives
                 TotalActivationCount, _conditionProgress, _conditionOccurrenceTicks);
         }
 
+        public UnitPassiveRuntimeState WithReset(bool isDisabled = false)
+        {
+            return new UnitPassiveRuntimeState(Owner, SlotKind, Definition, isDisabled);
+        }
+
         private static float[] CopyConditionProgress(PassiveAbilityDefinition definition, float[] source)
         {
             var conditions = definition.ActivationConditions.Conditions;

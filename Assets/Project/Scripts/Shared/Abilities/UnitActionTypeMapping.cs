@@ -14,6 +14,9 @@ namespace Project.Scripts.Shared.Abilities
 
                 if (direct.Kind == DirectActionKind.Heal)
                     return UnitActionType.HealAlly;
+
+                if (direct.Kind == DirectActionKind.Resurrect)
+                    return UnitActionType.ResurrectAlly;
             }
 
             var buffEntries = ability.BuffEntries;
@@ -26,12 +29,24 @@ namespace Project.Scripts.Shared.Abilities
 
         public static UnitActionType FromDirectActionKind(DirectActionKind kind)
         {
-            return kind == DirectActionKind.Heal ? UnitActionType.HealAlly : UnitActionType.DealDamage;
+            if (kind == DirectActionKind.Heal)
+                return UnitActionType.HealAlly;
+
+            if (kind == DirectActionKind.Resurrect)
+                return UnitActionType.ResurrectAlly;
+
+            return UnitActionType.DealDamage;
         }
 
         public static DirectActionKind ToDirectActionKind(UnitActionType actionType)
         {
-            return actionType == UnitActionType.HealAlly ? DirectActionKind.Heal : DirectActionKind.Damage;
+            if (actionType == UnitActionType.HealAlly)
+                return DirectActionKind.Heal;
+
+            if (actionType == UnitActionType.ResurrectAlly)
+                return DirectActionKind.Resurrect;
+
+            return DirectActionKind.Damage;
         }
     }
 }

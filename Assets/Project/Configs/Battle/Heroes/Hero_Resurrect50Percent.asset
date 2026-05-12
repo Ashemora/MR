@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1fea825070002c449f9d0545ccf77bb, type: 3}
+  m_Name: Hero_Resurrect50Percent
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
+  _maxHP: 45
+  _displayName: Hero_Resurrect50Percent
+  _portrait: {fileID: 21300000, guid: 390a127247ade0843b6e4f993c61122c, type: 3}
+  _activeAbility:
+    _displayName: Resurrect
+    _activationEnergyCost: 25
+    _activationCooldownSeconds: 12
+    _directAction:
+      _kind: 3
+      _value: 50
+      _operation: 2
+      _targeting:
+        _scope: 2
+        _relation: 0
+        _unitKind: 1
+        _includeOwner: 0
+        _selectionMode: 0
+        _filters: 
+      _ignoresAvatarGroupDefense: 0
+    _buffEntries: []
+  _passiveAbilities: []

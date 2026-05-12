@@ -1,5 +1,6 @@
 using System;
 using Project.Scripts.Shared.Abilities;
+using Project.Scripts.Shared.Buffs;
 using UnityEngine;
 
 namespace Project.Scripts.Configs.Battle.Abilities
@@ -13,6 +14,9 @@ namespace Project.Scripts.Configs.Battle.Abilities
         [Tooltip("Значение действия: урон, лечение или HP для воскрешения")]
         [SerializeField] private int _value;
 
+        [Tooltip("Как считать Value: AddFlat = прямое значение, AddPercent = процент от Max HP цели для воскрешения")]
+        [SerializeField] private ValueModifierOperation _operation = ValueModifierOperation.AddFlat;
+
         [Tooltip("К кому применяется это прямое действие")]
         [SerializeField] private UnitTargetingConfig _targeting;
 
@@ -25,7 +29,8 @@ namespace Project.Scripts.Configs.Battle.Abilities
 
         public DirectActionDefinition ToDefinition()
         {
-            return new DirectActionDefinition(_kind, _value, ToTargetingDefinition(), _ignoresAvatarGroupDefense);
+            return new DirectActionDefinition(_kind, _value, ToTargetingDefinition(), _ignoresAvatarGroupDefense,
+                _operation);
         }
 
         private Shared.Targeting.UnitTargetingDefinition ToTargetingDefinition()

@@ -1,6 +1,6 @@
 namespace Project.Scripts.Shared.Buffs
 {
-    public enum BuffModifierOperation
+    public enum ValueModifierOperation
     {
         None,
         AddFlat,

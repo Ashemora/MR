@@ -70,6 +70,9 @@ namespace Project.Scripts.Configs.Battle.Visuals
         [Tooltip("Цвет свечения допустимой цели лечения")]
         [SerializeField] private Color _healTargetColor = new(0.15f, 1f, 0.25f, 1f);
 
+        [Tooltip("Цвет свечения мертвого героя, допустимого для воскрешения")]
+        [SerializeField] private Color _resurrectTargetColor = new(0.65f, 0.2f, 1f, 1f);
+
         [Header("Cooldown Visuals")]
         [Tooltip("Переводить портрет в черно-белый режим во время кулдауна способности")]
         [SerializeField] private bool _cooldownGrayscaleEnabled = true;
@@ -112,6 +115,7 @@ namespace Project.Scripts.Configs.Battle.Visuals
         public Color SourceHighlightColor => _sourceHighlightColor;
         public Color AttackTargetColor => _attackTargetColor;
         public Color HealTargetColor => _healTargetColor;
+        public Color ResurrectTargetColor => _resurrectTargetColor;
         public Color DamageNumberColor => _damageNumberColor;
         public Color HealNumberColor => _healNumberColor;
         public float FloatDamageDistance => _floatDamageDistance;

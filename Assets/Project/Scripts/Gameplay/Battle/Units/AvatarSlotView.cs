@@ -208,11 +208,19 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 return;
 
             if (active && _config)
-                _glow.color = actionType is UnitActionType.HealAlly or UnitActionType.SupportAlly
-                    ? _config.HealTargetColor
-                    : _config.AttackTargetColor;
+                _glow.color = GetTargetHighlightColor(actionType);
 
             _glow.gameObject.SetActive(active);
+        }
+
+        private Color GetTargetHighlightColor(UnitActionType actionType)
+        {
+            if (actionType == UnitActionType.ResurrectAlly)
+                return _config.ResurrectTargetColor;
+
+            return actionType is UnitActionType.HealAlly or UnitActionType.SupportAlly
+                ? _config.HealTargetColor
+                : _config.AttackTargetColor;
         }
 
         public void CaptureCurrentLayoutPose()

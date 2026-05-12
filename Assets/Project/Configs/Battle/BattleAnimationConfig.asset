@@ -32,6 +32,7 @@ MonoBehaviour:
   _sourceHighlightColor: {r: 1, g: 1, b: 1, a: 1}
   _attackTargetColor: {r: 1, g: 0.15, b: 0.15, a: 1}
   _healTargetColor: {r: 0.15, g: 1, b: 0.25, a: 1}
+  _resurrectTargetColor: {r: 0.65, g: 0.2, b: 1, a: 1}
   _cooldownGrayscaleEnabled: 0
   _shieldPulse:
     _scaleMultiplier: 1.25

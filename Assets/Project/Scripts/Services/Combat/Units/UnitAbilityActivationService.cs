@@ -192,7 +192,7 @@ namespace Project.Scripts.Services.Combat.Units
                 return;
 
             result.Add(new UnitTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
-                state.IsAssigned && state.IsAlive));
+                state.IsAssigned && state.IsAlive, state.IsAssigned));
         }
 
         private void AddHeroCandidates(List<UnitTargetCandidate> result, BattleSide side)
@@ -204,7 +204,7 @@ namespace Project.Scripts.Services.Combat.Units
                     continue;
 
                 result.Add(new UnitTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
-                    state.IsAssigned && state.IsAlive));
+                    state.IsAssigned && state.IsAlive, state.IsAssigned));
             }
         }
 

@@ -8,24 +8,32 @@ namespace Project.Scripts.Shared.Targeting
         public static List<UnitDescriptor> SelectTargets(UnitTargetingDefinition targeting, UnitDescriptor owner,
             IReadOnlyList<UnitTargetCandidate> candidates)
         {
-            return SelectTargets(targeting, owner, default, false, candidates);
+            return SelectTargets(targeting, owner, default, false, candidates, true);
         }
 
         public static List<UnitDescriptor> SelectTargets(UnitTargetingDefinition targeting, UnitDescriptor owner,
             UnitDescriptor selectedTarget, IReadOnlyList<UnitTargetCandidate> candidates)
         {
-            return SelectTargets(targeting, owner, selectedTarget, true, candidates);
+            return SelectTargets(targeting, owner, selectedTarget, true, candidates, true);
+        }
+
+        public static List<UnitDescriptor> SelectTargetsIncludingUnavailable(UnitTargetingDefinition targeting,
+            UnitDescriptor owner, UnitDescriptor selectedTarget, IReadOnlyList<UnitTargetCandidate> candidates)
+        {
+            return SelectTargets(targeting, owner, selectedTarget, true, candidates, false);
         }
         
 
         private static List<UnitDescriptor> SelectTargets(UnitTargetingDefinition targeting, UnitDescriptor owner,
-            UnitDescriptor selectedTarget, bool hasSelectedTarget, IReadOnlyList<UnitTargetCandidate> candidates)
+            UnitDescriptor selectedTarget, bool hasSelectedTarget, IReadOnlyList<UnitTargetCandidate> candidates,
+            bool requireAvailable)
         {
             if (targeting.Scope == UnitTargetScope.Self)
                 return new List<UnitDescriptor> { owner };
 
             if (targeting.Scope == UnitTargetScope.SelectedTarget)
-                return hasSelectedTarget && IsCandidateMatch(targeting, owner, selectedTarget, candidates)
+                return hasSelectedTarget && IsCandidateMatch(targeting, owner, selectedTarget, candidates,
+                    requireAvailable)
                     ? new List<UnitDescriptor> { selectedTarget }
                     : new List<UnitDescriptor>();
 
@@ -36,7 +44,7 @@ namespace Project.Scripts.Shared.Targeting
             for (var i = 0; i < candidates.Count; i++)
             {
                 var candidate = candidates[i];
-                if (IsCandidateMatch(targeting, owner, candidate))
+                if (IsCandidateMatch(targeting, owner, candidate, requireAvailable))
                     result.Add(candidate.Descriptor);
             }
 
@@ -44,7 +52,7 @@ namespace Project.Scripts.Shared.Targeting
         }
 
         private static bool IsCandidateMatch(UnitTargetingDefinition targeting, UnitDescriptor owner,
-            UnitDescriptor selectedTarget, IReadOnlyList<UnitTargetCandidate> candidates)
+            UnitDescriptor selectedTarget, IReadOnlyList<UnitTargetCandidate> candidates, bool requireAvailable)
         {
             if (null == candidates)
                 return false;
@@ -54,16 +62,16 @@ namespace Project.Scripts.Shared.Targeting
             {
                 var candidate = candidates[i];
                 if (BattleUnitKey.FromDescriptor(candidate.Descriptor) == selectedKey)
-                    return IsCandidateMatch(targeting, owner, candidate);
+                    return IsCandidateMatch(targeting, owner, candidate, requireAvailable);
             }
 
             return false;
         }
 
         private static bool IsCandidateMatch(UnitTargetingDefinition targeting, UnitDescriptor owner,
-            UnitTargetCandidate candidate)
+            UnitTargetCandidate candidate, bool requireAvailable)
         {
-            if (false == candidate.IsAvailable)
+            if (requireAvailable && false == candidate.IsAvailable)
                 return false;
 
             if (false == targeting.IncludeOwner &&
@@ -101,7 +109,16 @@ namespace Project.Scripts.Shared.Targeting
             if (targeting.Scope == UnitTargetScope.Self)
                 return BattleUnitKey.FromDescriptor(candidate.Descriptor) == BattleUnitKey.FromDescriptor(owner);
 
-            return IsCandidateMatch(targeting, owner, candidate);
+            return IsCandidateMatch(targeting, owner, candidate, true);
+        }
+
+        public static bool MatchesTargetingIncludingUnavailable(UnitTargetingDefinition targeting, UnitDescriptor owner,
+            UnitTargetCandidate candidate)
+        {
+            if (targeting.Scope == UnitTargetScope.Self)
+                return BattleUnitKey.FromDescriptor(candidate.Descriptor) == BattleUnitKey.FromDescriptor(owner);
+
+            return IsCandidateMatch(targeting, owner, candidate, false);
         }
 
         private static bool IsRelationMatch(UnitTargetRelation relation, BattleSide ownerSide, BattleSide candidateSide)

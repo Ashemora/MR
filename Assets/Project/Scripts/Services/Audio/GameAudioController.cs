@@ -30,7 +30,7 @@ namespace Project.Scripts.Services.Audio
 
             eventBus.Subscribe<AbilityApplicationEvent>(e =>
             {
-                var sound = e.ActionType == UnitActionType.HealAlly
+                var sound = e.ActionType is UnitActionType.HealAlly or UnitActionType.ResurrectAlly
                     ? AudioTags.Sound_Heal_01
                     : AudioTags.Sound_Laser_01;
                 _audioService.Play(AudioTags.Group_Gameplay, sound);

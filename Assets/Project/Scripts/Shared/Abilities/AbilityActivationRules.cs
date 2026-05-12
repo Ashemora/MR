@@ -38,9 +38,23 @@ namespace Project.Scripts.Shared.Abilities
             {
                 var candidate = candidates[i];
                 if (false == UnitTargetingRules.MatchesTargeting(action.Targeting, source, candidate))
+                {
+                    if (action.Kind != DirectActionKind.Resurrect ||
+                        false == UnitTargetingRules.MatchesTargetingIncludingUnavailable(action.Targeting, source,
+                            candidate))
+                        continue;
+                }
+
+                if (action.Kind == DirectActionKind.Damage && false == IsAlive(candidate))
                     continue;
 
                 if (action.Kind == DirectActionKind.Heal && IsHpFull(candidate))
+                    continue;
+
+                if (action.Kind == DirectActionKind.Heal && false == IsAlive(candidate))
+                    continue;
+
+                if (action.Kind == DirectActionKind.Resurrect && false == IsValidResurrectionTarget(candidate))
                     continue;
 
                 return true;
@@ -65,6 +79,17 @@ namespace Project.Scripts.Shared.Abilities
         private static bool IsHpFull(UnitTargetCandidate candidate)
         {
             return candidate.MaxHP <= 0 || candidate.CurrentHP >= candidate.MaxHP;
+        }
+
+        private static bool IsAlive(UnitTargetCandidate candidate)
+        {
+            return candidate.MaxHP <= 0 || candidate.CurrentHP > 0;
+        }
+
+        private static bool IsValidResurrectionTarget(UnitTargetCandidate candidate)
+        {
+            return candidate.IsAssigned && candidate.Descriptor.Kind == UnitKind.Hero && candidate.MaxHP > 0
+                   && candidate.CurrentHP <= 0;
         }
     }
 }

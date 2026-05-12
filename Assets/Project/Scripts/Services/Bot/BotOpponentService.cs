@@ -191,8 +191,20 @@ namespace Project.Scripts.Services.Bot
                     ExecuteEnemyAvatarAbility(UnitDescriptor.Avatar(BattleSide.Player));
                 }
             }
+            else if (preview.ActionType == UnitActionType.ResurrectAlly)
+                DischargeAvatarResurrect();
             else
                 DischargeAvatarHeal(preview);
+        }
+
+        private void DischargeAvatarResurrect()
+        {
+            var enemySlots = _heroService.GetSlots(BattleSide.Enemy);
+            var targetIdx = PickDeadHero(enemySlots);
+            if (targetIdx < 0)
+                return;
+
+            ExecuteEnemyAvatarAbility(UnitDescriptor.Hero(BattleSide.Enemy, targetIdx));
         }
 
         private void DischargeAvatarHeal(UnitAbilityActivationState preview)
@@ -287,6 +299,10 @@ namespace Project.Scripts.Services.Bot
                         continue;
                 }
 
+                if (updatedSlot.ActionType == UnitActionType.ResurrectAlly
+                    && PickDeadHero(currentEnemySlots, pickedIndex) < 0)
+                    continue;
+
                 _heroActivationPending[pickedIndex] = true;
                 ActivateWithDelay(pickedIndex, ct).Forget();
             }
@@ -321,6 +337,8 @@ namespace Project.Scripts.Services.Bot
                 ActivateHeroDamage(slotIndex, enemySlots);
             else if (slot.ActionType == UnitActionType.SupportAlly)
                 ActivateHeroSupport(slotIndex);
+            else if (slot.ActionType == UnitActionType.ResurrectAlly)
+                ActivateHeroResurrect(slotIndex, enemySlots);
             else
                 ActivateHeroHeal(slotIndex, enemySlots);
         }
@@ -388,6 +406,34 @@ namespace Project.Scripts.Services.Bot
                 var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx);
                 _abilityExecutionService.Execute(source, target);
             }
+        }
+
+        private void ActivateHeroResurrect(int slotIndex, IReadOnlyList<HeroSlotState> enemySlots)
+        {
+            var targetIdx = PickDeadHero(enemySlots, slotIndex);
+            if (targetIdx < 0)
+                return;
+
+            var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
+            var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx);
+            _abilityExecutionService.Execute(source, target);
+        }
+
+        private static int PickDeadHero(IReadOnlyList<HeroSlotState> slots, int excludedIndex = -1)
+        {
+            if (null == slots)
+                return -1;
+
+            for (var i = 0; i < slots.Count; i++)
+            {
+                if (i == excludedIndex)
+                    continue;
+
+                if (slots[i].IsAssigned && false == slots[i].IsAlive)
+                    return i;
+            }
+
+            return -1;
         }
 
         private void StopLoops()

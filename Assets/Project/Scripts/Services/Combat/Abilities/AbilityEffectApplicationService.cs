@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.BattleFlow;
+using Project.Scripts.Shared.Buffs;
 using Project.Scripts.Shared.Tiles;
 using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Services.Combat.Units;
@@ -63,14 +64,17 @@ namespace Project.Scripts.Services.Combat.Abilities
             if (false == action.IsConfigured)
                 return;
 
-            var targets = UnitTargetingRules.SelectTargets(action.Targeting, source, selectedTarget, candidates);
+            var targets = action.Kind == DirectActionKind.Resurrect
+                ? UnitTargetingRules.SelectTargetsIncludingUnavailable(action.Targeting, source, selectedTarget,
+                    candidates)
+                : UnitTargetingRules.SelectTargets(action.Targeting, source, selectedTarget, candidates);
             for (var i = 0; i < targets.Count; i++)
             {
                 var target = targets[i];
                 if (false == CanApplyDirectAction(action, target))
                     continue;
 
-                var finalValue = ExecuteDirectAction(source, target, action, nextAttackBonus);
+                var finalValue = ExecuteDirectAction(source, target, action, nextAttackBonus, occurredAtTick);
                 if (finalValue > 0)
                     directApplications.Add(new AbilityDirectApplicationResult(source, target,
                         UnitActionTypeMapping.FromDirectActionKind(action.Kind),
@@ -129,7 +133,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         }
 
         private int ExecuteDirectAction(UnitDescriptor source, UnitDescriptor target, DirectActionDefinition action,
-            int nextAttackBonus)
+            int nextAttackBonus, long occurredAtTick)
         {
             if (action.Kind == DirectActionKind.Damage)
             {
@@ -149,6 +153,21 @@ namespace Project.Scripts.Services.Combat.Abilities
 
                 ApplyHeal(target, value);
                 return value;
+            }
+
+            if (action.Kind == DirectActionKind.Resurrect)
+            {
+                if (target.Kind != UnitKind.Hero)
+                    return 0;
+
+                var value = ResolveResurrectionHP(target, action);
+                if (value <= 0)
+                    return 0;
+
+                return _heroService.TryResurrectHero(target.Side, target.SlotIndex, value, out var restoredHP,
+                    occurredAtTick)
+                    ? restoredHP
+                    : 0;
             }
 
             return 0;
@@ -182,7 +201,18 @@ namespace Project.Scripts.Services.Combat.Abilities
                     out var isExposed))
                 return false;
 
+            if (action.Kind == DirectActionKind.Resurrect && target.Kind != UnitKind.Hero)
+                return false;
+
             return AbilityTargetRules.IsActionRecipientValid(action.Kind, isAlive, isHpFull, isExposed);
+        }
+
+        private int ResolveResurrectionHP(UnitDescriptor target, DirectActionDefinition action)
+        {
+            if (false == _unitStateService.TryGetUnit(target, out var state))
+                return 0;
+
+            return BuffRules.ResolveAdditiveValue(action.Operation, action.Value, state.MaxHP);
         }
 
         private bool TryGetTargetState(UnitDescriptor target, bool ignoresAvatarGroupDefense, out bool isAlive,
@@ -223,7 +253,7 @@ namespace Project.Scripts.Services.Combat.Abilities
                 return;
 
             result.Add(new UnitTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
-                state.IsAssigned && state.IsAlive));
+                state.IsAssigned && state.IsAlive, state.IsAssigned));
         }
 
         private void AddHeroCandidates(List<UnitTargetCandidate> result, BattleSide side)
@@ -235,7 +265,7 @@ namespace Project.Scripts.Services.Combat.Abilities
                     continue;
 
                 result.Add(new UnitTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
-                    state.IsAssigned && state.IsAlive));
+                    state.IsAssigned && state.IsAlive, state.IsAssigned));
             }
         }
 

@@ -8,6 +8,7 @@ namespace Project.Scripts.Shared.Abilities
         public UnitActionType ActionType { get; }
         public int CurrentHP { get; }
         public int MaxHP { get; }
+        public bool IsAssigned { get; }
         public bool IsAlive { get; }
         public bool IsExposed { get; }
 
@@ -16,12 +17,13 @@ namespace Project.Scripts.Shared.Abilities
 
 
         public AbilityTargetCandidate(UnitDescriptor descriptor, UnitActionType actionType, int currentHP, int maxHP,
-            bool isAlive, bool isExposed)
+            bool isAlive, bool isExposed, bool isAssigned = false)
         {
             Descriptor = descriptor;
             ActionType = actionType;
             CurrentHP = currentHP < 0 ? 0 : currentHP;
             MaxHP = maxHP < 0 ? 0 : maxHP;
+            IsAssigned = isAssigned || isAlive;
             IsAlive = isAlive;
             IsExposed = isExposed;
         }

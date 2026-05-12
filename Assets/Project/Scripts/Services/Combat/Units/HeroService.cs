@@ -63,6 +63,27 @@ namespace Project.Scripts.Services.Combat.Units
             ApplyHPChange(ref slot, side, slotIndex, +amount);
         }
 
+        public bool TryResurrectHero(BattleSide side, int slotIndex, int restoredHP, out int actualRestoredHP,
+            long occurredAtTick = 0)
+        {
+            actualRestoredHP = 0;
+            if (slotIndex is < 0 or >= SlotCount || restoredHP <= 0)
+                return false;
+
+            ref var slot = ref GetSlotRef(side, slotIndex);
+            if (false == slot.IsAssigned || slot.MaxHP <= 0 || slot.CurrentHP > 0)
+                return false;
+
+            actualRestoredHP = restoredHP > slot.MaxHP ? slot.MaxHP : restoredHP;
+            slot.CurrentHP = actualRestoredHP;
+
+            var resolvedTick = occurredAtTick > 0 ? occurredAtTick : _battleClock.CurrentTick;
+            _eventBus.Publish(new HeroResurrectedEvent(side, slotIndex, actualRestoredHP, resolvedTick));
+            _eventBus.Publish(new HeroHPChangedEvent(side, slotIndex, slot.CurrentHP, slot.MaxHP));
+
+            return true;
+        }
+
         public void Dispose()
         {
         }

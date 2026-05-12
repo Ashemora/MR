@@ -170,7 +170,7 @@ namespace Project.Scripts.Services.Combat.Buffs
 
         public void Grant(IReadOnlyList<UnitDescriptor> targets, int amount)
         {
-            var definition = new BuffDefinition(BuffKind.NextAttackDamage, BuffModifierOperation.AddFlat,
+            var definition = new BuffDefinition(BuffKind.NextAttackDamage, ValueModifierOperation.AddFlat,
                 amount, BuffLifetimeKind.NextAttack, BuffStackingMode.Stack);
 
             for (var i = 0; i < targets.Count; i++)

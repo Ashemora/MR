@@ -280,7 +280,7 @@ namespace Project.Scripts.Services.Combat.Abilities
                 return;
 
             result.Add(new AbilityTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
-                state.IsAssigned && state.IsAlive, _groupDefense.IsExposed(side)));
+                state.IsAssigned && state.IsAlive, _groupDefense.IsExposed(side), state.IsAssigned));
         }
 
         private void AddHeroTargetCandidates(List<AbilityTargetCandidate> result, BattleSide side)
@@ -292,7 +292,7 @@ namespace Project.Scripts.Services.Combat.Abilities
                     continue;
 
                 result.Add(new AbilityTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
-                    state.IsAssigned && state.IsAlive, true));
+                    state.IsAssigned && state.IsAlive, true, state.IsAssigned));
             }
         }
 
@@ -304,7 +304,7 @@ namespace Project.Scripts.Services.Combat.Abilities
             {
                 var candidate = targetCandidates[i];
                 result.Add(new UnitTargetCandidate(candidate.Descriptor, candidate.ActionType, candidate.CurrentHP,
-                    candidate.MaxHP, candidate.IsAlive));
+                    candidate.MaxHP, candidate.IsAlive, candidate.IsAssigned));
             }
 
             return result;

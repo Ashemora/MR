@@ -273,6 +273,22 @@ namespace Project.Scripts.Shared.Passives
             return changed;
         }
 
+        public bool ResetOwnerRuntimeState(UnitDescriptor owner)
+        {
+            var changed = false;
+            for (var i = 0; i < _states.Length; i++)
+            {
+                var state = _states[i];
+                if (false == IsSameOwner(state.Owner, owner))
+                    continue;
+
+                _states[i] = state.WithReset();
+                changed = true;
+            }
+
+            return changed;
+        }
+
         private static bool IsSameOwner(UnitDescriptor left, UnitDescriptor right)
         {
             return left.Side == right.Side && left.Kind == right.Kind && left.SlotIndex == right.SlotIndex;

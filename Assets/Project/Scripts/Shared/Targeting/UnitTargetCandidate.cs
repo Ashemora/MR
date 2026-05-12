@@ -9,16 +9,18 @@ namespace Project.Scripts.Shared.Targeting
         public int CurrentHP { get; }
         public int MaxHP { get; }
         public bool IsAvailable { get; }
+        public bool IsAssigned { get; }
 
 
         public UnitTargetCandidate(UnitDescriptor descriptor, UnitActionType actionType, int currentHP, int maxHP,
-            bool isAvailable)
+            bool isAvailable, bool isAssigned = false)
         {
             Descriptor = descriptor;
             ActionType = actionType;
             CurrentHP = currentHP < 0 ? 0 : currentHP;
             MaxHP = maxHP < 0 ? 0 : maxHP;
             IsAvailable = isAvailable;
+            IsAssigned = isAssigned || isAvailable;
         }
     }
 }

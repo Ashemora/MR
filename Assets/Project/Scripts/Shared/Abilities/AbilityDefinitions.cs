@@ -9,16 +9,18 @@ namespace Project.Scripts.Shared.Abilities
     {
         public DirectActionKind Kind { get; }
         public int Value { get; }
+        public ValueModifierOperation Operation { get; }
         public UnitTargetingDefinition Targeting { get; }
         public bool IgnoresAvatarGroupDefense { get; }
         public bool IsConfigured => Kind != DirectActionKind.None && Value > 0;
 
 
         public DirectActionDefinition(DirectActionKind kind, int value, UnitTargetingDefinition targeting,
-            bool ignoresAvatarGroupDefense)
+            bool ignoresAvatarGroupDefense, ValueModifierOperation operation = ValueModifierOperation.AddFlat)
         {
             Kind = kind;
             Value = value < 0 ? 0 : value;
+            Operation = operation == ValueModifierOperation.None ? ValueModifierOperation.AddFlat : operation;
             Targeting = targeting;
             IgnoresAvatarGroupDefense = ignoresAvatarGroupDefense;
         }

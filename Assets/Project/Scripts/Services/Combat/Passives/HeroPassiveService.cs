@@ -161,9 +161,10 @@ namespace Project.Scripts.Services.Combat.Passives
         private void OnHeroResurrected(HeroResurrectedEvent e)
         {
             var owner = UnitDescriptor.Hero(e.Side, e.SlotIndex);
-            _engine.ResetOwnerProgress(owner);
+            _engine.ResetOwnerRuntimeState(owner);
             ClearPendingActivations(owner);
             RunOwnerBuffCleanup(e.Side, e.SlotIndex);
+            RefreshSlotKindPassiveState(e.Side, e.SlotIndex);
         }
 
         private bool RunOwnerBuffCleanup(BattleSide side, int slotIndex)
