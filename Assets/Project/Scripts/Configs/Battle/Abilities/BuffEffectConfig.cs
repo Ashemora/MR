@@ -19,7 +19,7 @@ namespace Project.Scripts.Configs.Battle.Abilities
         [Tooltip("Когда баф снимается: Battle = до конца боя, NextAttack = после следующей атаки цели, NextActivation = после следующей активации цели, UntilEndOfNextMainPhase = до конца следующей Match/Hero фазы")]
         [SerializeField] private BuffLifetimeKind _lifetimeKind = BuffLifetimeKind.Battle;
 
-        [Tooltip("Stack = повторное наложение усиливает баф. IgnoreNew = новый такой же баф игнорируется, пока старый активен")]
+        [Tooltip("Stack = повторное наложение создает отдельный параллельный стак со своим временем действия. IgnoreNew = новый такой же баф игнорируется, пока старый активен")]
         [SerializeField] private BuffStackingMode _stackingMode = BuffStackingMode.Stack;
 
 

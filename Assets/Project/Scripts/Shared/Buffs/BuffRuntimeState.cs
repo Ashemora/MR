@@ -39,17 +39,6 @@ namespace Project.Scripts.Shared.Buffs
             RemainingDurationSeconds = durationSeconds < 0f ? 0f : durationSeconds;
         }
 
-        public BuffRuntimeState WithStackAdded(int amount, int currentRound, BattlePhaseKind currentPhase,
-            float durationSeconds = 0f)
-        {
-            var nextDuration = RemainingDurationSeconds;
-            if (durationSeconds > nextDuration)
-                nextDuration = durationSeconds;
-
-            return new BuffRuntimeState(Source, Target, SourceSlotKind, Definition, StackCount + amount,
-                currentRound, currentPhase, nextDuration);
-        }
-
         public BuffRuntimeState WithDurationTicked(float deltaTime)
         {
             if (RemainingDurationSeconds <= 0f || deltaTime <= 0f)

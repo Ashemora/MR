@@ -24,17 +24,11 @@ namespace Project.Scripts.Shared.Buffs
             if (false == definition.IsConfigured)
                 return false;
 
-            for (var i = 0; i < _buffs.Count; i++)
+            if (definition.StackingMode == BuffStackingMode.IgnoreNew)
             {
-                if (false == IsSameStack(_buffs[i], source, target, sourceSlotKind, definition))
-                    continue;
-
-                if (definition.StackingMode == BuffStackingMode.IgnoreNew)
-                    return false;
-
-                _buffs[i] = _buffs[i].WithStackAdded(1, currentRound, currentPhase, durationSeconds);
-                
-                return true;
+                for (var i = 0; i < _buffs.Count; i++)
+                    if (IsSameStack(_buffs[i], source, target, sourceSlotKind, definition))
+                        return false;
             }
 
             _buffs.Add(new BuffRuntimeState(source, target, sourceSlotKind, definition, 1, currentRound,
