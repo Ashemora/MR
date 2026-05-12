@@ -1,15 +1,22 @@
+using System.Collections.Generic;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Services.Combat.Energy;
+using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.BattleFlow;
+using Project.Scripts.Shared.BattleSetup;
+using Project.Scripts.Shared.Targeting;
 using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Units
 {
     public class UnitAbilityActivationService : IUnitAbilityActivationService
     {
+        private const int SlotCount = 4;
+
+
         private readonly IUnitStateService _unitStateService;
         private readonly IBattleSideEnergyService _battleSideEnergyService;
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
@@ -17,6 +24,7 @@ namespace Project.Scripts.Services.Combat.Units
         private readonly IHeroAbilityModifierService _heroAbilityModifierService;
         private readonly IAbilityPowerModifierService _abilityPowerModifierService;
         private readonly INextActivationBuffService _nextActivationBuffService;
+        private readonly BattleSetup _battleSetup;
         private readonly EventBus _eventBus;
 
 
@@ -28,6 +36,7 @@ namespace Project.Scripts.Services.Combat.Units
             IHeroAbilityModifierService heroAbilityModifierService,
             IAbilityPowerModifierService abilityPowerModifierService,
             INextActivationBuffService nextActivationBuffService,
+            BattleSetup battleSetup,
             EventBus eventBus)
         {
             _unitStateService = unitStateService;
@@ -37,6 +46,7 @@ namespace Project.Scripts.Services.Combat.Units
             _heroAbilityModifierService = heroAbilityModifierService;
             _abilityPowerModifierService = abilityPowerModifierService;
             _nextActivationBuffService = nextActivationBuffService;
+            _battleSetup = battleSetup;
             _eventBus = eventBus;
         }
 
@@ -133,7 +143,10 @@ namespace Project.Scripts.Services.Combat.Units
             if (_unitActivationCooldownService.IsOnCooldown(state.Unit))
                 return false;
 
-            return _battleSideEnergyService.CanSpend(state.Unit.Side, state.BaseActivationEnergyCost);
+            if (false == _battleSideEnergyService.CanSpend(state.Unit.Side, state.BaseActivationEnergyCost))
+                return false;
+
+            return HasAnyValidEffect(state);
         }
 
         private bool CanActivateHero(UnitRuntimeState state)
@@ -141,35 +154,56 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == state.IsAssigned || false == state.IsAlive)
                 return false;
 
-            if (state.Unit.ActionType == UnitActionType.HealAlly && false == HasHeroHealTarget(state))
-                return false;
-
             if (_unitActivationCooldownService.IsOnCooldown(state.Unit))
                 return false;
 
-            return _battleSideEnergyService.CanSpend(state.Unit.Side, GetHeroActivationEnergyCost(state));
+            if (false == _battleSideEnergyService.CanSpend(state.Unit.Side, GetHeroActivationEnergyCost(state)))
+                return false;
+
+            return HasAnyValidEffect(state);
         }
 
-        private bool HasHeroHealTarget(UnitRuntimeState source)
+        private bool HasAnyValidEffect(UnitRuntimeState state)
         {
-            if (_unitStateService.TryGetUnit(UnitDescriptor.Avatar(source.Unit.Side, UnitActionType.HealAlly),
-                    out var avatar) && false == avatar.IsHpFull)
-                return true;
+            if (false == _battleSetup.TryGetUnit(state.Unit, out var setup))
+                return false;
 
-            for (var i = 0; i < 4; i++)
+            return AbilityActivationRules.WouldProduceAnyEffect(state.Unit, setup.ActiveAbility.DirectAction,
+                setup.ActiveAbility.BuffEntries, CollectCandidates());
+        }
+
+        private List<UnitTargetCandidate> CollectCandidates()
+        {
+            var result = new List<UnitTargetCandidate>(10);
+            AddAvatarCandidate(result, BattleSide.Player);
+            AddAvatarCandidate(result, BattleSide.Enemy);
+            AddHeroCandidates(result, BattleSide.Player);
+            AddHeroCandidates(result, BattleSide.Enemy);
+
+            return result;
+        }
+
+        private void AddAvatarCandidate(List<UnitTargetCandidate> result, BattleSide side)
+        {
+            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, UnitActionType.DealDamage),
+                    out var state))
+                return;
+
+            result.Add(new UnitTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+                state.IsAssigned && state.IsAlive));
+        }
+
+        private void AddHeroCandidates(List<UnitTargetCandidate> result, BattleSide side)
+        {
+            for (var i = 0; i < SlotCount; i++)
             {
-                if (i == source.Unit.SlotIndex)
+                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, UnitActionType.DealDamage),
+                        out var state))
                     continue;
 
-                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(source.Unit.Side, i, UnitActionType.HealAlly),
-                        out var target))
-                    continue;
-
-                if (target is { IsAssigned: true, IsAlive: true, MaxHP: > 0, IsHpFull: false })
-                    return true;
+                result.Add(new UnitTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+                    state.IsAssigned && state.IsAlive));
             }
-
-            return false;
         }
 
         private int GetHeroActivationEnergyCost(UnitRuntimeState state)

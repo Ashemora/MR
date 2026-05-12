@@ -92,6 +92,18 @@ namespace Project.Scripts.Shared.Targeting
             return false;
         }
 
+        public static bool MatchesTargeting(UnitTargetingDefinition targeting, UnitDescriptor owner,
+            UnitTargetCandidate candidate)
+        {
+            if (false == candidate.IsAvailable)
+                return false;
+
+            if (targeting.Scope == UnitTargetScope.Self)
+                return BattleUnitKey.FromDescriptor(candidate.Descriptor) == BattleUnitKey.FromDescriptor(owner);
+
+            return IsCandidateMatch(targeting, owner, candidate);
+        }
+
         private static bool IsRelationMatch(UnitTargetRelation relation, BattleSide ownerSide, BattleSide candidateSide)
         {
             if (relation == UnitTargetRelation.Everyone)
