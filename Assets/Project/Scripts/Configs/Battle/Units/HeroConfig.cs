@@ -40,22 +40,7 @@ namespace Project.Scripts.Configs.Battle.Units
 
         private UnitActionType ResolveAbilityType()
         {
-            var definition = ToActiveAbilityDefinition();
-            var direct = definition.DirectAction;
-            if (direct.IsConfigured && direct.Kind is DirectActionKind.Damage or DirectActionKind.Heal)
-                return UnitActionTypeMapping.FromDirectActionKind(direct.Kind);
-
-            return HasConfiguredBuffEntries(definition) ? UnitActionType.SupportAlly : UnitActionType.DealDamage;
-        }
-
-        private static bool HasConfiguredBuffEntries(ActiveAbilityDefinition definition)
-        {
-            var buffEntries = definition.BuffEntries;
-            for (var i = 0; i < buffEntries.Count; i++)
-                if (buffEntries[i].IsConfigured)
-                    return true;
-
-            return false;
+            return UnitActionTypeMapping.FromActiveAbility(ToActiveAbilityDefinition());
         }
     }
 }

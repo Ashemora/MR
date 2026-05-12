@@ -15,6 +15,7 @@ namespace Project.Scripts.Shared.BattleSetup
         public int BaseActivationEnergyCost { get; }
         public float BaseActivationCooldownSeconds { get; }
         public ActiveAbilityDefinition ActiveAbility { get; }
+        public UnitActionType ActionType => UnitActionTypeMapping.FromActiveAbility(ActiveAbility);
         public TileKind SlotKind { get; }
         public IReadOnlyList<PassiveAbilityDefinition> PassiveAbilities =>
             _passiveAbilities ?? Array.Empty<PassiveAbilityDefinition>();

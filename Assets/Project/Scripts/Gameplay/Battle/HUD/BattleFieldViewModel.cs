@@ -306,7 +306,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
         private int GetAvatarAbilityPower(BattleSide side, AvatarConfig config)
         {
-            return _abilityPowerModifierService.GetAbilityPower(UnitDescriptor.Avatar(side, config.AbilityType),
+            return _abilityPowerModifierService.GetAbilityPower(UnitDescriptor.Avatar(side),
                 config.AbilityPower);
         }
     }

@@ -76,7 +76,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         
         public Transform HitAnchor => _hitAnchor ? _hitAnchor : transform;
-        public UnitDescriptor Descriptor => UnitDescriptor.Hero(_viewModel.Side, _viewModel.SlotIndex, _viewModel.ActionType);
+        public UnitDescriptor Descriptor => UnitDescriptor.Hero(_viewModel.Side, _viewModel.SlotIndex);
+        public UnitActionType ActionType => _viewModel.ActionType;
         public bool IsReadySource => _viewModel is { IsAssigned: true } && _viewModel.IsActivatable.CurrentValue;
         public Bounds WorldBounds => _boundsSource ? _boundsSource.bounds : new Bounds(transform.position, Vector3.one);
 
@@ -127,15 +128,15 @@ namespace Project.Scripts.Gameplay.Battle.Units
             BindAbilityPowerLabel(viewModel);
         }
 
-        public bool IsValidTarget(UnitDescriptor source)
+        public bool IsValidTarget(UnitDescriptor source, UnitActionType sourceActionType)
         {
             if (null == _viewModel || false == _viewModel.IsAssigned || _viewModel.IsDefeated.CurrentValue)
                 return false;
 
-            if (source.ActionType == UnitActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
+            if (sourceActionType == UnitActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
                 return true;
 
-            if (source.ActionType == UnitActionType.HealAlly && _viewModel.Side == BattleSide.Player)
+            if (sourceActionType == UnitActionType.HealAlly && _viewModel.Side == BattleSide.Player)
             {
                 if (source.Kind == UnitKind.Hero && source.SlotIndex == _viewModel.SlotIndex)
                     return false;
@@ -143,7 +144,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 return _viewModel.HPFill.CurrentValue < 1f;
             }
 
-            if (source.ActionType == UnitActionType.SupportAlly && _viewModel.Side == BattleSide.Player)
+            if (sourceActionType == UnitActionType.SupportAlly && _viewModel.Side == BattleSide.Player)
                 return true;
 
             return false;

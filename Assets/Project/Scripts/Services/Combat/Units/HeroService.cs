@@ -73,7 +73,7 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == slot.IsAssigned || slot.MaxHP <= 0)
                 return;
 
-            var owner = UnitDescriptor.Hero(side, slotIndex, slot.ActionType);
+            var owner = UnitDescriptor.Hero(side, slotIndex);
             var resurrectChargeHP = _resurrectOnDeathBuffService.GetResurrectOnDeath(owner, slot.MaxHP);
             var isBurndownActive = _gameStateService.State.CurrentValue == GameState.Burndown;
             var resolution = HeroDeathResolutionRules.Resolve(slot.CurrentHP, slot.MaxHP, delta, resurrectChargeHP,
@@ -135,7 +135,7 @@ namespace Project.Scripts.Services.Combat.Units
                     SlotKind = setup.SlotKind,
                     IsAssigned = true,
                     ActivationEnergyCost = setup.BaseActivationEnergyCost,
-                    ActionType = setup.Unit.ActionType,
+                    ActionType = setup.ActionType,
                     ActionValue = setup.BaseAbilityPower,
                     CurrentHP = setup.MaxHP,
                     MaxHP = setup.MaxHP,

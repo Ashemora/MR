@@ -133,7 +133,7 @@ namespace Project.Scripts.Services.Combat.Passives
         private void OnHeroDefeated(HeroDefeatedEvent e)
         {
             AddProgressAndPublishActivations(new ActivationConditionEvent(ActivationConditionKind.EnemyHeroDefeatsInTimeWindow,
-                UnitDescriptor.Hero(e.Side, e.SlotIndex, GetSourceActionType(e.Side, e.SlotIndex)),
+                UnitDescriptor.Hero(e.Side, e.SlotIndex),
                 occurredAtTick: ResolveOccurredAtTick(e.OccurredAtTick)));
 
             _engine.ResetOwnerProgress(e.Side, e.SlotIndex);
@@ -158,7 +158,7 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private bool RunOwnerBuffCleanup(BattleSide side, int slotIndex)
         {
-            var owner = UnitDescriptor.Hero(side, slotIndex, GetSourceActionType(side, slotIndex));
+            var owner = UnitDescriptor.Hero(side, slotIndex);
             if (false == _buffService.RemoveByUnit(owner))
                 return false;
 
@@ -323,7 +323,7 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private bool HasActiveBuffForPassiveOwner(UnitPassiveRuntimeState state)
         {
-            return _buffService.HasBuffFromSource(UnitDescriptor.Hero(state.Side, state.SlotIndex, GetSourceActionType(state.Side, state.SlotIndex)));
+            return _buffService.HasBuffFromSource(UnitDescriptor.Hero(state.Side, state.SlotIndex));
         }
 
         private long ResolveOccurredAtTick(long occurredAtTick)
@@ -425,7 +425,7 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private void ApplyPassiveEffects(UnitPassiveRuntimeState state)
         {
-            var source = UnitDescriptor.Hero(state.Side, state.SlotIndex, GetSourceActionType(state.Side, state.SlotIndex));
+            var source = UnitDescriptor.Hero(state.Side, state.SlotIndex);
             var result = _abilityEffectApplicationService.Apply(source, default, state.Definition.DirectAction,
                 state.Definition.BuffEntries, state.SlotKind, _currentRound, _currentPhase, _battleClock.CurrentTick);
             PublishAbilityApplicationResultEvents(result);
@@ -485,7 +485,7 @@ namespace Project.Scripts.Services.Combat.Passives
         private int GetAbilityPower(BattleSide side, int slotIndex, int basePower)
         {
             return (_buffService as IAbilityPowerModifierService)
-                       ?.GetAbilityPower(UnitDescriptor.Hero(side, slotIndex, GetSourceActionType(side, slotIndex)), basePower)
+                       ?.GetAbilityPower(UnitDescriptor.Hero(side, slotIndex), basePower)
                    ?? basePower;
         }
 
@@ -556,18 +556,11 @@ namespace Project.Scripts.Services.Combat.Passives
             return false;
         }
 
-        private UnitActionType GetSourceActionType(BattleSide side, int slotIndex)
-        {
-            var hero = _battleSetup.GetHero(side, slotIndex);
-            
-            return hero.IsAssigned ? hero.Unit.ActionType : UnitActionType.DealDamage;
-        }
-
         private UnitDescriptor GetAvatarUnit(BattleSide side)
         {
             var avatar = side == BattleSide.Player ? _battleSetup.PlayerAvatar : _battleSetup.EnemyAvatar;
             
-            return avatar.IsAssigned ? avatar.Unit : UnitDescriptor.Avatar(side, UnitActionType.DealDamage);
+            return avatar.IsAssigned ? avatar.Unit : UnitDescriptor.Avatar(side);
         }
 
         private static int GetSideIndex(BattleSide side)

@@ -184,13 +184,11 @@ namespace Project.Scripts.Services.Bot
                     if (targetIdx < 0)
                         return;
 
-                    ExecuteEnemyAvatarAbility(preview.ActionType,
-                        UnitDescriptor.Hero(BattleSide.Player, targetIdx, preview.ActionType));
+                    ExecuteEnemyAvatarAbility(UnitDescriptor.Hero(BattleSide.Player, targetIdx));
                 }
                 else
                 {
-                    ExecuteEnemyAvatarAbility(preview.ActionType,
-                        UnitDescriptor.Avatar(BattleSide.Player, preview.ActionType));
+                    ExecuteEnemyAvatarAbility(UnitDescriptor.Avatar(BattleSide.Player));
                 }
             }
             else
@@ -210,13 +208,11 @@ namespace Project.Scripts.Services.Bot
                 if (targetIdx < 0)
                     return;
 
-                ExecuteEnemyAvatarAbility(preview.ActionType,
-                    UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, preview.ActionType));
+                ExecuteEnemyAvatarAbility(UnitDescriptor.Hero(BattleSide.Enemy, targetIdx));
             }
             else if (false == _avatarService.IsHpFull(BattleSide.Enemy))
             {
-                ExecuteEnemyAvatarAbility(preview.ActionType,
-                    UnitDescriptor.Avatar(BattleSide.Enemy, preview.ActionType));
+                ExecuteEnemyAvatarAbility(UnitDescriptor.Avatar(BattleSide.Enemy));
             }
             else
             {
@@ -225,20 +221,19 @@ namespace Project.Scripts.Services.Bot
                 if (targetIdx < 0)
                     return;
 
-                ExecuteEnemyAvatarAbility(preview.ActionType,
-                    UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, preview.ActionType));
+                ExecuteEnemyAvatarAbility(UnitDescriptor.Hero(BattleSide.Enemy, targetIdx));
             }
         }
 
         private bool TryPreviewEnemyAvatar(out UnitAbilityActivationState preview)
         {
             return _unitAbilityActivationService.TryPreview(
-                UnitDescriptor.Avatar(BattleSide.Enemy, UnitActionType.DealDamage), out preview);
+                UnitDescriptor.Avatar(BattleSide.Enemy), out preview);
         }
 
-        private void ExecuteEnemyAvatarAbility(UnitActionType actionType, UnitDescriptor target)
+        private void ExecuteEnemyAvatarAbility(UnitDescriptor target)
         {
-            _abilityExecutionService.Execute(UnitDescriptor.Avatar(BattleSide.Enemy, actionType), target);
+            _abilityExecutionService.Execute(UnitDescriptor.Avatar(BattleSide.Enemy), target);
         }
 
         private async UniTaskVoid RunHeroEnergyLoop(CancellationToken ct)
@@ -265,7 +260,7 @@ namespace Project.Scripts.Services.Bot
                 var currentEnemySlots = _heroService.GetSlots(BattleSide.Enemy);
                 var updatedSlot = currentEnemySlots[pickedIndex];
 
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, pickedIndex, updatedSlot.ActionType);
+                var source = UnitDescriptor.Hero(BattleSide.Enemy, pickedIndex);
                 if (false == _unitAbilityActivationService.TryPreview(source, out _) || _heroActivationPending[pickedIndex])
                     continue;
 
@@ -318,7 +313,7 @@ namespace Project.Scripts.Services.Bot
             var enemySlots = _heroService.GetSlots(BattleSide.Enemy);
             var slot = enemySlots[slotIndex];
 
-            var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, slot.ActionType);
+            var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
             if (false == _unitAbilityActivationService.TryPreview(source, out _))
                 return;
 
@@ -332,7 +327,7 @@ namespace Project.Scripts.Services.Bot
 
         private void ActivateHeroSupport(int slotIndex)
         {
-            var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, UnitActionType.SupportAlly);
+            var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
             _abilityExecutionService.Execute(source, source);
         }
 
@@ -349,14 +344,14 @@ namespace Project.Scripts.Services.Bot
                 if (targetIdx < 0)
                     return;
 
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, UnitActionType.DealDamage);
-                var target = UnitDescriptor.Hero(BattleSide.Player, targetIdx, UnitActionType.DealDamage);
+                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
+                var target = UnitDescriptor.Hero(BattleSide.Player, targetIdx);
                 _abilityExecutionService.Execute(source, target);
             }
             else
             {
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, UnitActionType.DealDamage);
-                var target = UnitDescriptor.Avatar(BattleSide.Player, UnitActionType.DealDamage);
+                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
+                var target = UnitDescriptor.Avatar(BattleSide.Player);
                 _abilityExecutionService.Execute(source, target);
             }
         }
@@ -373,14 +368,14 @@ namespace Project.Scripts.Services.Bot
                 if (targetIdx < 0 || targetIdx == slotIndex)
                     return;
 
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, UnitActionType.HealAlly);
-                var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, UnitActionType.HealAlly);
+                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
+                var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx);
                 _abilityExecutionService.Execute(source, target);
             }
             else if (false == _avatarService.IsHpFull(BattleSide.Enemy))
             {
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, UnitActionType.HealAlly);
-                var target = UnitDescriptor.Avatar(BattleSide.Enemy, UnitActionType.HealAlly);
+                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
+                var target = UnitDescriptor.Avatar(BattleSide.Enemy);
                 _abilityExecutionService.Execute(source, target);
             }
             else
@@ -389,8 +384,8 @@ namespace Project.Scripts.Services.Bot
                 if (targetIdx < 0 || targetIdx == slotIndex)
                     return;
 
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex, UnitActionType.HealAlly);
-                var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx, UnitActionType.HealAlly);
+                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
+                var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx);
                 _abilityExecutionService.Execute(source, target);
             }
         }

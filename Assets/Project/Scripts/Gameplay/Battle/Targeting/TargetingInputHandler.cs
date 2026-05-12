@@ -93,7 +93,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
             var candidate = _registry.FindAtPosition(_currentScreenPos, _cam, OffsetPx);
             var valid = null != candidate
                         && candidate != _source
-                        && candidate.IsValidTarget(_source.Descriptor);
+                        && candidate.IsValidTarget(_source.Descriptor, _source.ActionType);
 
             if (null != _target && _target != candidate)
             {
@@ -104,14 +104,14 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
             if (valid)
             {
                 _target = candidate;
-                _target.SetTargetHighlight(true, _source.Descriptor.ActionType);
+                _target.SetTargetHighlight(true, _source.ActionType);
             }
 
             _isHoveringBlockedAvatar.Value = null != candidate
                 && false == valid
                 && candidate.Descriptor.Kind == UnitKind.Avatar
                 && candidate.Descriptor.Side == BattleSide.Enemy
-                && _source.Descriptor.ActionType == UnitActionType.DealDamage;
+                && _source.ActionType == UnitActionType.DealDamage;
         }
 
         private void HandleDragCanceled()

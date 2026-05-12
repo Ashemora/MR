@@ -276,11 +276,11 @@ namespace Project.Scripts.Services.Combat.Abilities
 
         private void AddAvatarTargetCandidate(List<AbilityTargetCandidate> result, BattleSide side)
         {
-            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, UnitActionType.DealDamage),
+            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side),
                     out var state))
                 return;
 
-            result.Add(new AbilityTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+            result.Add(new AbilityTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
                 state.IsAssigned && state.IsAlive, _groupDefense.IsExposed(side)));
         }
 
@@ -288,11 +288,11 @@ namespace Project.Scripts.Services.Combat.Abilities
         {
             for (var i = 0; i < 4; i++)
             {
-                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, UnitActionType.DealDamage),
+                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i),
                         out var state))
                     continue;
 
-                result.Add(new AbilityTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+                result.Add(new AbilityTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
                     state.IsAssigned && state.IsAlive, true));
             }
         }
@@ -304,8 +304,8 @@ namespace Project.Scripts.Services.Combat.Abilities
             for (var i = 0; i < targetCandidates.Count; i++)
             {
                 var candidate = targetCandidates[i];
-                result.Add(new UnitTargetCandidate(candidate.Descriptor, candidate.CurrentHP, candidate.MaxHP,
-                    candidate.IsAlive));
+                result.Add(new UnitTargetCandidate(candidate.Descriptor, candidate.ActionType, candidate.CurrentHP,
+                    candidate.MaxHP, candidate.IsAlive));
             }
 
             return result;

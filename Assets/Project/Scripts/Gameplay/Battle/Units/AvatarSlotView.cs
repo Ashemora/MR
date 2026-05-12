@@ -73,7 +73,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
         [SerializeField] private GameObject[] _deactivateOnDeath;
 
 
-        public UnitDescriptor Descriptor => UnitDescriptor.Avatar(_viewModel.Side, _viewModel.AbilityType);
+        public UnitDescriptor Descriptor => UnitDescriptor.Avatar(_viewModel.Side);
+        public UnitActionType ActionType => _viewModel.AbilityType;
         public bool IsReadySource => _viewModel is { Side: BattleSide.Player } && _viewModel.EnergyBar.IsReady.CurrentValue;
         public Bounds WorldBounds => _boundsSource ? _boundsSource.bounds : new Bounds(transform.position, Vector3.one);
         public Transform HitAnchor => _hitAnchor ? _hitAnchor : transform;
@@ -165,12 +166,12 @@ namespace Project.Scripts.Gameplay.Battle.Units
             await _resultPulseTween.ToUniTask();
         }
 
-        public bool IsValidTarget(UnitDescriptor source)
+        public bool IsValidTarget(UnitDescriptor source, UnitActionType sourceActionType)
         {
             if (null == _viewModel || _viewModel.IsDefeated.CurrentValue)
                 return false;
 
-            if (source.ActionType == UnitActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
+            if (sourceActionType == UnitActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
             {
                 if (null != _groupDefense && false == _groupDefense.IsExposed(BattleSide.Enemy))
                     return false;
@@ -178,7 +179,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 return true;
             }
 
-            if (source.ActionType == UnitActionType.HealAlly && _viewModel.Side == BattleSide.Player)
+            if (sourceActionType == UnitActionType.HealAlly && _viewModel.Side == BattleSide.Player)
             {
                 if (source.Kind == UnitKind.Avatar)
                     return false;
@@ -186,7 +187,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 return _viewModel.HPFill.CurrentValue < 1f;
             }
 
-            if (source.ActionType == UnitActionType.SupportAlly && _viewModel.Side == BattleSide.Player)
+            if (sourceActionType == UnitActionType.SupportAlly && _viewModel.Side == BattleSide.Player)
                 return true;
 
             return false;

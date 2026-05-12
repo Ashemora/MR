@@ -218,11 +218,11 @@ namespace Project.Scripts.Services.Combat.Abilities
 
         private void AddAvatarCandidate(List<UnitTargetCandidate> result, BattleSide side)
         {
-            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, UnitActionType.DealDamage),
+            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side),
                     out var state))
                 return;
 
-            result.Add(new UnitTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+            result.Add(new UnitTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
                 state.IsAssigned && state.IsAlive));
         }
 
@@ -230,11 +230,11 @@ namespace Project.Scripts.Services.Combat.Abilities
         {
             for (var i = 0; i < SlotCount; i++)
             {
-                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, UnitActionType.DealDamage),
+                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i),
                         out var state))
                     continue;
 
-                result.Add(new UnitTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+                result.Add(new UnitTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
                     state.IsAssigned && state.IsAlive));
             }
         }

@@ -6,6 +6,7 @@ namespace Project.Scripts.Services.Combat.Units
     public readonly struct UnitRuntimeState
     {
         public UnitDescriptor Unit { get; }
+        public UnitActionType ActionType { get; }
         public bool IsAssigned { get; }
         public bool IsAlive { get; }
         public int CurrentHP { get; }
@@ -16,10 +17,11 @@ namespace Project.Scripts.Services.Combat.Units
         public TileKind SlotKind { get; }
 
 
-        public UnitRuntimeState(UnitDescriptor unit, bool isAssigned, bool isAlive, int currentHP, int maxHP,
-            int baseAbilityPower, int baseActivationEnergyCost, TileKind slotKind)
+        public UnitRuntimeState(UnitDescriptor unit, UnitActionType actionType, bool isAssigned, bool isAlive,
+            int currentHP, int maxHP, int baseAbilityPower, int baseActivationEnergyCost, TileKind slotKind)
         {
             Unit = unit;
+            ActionType = actionType;
             IsAssigned = isAssigned;
             IsAlive = isAlive;
             CurrentHP = currentHP < 0 ? 0 : currentHP;

@@ -78,7 +78,7 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == CanActivateAvatar(unitState))
                 return false;
 
-            state = new UnitAbilityActivationState(unitState.Unit.ActionType, unitState.IsAlive);
+            state = new UnitAbilityActivationState(unitState.ActionType, unitState.IsAlive);
 
             return true;
         }
@@ -96,7 +96,7 @@ namespace Project.Scripts.Services.Combat.Units
                 return false;
 
             _unitActivationCooldownService.StartCooldown(unitState.Unit);
-            state = new UnitAbilityActivationState(unitState.Unit.ActionType, unitState.IsAlive);
+            state = new UnitAbilityActivationState(unitState.ActionType, unitState.IsAlive);
 
             return true;
         }
@@ -110,7 +110,7 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == CanActivateHero(unitState))
                 return false;
 
-            state = new UnitAbilityActivationState(unitState.Unit.ActionType, unitState.IsAlive);
+            state = new UnitAbilityActivationState(unitState.ActionType, unitState.IsAlive);
 
             return true;
         }
@@ -130,7 +130,7 @@ namespace Project.Scripts.Services.Combat.Units
 
             _unitActivationCooldownService.StartCooldown(unitState.Unit);
             ConsumeNextActivationBuffs(unitState);
-            state = new UnitAbilityActivationState(unitState.Unit.ActionType, unitState.IsAlive);
+            state = new UnitAbilityActivationState(unitState.ActionType, unitState.IsAlive);
 
             return true;
         }
@@ -185,11 +185,11 @@ namespace Project.Scripts.Services.Combat.Units
 
         private void AddAvatarCandidate(List<UnitTargetCandidate> result, BattleSide side)
         {
-            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side, UnitActionType.DealDamage),
+            if (false == _unitStateService.TryGetUnit(UnitDescriptor.Avatar(side),
                     out var state))
                 return;
 
-            result.Add(new UnitTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+            result.Add(new UnitTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
                 state.IsAssigned && state.IsAlive));
         }
 
@@ -197,11 +197,11 @@ namespace Project.Scripts.Services.Combat.Units
         {
             for (var i = 0; i < SlotCount; i++)
             {
-                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i, UnitActionType.DealDamage),
+                if (false == _unitStateService.TryGetUnit(UnitDescriptor.Hero(side, i),
                         out var state))
                     continue;
 
-                result.Add(new UnitTargetCandidate(state.Unit, state.CurrentHP, state.MaxHP,
+                result.Add(new UnitTargetCandidate(state.Unit, state.ActionType, state.CurrentHP, state.MaxHP,
                     state.IsAssigned && state.IsAlive));
             }
         }

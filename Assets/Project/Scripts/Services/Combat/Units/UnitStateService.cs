@@ -39,9 +39,10 @@ namespace Project.Scripts.Services.Combat.Units
                 return false;
             }
 
-            var abilityType = setup.IsAssigned ? setup.Unit.ActionType : unit.ActionType;
+            var abilityType = setup.IsAssigned ? setup.ActionType : UnitActionType.DealDamage;
             state = new UnitRuntimeState(
-                UnitDescriptor.Avatar(unit.Side, abilityType),
+                UnitDescriptor.Avatar(unit.Side),
+                abilityType,
                 setup.IsAssigned,
                 avatar.IsAlive,
                 avatar.CurrentHP,
@@ -67,9 +68,10 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == _battleSetup.TryGetUnit(unit, out var setup))
                 return false;
 
-            var abilityType = slot.IsAssigned ? slot.ActionType : unit.ActionType;
+            var abilityType = slot.IsAssigned ? slot.ActionType : UnitActionType.DealDamage;
             state = new UnitRuntimeState(
-                UnitDescriptor.Hero(unit.Side, unit.SlotIndex, abilityType),
+                UnitDescriptor.Hero(unit.Side, unit.SlotIndex),
+                abilityType,
                 slot.IsAssigned,
                 slot.IsAlive,
                 slot.CurrentHP,
