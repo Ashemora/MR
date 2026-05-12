@@ -5,40 +5,41 @@ using Project.Scripts.Shared.Targeting;
 
 namespace Project.Scripts.Shared.Abilities
 {
-    public readonly struct AbilityEffectEntryDefinition
+    public readonly struct DirectActionDefinition
+    {
+        public DirectActionKind Kind { get; }
+        public int Value { get; }
+        public UnitTargetingDefinition Targeting { get; }
+        public bool IgnoresAvatarGroupDefense { get; }
+        public bool IsConfigured => Kind != DirectActionKind.None && Value > 0;
+
+
+        public DirectActionDefinition(DirectActionKind kind, int value, UnitTargetingDefinition targeting,
+            bool ignoresAvatarGroupDefense)
+        {
+            Kind = kind;
+            Value = value < 0 ? 0 : value;
+            Targeting = targeting;
+            IgnoresAvatarGroupDefense = ignoresAvatarGroupDefense;
+        }
+    }
+
+    public readonly struct BuffEntryDefinition
     {
         public UnitTargetingDefinition Targeting { get; }
-        public IReadOnlyList<DirectActionDefinition> DirectActions =>
-            _directActions ?? Array.Empty<DirectActionDefinition>();
         public IReadOnlyList<BuffApplicationDefinition> BuffApplications =>
             _buffApplications ?? Array.Empty<BuffApplicationDefinition>();
-        public bool IgnoresAvatarGroupDefense { get; }
-        public bool IsConfigured => HasConfiguredDirectActions() || HasConfiguredBuffApplications();
+        public bool IsConfigured => HasConfiguredBuffApplications();
 
 
-        private readonly DirectActionDefinition[] _directActions;
         private readonly BuffApplicationDefinition[] _buffApplications;
 
 
-        public AbilityEffectEntryDefinition(UnitTargetingDefinition targeting,
-            IReadOnlyList<DirectActionDefinition> directActions,
-            IReadOnlyList<BuffApplicationDefinition> buffApplications,
-            bool ignoresAvatarGroupDefense = false)
+        public BuffEntryDefinition(UnitTargetingDefinition targeting,
+            IReadOnlyList<BuffApplicationDefinition> buffApplications)
         {
             Targeting = targeting;
-            _directActions = CopyConfiguredDirectActions(directActions);
             _buffApplications = CopyConfiguredBuffApplications(buffApplications);
-            IgnoresAvatarGroupDefense = ignoresAvatarGroupDefense;
-        }
-
-        private bool HasConfiguredDirectActions()
-        {
-            if (null != _directActions)
-                for (var i = 0; i < _directActions.Length; i++)
-                    if (_directActions[i].IsConfigured)
-                        return true;
-
-            return false;
         }
 
         private bool HasConfiguredBuffApplications()
@@ -49,22 +50,6 @@ namespace Project.Scripts.Shared.Abilities
                         return true;
 
             return false;
-        }
-
-        private static DirectActionDefinition[] CopyConfiguredDirectActions(IReadOnlyList<DirectActionDefinition> directActions)
-        {
-            if (null == directActions || directActions.Count == 0)
-                return Array.Empty<DirectActionDefinition>();
-
-            var result = new List<DirectActionDefinition>(directActions.Count);
-            for (var i = 0; i < directActions.Count; i++)
-            {
-                var action = directActions[i];
-                if (action.IsConfigured)
-                    result.Add(action);
-            }
-
-            return result.ToArray();
         }
 
         private static BuffApplicationDefinition[] CopyConfiguredBuffApplications(IReadOnlyList<BuffApplicationDefinition> buffApplications)
@@ -81,20 +66,6 @@ namespace Project.Scripts.Shared.Abilities
             }
 
             return result.ToArray();
-        }
-    }
-
-    public readonly struct DirectActionDefinition
-    {
-        public DirectActionKind Kind { get; }
-        public int Value { get; }
-        public bool IsConfigured => Kind != DirectActionKind.None && Value > 0;
-
-
-        public DirectActionDefinition(DirectActionKind kind, int value)
-        {
-            Kind = kind;
-            Value = value < 0 ? 0 : value;
         }
     }
 
@@ -122,15 +93,15 @@ namespace Project.Scripts.Shared.Abilities
 
     internal static class AbilityDefinitionCopy
     {
-        public static AbilityEffectEntryDefinition[] CopyConfiguredEffectEntries(IReadOnlyList<AbilityEffectEntryDefinition> effectEntries)
+        public static BuffEntryDefinition[] CopyConfiguredBuffEntries(IReadOnlyList<BuffEntryDefinition> buffEntries)
         {
-            if (null == effectEntries || effectEntries.Count == 0)
-                return Array.Empty<AbilityEffectEntryDefinition>();
+            if (null == buffEntries || buffEntries.Count == 0)
+                return Array.Empty<BuffEntryDefinition>();
 
-            var result = new List<AbilityEffectEntryDefinition>(effectEntries.Count);
-            for (var i = 0; i < effectEntries.Count; i++)
+            var result = new List<BuffEntryDefinition>(buffEntries.Count);
+            for (var i = 0; i < buffEntries.Count; i++)
             {
-                var entry = effectEntries[i];
+                var entry = buffEntries[i];
                 if (entry.IsConfigured)
                     result.Add(entry);
             }

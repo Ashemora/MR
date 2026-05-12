@@ -426,8 +426,8 @@ namespace Project.Scripts.Services.Combat.Passives
         private void ApplyPassiveEffects(UnitPassiveRuntimeState state)
         {
             var source = UnitDescriptor.Hero(state.Side, state.SlotIndex, GetSourceActionType(state.Side, state.SlotIndex));
-            var result = _abilityEffectApplicationService.Apply(source, default, state.Definition.EffectEntries,
-                state.SlotKind, _currentRound, _currentPhase, _battleClock.CurrentTick);
+            var result = _abilityEffectApplicationService.Apply(source, default, state.Definition.DirectAction,
+                state.Definition.BuffEntries, state.SlotKind, _currentRound, _currentPhase, _battleClock.CurrentTick);
             PublishAbilityApplicationResultEvents(result);
         }
 

@@ -6,17 +6,27 @@ namespace Project.Scripts.Shared.Abilities
 {
     public static class AbilityTargetRules
     {
-        public static bool IsTargetAllowedByEntries(UnitDescriptor source, UnitDescriptor target,
-            IReadOnlyList<AbilityEffectEntryDefinition> entries, IReadOnlyList<UnitTargetCandidate> candidates)
+        public static bool IsTargetAllowedByEffect(UnitDescriptor source, UnitDescriptor target,
+            DirectActionDefinition directAction, IReadOnlyList<BuffEntryDefinition> buffEntries,
+            IReadOnlyList<UnitTargetCandidate> candidates)
         {
-            if (null == entries || null == candidates)
+            if (null == candidates)
                 return false;
 
-            for (var i = 0; i < entries.Count; i++)
+            if (directAction.IsConfigured)
             {
-                var entry = entries[i];
-                if (false == HasConfiguredDirectActions(entry.DirectActions)
-                    && false == HasConfiguredBuffApplications(entry.BuffApplications))
+                var directTargets = UnitTargetingRules.SelectTargets(directAction.Targeting, source, target, candidates);
+                if (UnitTargetingRules.ContainsTarget(directTargets, target))
+                    return true;
+            }
+
+            if (null == buffEntries)
+                return false;
+
+            for (var i = 0; i < buffEntries.Count; i++)
+            {
+                var entry = buffEntries[i];
+                if (false == entry.IsConfigured)
                     continue;
 
                 var targets = UnitTargetingRules.SelectTargets(entry.Targeting, source, target, candidates);
@@ -41,30 +51,6 @@ namespace Project.Scripts.Shared.Abilities
 
             if (actionType == UnitActionType.SupportAlly)
                 return true;
-
-            return false;
-        }
-
-        private static bool HasConfiguredDirectActions(IReadOnlyList<DirectActionDefinition> directActions)
-        {
-            if (null == directActions)
-                return false;
-
-            for (var i = 0; i < directActions.Count; i++)
-                if (directActions[i].IsConfigured)
-                    return true;
-
-            return false;
-        }
-
-        private static bool HasConfiguredBuffApplications(IReadOnlyList<BuffApplicationDefinition> buffApplications)
-        {
-            if (null == buffApplications)
-                return false;
-
-            for (var i = 0; i < buffApplications.Count; i++)
-                if (buffApplications[i].IsConfigured)
-                    return true;
 
             return false;
         }

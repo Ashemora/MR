@@ -8,7 +8,7 @@ namespace Project.Scripts.Shared.Abilities
     {
         public static List<UnitDescriptor> SelectTargets(UnitDescriptor source, UnitDescriptor primaryTarget,
             UnitActionType actionType, int maxTargets, IReadOnlyList<AbilityTargetCandidate> candidates,
-            IReadOnlyList<AbilityEffectEntryDefinition> entries)
+            DirectActionDefinition directAction, IReadOnlyList<BuffEntryDefinition> buffEntries)
         {
             var result = new List<UnitDescriptor>();
             if (maxTargets <= 0 || null == candidates)
@@ -26,8 +26,8 @@ namespace Project.Scripts.Shared.Abilities
                         candidate.IsHpFull, candidate.IsExposed))
                     continue;
 
-                if (false == AbilityTargetRules.IsTargetAllowedByEntries(source, candidate.Descriptor, entries,
-                        unitCandidates))
+                if (false == AbilityTargetRules.IsTargetAllowedByEffect(source, candidate.Descriptor, directAction,
+                        buffEntries, unitCandidates))
                     continue;
 
                 rankedCandidates.Add(candidate);

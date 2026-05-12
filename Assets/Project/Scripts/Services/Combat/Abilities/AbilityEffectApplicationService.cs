@@ -38,54 +38,66 @@ namespace Project.Scripts.Services.Combat.Abilities
 
 
         public AbilityEffectApplicationResult Apply(UnitDescriptor source, UnitDescriptor selectedTarget,
-            IReadOnlyList<AbilityEffectEntryDefinition> entries, TileKind sourceSlotKind, int currentRound,
-            BattlePhaseKind currentPhase, long occurredAtTick, int applicationIndexOffset = 0, bool isRepeat = false)
+            DirectActionDefinition directAction, IReadOnlyList<BuffEntryDefinition> buffEntries,
+            TileKind sourceSlotKind, int currentRound, BattlePhaseKind currentPhase, long occurredAtTick,
+            int applicationIndex = 0, bool isRepeat = false)
         {
-            if (entries == null || entries.Count == 0)
-                return default;
-
             var directApplications = new List<AbilityDirectApplicationResult>();
             var abilityStatsChanges = new List<AbilityStatsChangeResult>();
             var buffApplicationCount = 0;
             var candidates = CollectCandidates();
 
-            for (var i = 0; i < entries.Count; i++)
-            {
-                var entry = entries[i];
-                if (false == entry.IsConfigured)
-                    continue;
-
-                var targets = UnitTargetingRules.SelectTargets(entry.Targeting, source, selectedTarget, candidates);
-                for (var targetIndex = 0; targetIndex < targets.Count; targetIndex++)
-                {
-                    var target = targets[targetIndex];
-                    ApplyDirectActions(source, target, entry.DirectActions, entry.IgnoresAvatarGroupDefense,
-                        occurredAtTick, applicationIndexOffset, isRepeat, directApplications);
-                    buffApplicationCount += ApplyBuffApplications(source, target, sourceSlotKind, entry.BuffApplications,
-                        currentRound, currentPhase, abilityStatsChanges);
-                }
-            }
+            ApplyDirectAction(source, selectedTarget, directAction, candidates, occurredAtTick, applicationIndex,
+                isRepeat, directApplications);
+            buffApplicationCount += ApplyBuffEntries(source, selectedTarget, buffEntries, sourceSlotKind,
+                currentRound, currentPhase, candidates, abilityStatsChanges);
 
             return new AbilityEffectApplicationResult(buffApplicationCount, directApplications, abilityStatsChanges);
         }
 
-        private void ApplyDirectActions(UnitDescriptor source, UnitDescriptor target,
-            IReadOnlyList<DirectActionDefinition> actions, bool ignoresAvatarGroupDefense, long occurredAtTick,
-            int applicationIndexOffset, bool isRepeat, List<AbilityDirectApplicationResult> directApplications)
+        private void ApplyDirectAction(UnitDescriptor source, UnitDescriptor selectedTarget,
+            DirectActionDefinition action, IReadOnlyList<UnitTargetCandidate> candidates, long occurredAtTick,
+            int applicationIndex, bool isRepeat, List<AbilityDirectApplicationResult> directApplications)
         {
-            if (null == actions || actions.Count == 0)
+            if (false == action.IsConfigured)
                 return;
 
-            for (var i = 0; i < actions.Count; i++)
+            var targets = UnitTargetingRules.SelectTargets(action.Targeting, source, selectedTarget, candidates);
+            for (var i = 0; i < targets.Count; i++)
             {
-                var action = actions[i];
-                if (false == action.IsConfigured || false == CanApplyDirectAction(action, target, ignoresAvatarGroupDefense))
+                var target = targets[i];
+                if (false == CanApplyDirectAction(action, target))
                     continue;
 
-                if (ApplyDirectAction(target, action))
-                    directApplications.Add(new AbilityDirectApplicationResult(source, target, UnitActionTypeMapping.FromDirectActionKind(action.Kind),
-                        action.Value, applicationIndexOffset + i, isRepeat, occurredAtTick));
+                if (ExecuteDirectAction(target, action))
+                    directApplications.Add(new AbilityDirectApplicationResult(source, target,
+                        UnitActionTypeMapping.FromDirectActionKind(action.Kind),
+                        action.Value, applicationIndex, isRepeat, occurredAtTick));
             }
+        }
+
+        private int ApplyBuffEntries(UnitDescriptor source, UnitDescriptor selectedTarget,
+            IReadOnlyList<BuffEntryDefinition> buffEntries, TileKind sourceSlotKind, int currentRound,
+            BattlePhaseKind currentPhase, IReadOnlyList<UnitTargetCandidate> candidates,
+            List<AbilityStatsChangeResult> abilityStatsChanges)
+        {
+            if (null == buffEntries || buffEntries.Count == 0)
+                return 0;
+
+            var appliedCount = 0;
+            for (var i = 0; i < buffEntries.Count; i++)
+            {
+                var entry = buffEntries[i];
+                if (false == entry.IsConfigured)
+                    continue;
+
+                var targets = UnitTargetingRules.SelectTargets(entry.Targeting, source, selectedTarget, candidates);
+                for (var t = 0; t < targets.Count; t++)
+                    appliedCount += ApplyBuffApplications(source, targets[t], sourceSlotKind, entry.BuffApplications,
+                        currentRound, currentPhase, abilityStatsChanges);
+            }
+
+            return appliedCount;
         }
 
         private int ApplyBuffApplications(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind,
@@ -114,7 +126,7 @@ namespace Project.Scripts.Services.Combat.Abilities
             return appliedCount;
         }
 
-        private bool ApplyDirectAction(UnitDescriptor target, DirectActionDefinition action)
+        private bool ExecuteDirectAction(UnitDescriptor target, DirectActionDefinition action)
         {
             if (action.Kind == DirectActionKind.Damage)
             {
@@ -153,14 +165,14 @@ namespace Project.Scripts.Services.Combat.Abilities
             _heroService.ApplyHealToHero(target.Side, target.SlotIndex, value);
         }
 
-        private bool CanApplyDirectAction(DirectActionDefinition action, UnitDescriptor target,
-            bool ignoresAvatarGroupDefense)
+        private bool CanApplyDirectAction(DirectActionDefinition action, UnitDescriptor target)
         {
-            if (false == TryGetTargetState(target, ignoresAvatarGroupDefense, out var isAlive, out var isHpFull,
+            if (false == TryGetTargetState(target, action.IgnoresAvatarGroupDefense, out var isAlive, out var isHpFull,
                     out var isExposed))
                 return false;
 
-            return AbilityTargetRules.IsTargetValid(UnitActionTypeMapping.FromDirectActionKind(action.Kind), true, isAlive, isHpFull, isExposed);
+            return AbilityTargetRules.IsTargetValid(UnitActionTypeMapping.FromDirectActionKind(action.Kind), true,
+                isAlive, isHpFull, isExposed);
         }
 
         private bool TryGetTargetState(UnitDescriptor target, bool ignoresAvatarGroupDefense, out bool isAlive,

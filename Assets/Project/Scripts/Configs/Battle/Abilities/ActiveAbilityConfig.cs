@@ -17,42 +17,56 @@ namespace Project.Scripts.Configs.Battle.Abilities
         [Tooltip("Кулдаун повторной активации в секундах")]
         [SerializeField] private float _activationCooldownSeconds = 3f;
 
-        [Tooltip("Что активная способность применяет после успешной активации")]
-        [SerializeField] private AbilityEffectEntryConfig[] _effectEntries;
+        [Tooltip("Прямое действие активки: урон, лечение или воскрешение. Не задано - активка только применяет баффы")]
+        [SerializeField] private DirectActionConfig _directAction;
+
+        [Tooltip("Дополнительные баффы, накладываемые при активации. Каждая запись имеет собственный таргетинг")]
+        [SerializeField] private BuffEntryConfig[] _buffEntries;
 
 
         public string DisplayName => _displayName;
         public int ActivationEnergyCost => _activationEnergyCost;
         public float ActivationCooldownSeconds => _activationCooldownSeconds;
-        public AbilityEffectEntryConfig[] EffectEntries => _effectEntries;
-        public bool IsConfigured => HasConfiguredEffectEntries();
+        public DirectActionConfig DirectAction => _directAction;
+        public BuffEntryConfig[] BuffEntries => _buffEntries;
+        public bool IsConfigured => HasConfiguredDirectAction() || HasConfiguredBuffEntries();
 
 
         public ActiveAbilityDefinition ToDefinition()
         {
             return new ActiveAbilityDefinition(_displayName, _activationEnergyCost, _activationCooldownSeconds,
-                ToEffectEntryDefinitions());
+                ToDirectActionDefinition(), ToBuffEntryDefinitions());
         }
 
-        private AbilityEffectEntryDefinition[] ToEffectEntryDefinitions()
+        private DirectActionDefinition ToDirectActionDefinition()
         {
-            if (null == _effectEntries || _effectEntries.Length == 0)
-                return Array.Empty<AbilityEffectEntryDefinition>();
+            return null != _directAction ? _directAction.ToDefinition() : default;
+        }
 
-            var result = new AbilityEffectEntryDefinition[_effectEntries.Length];
-            for (var i = 0; i < _effectEntries.Length; i++)
-                result[i] = null != _effectEntries[i] ? _effectEntries[i].ToDefinition() : default;
+        private BuffEntryDefinition[] ToBuffEntryDefinitions()
+        {
+            if (null == _buffEntries || _buffEntries.Length == 0)
+                return Array.Empty<BuffEntryDefinition>();
+
+            var result = new BuffEntryDefinition[_buffEntries.Length];
+            for (var i = 0; i < _buffEntries.Length; i++)
+                result[i] = null != _buffEntries[i] ? _buffEntries[i].ToDefinition() : default;
 
             return result;
         }
 
-        private bool HasConfiguredEffectEntries()
+        private bool HasConfiguredDirectAction()
         {
-            if (null == _effectEntries)
+            return null != _directAction && _directAction.IsConfigured;
+        }
+
+        private bool HasConfiguredBuffEntries()
+        {
+            if (null == _buffEntries)
                 return false;
 
-            for (var i = 0; i < _effectEntries.Length; i++)
-                if (null != _effectEntries[i] && _effectEntries[i].IsConfigured)
+            for (var i = 0; i < _buffEntries.Length; i++)
+                if (null != _buffEntries[i] && _buffEntries[i].IsConfigured)
                     return true;
 
             return false;

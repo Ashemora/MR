@@ -19,7 +19,18 @@ MonoBehaviour:
     _displayName: Splash Buff
     _activationEnergyCost: 20
     _activationCooldownSeconds: 8
-    _effectEntries:
+    _directAction:
+      _kind: 0
+      _value: 0
+      _targeting:
+        _scope: 0
+        _relation: 0
+        _unitKind: 0
+        _includeOwner: 0
+        _selectionMode: 0
+        _filters: []
+      _ignoresAvatarGroupDefense: 0
+    _buffEntries:
     - _targeting:
         _scope: 1
         _relation: 0
@@ -27,7 +38,6 @@ MonoBehaviour:
         _includeOwner: 0
         _selectionMode: 0
         _filters: []
-      _directActions: []
       _buffApplications:
       - _buff:
           _kind: 8
@@ -36,5 +46,4 @@ MonoBehaviour:
           _lifetimeKind: 2
           _stackingMode: 0
         _durationSeconds: 0
-      _ignoresAvatarGroupDefense: 0
   _passiveAbilities: []

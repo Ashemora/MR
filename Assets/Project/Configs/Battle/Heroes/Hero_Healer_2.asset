@@ -19,18 +19,18 @@ MonoBehaviour:
     _displayName: Heal
     _activationEnergyCost: 15
     _activationCooldownSeconds: 10
-    _effectEntries:
-    - _targeting:
+    _directAction:
+      _kind: 2
+      _value: 30
+      _targeting:
         _scope: 2
         _relation: 0
         _unitKind: 0
         _includeOwner: 1
         _selectionMode: 0
         _filters: []
-      _directActions:
-      - _kind: 2
-        _value: 30
-      _buffApplications: []
+      _ignoresAvatarGroupDefense: 0
+    _buffEntries:
     - _targeting:
         _scope: 1
         _relation: 0
@@ -38,7 +38,6 @@ MonoBehaviour:
         _includeOwner: 1
         _selectionMode: 0
         _filters: []
-      _directActions: []
       _buffApplications:
       - _buff:
           _kind: 1

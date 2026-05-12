@@ -25,7 +25,7 @@ namespace Project.Scripts.Configs.Battle.Units
 
 
         public UnitActionType AbilityType => ResolveAbilityType();
-        public int AbilityPower => GetPrimaryDirectAction().Value;
+        public int AbilityPower => ToActiveAbilityDefinition().DirectAction.Value;
         public int MaxHP => _maxHP;
         public Sprite Portrait => _portrait;
         public int ActivationEnergyCost => _activeAbility?.ActivationEnergyCost ?? 0;
@@ -35,43 +35,25 @@ namespace Project.Scripts.Configs.Battle.Units
 
         public ActiveAbilityDefinition ToActiveAbilityDefinition()
         {
-            return _activeAbility != null ? _activeAbility.ToDefinition() : default;
-        }
-
-        private DirectActionDefinition GetPrimaryDirectAction()
-        {
-            var definition = ToActiveAbilityDefinition();
-            var entries = definition.EffectEntries;
-            for (var i = 0; i < entries.Count; i++)
-            {
-                var directActions = entries[i].DirectActions;
-                for (var j = 0; j < directActions.Count; j++)
-                    if (directActions[j].Kind is DirectActionKind.Damage or DirectActionKind.Heal)
-                        return directActions[j];
-            }
-
-            return default;
+            return null != _activeAbility ? _activeAbility.ToDefinition() : default;
         }
 
         private UnitActionType ResolveAbilityType()
         {
-            var primary = GetPrimaryDirectAction();
-            if (primary.IsConfigured)
-                return UnitActionTypeMapping.FromDirectActionKind(primary.Kind);
+            var definition = ToActiveAbilityDefinition();
+            var direct = definition.DirectAction;
+            if (direct.IsConfigured && direct.Kind is DirectActionKind.Damage or DirectActionKind.Heal)
+                return UnitActionTypeMapping.FromDirectActionKind(direct.Kind);
 
-            return HasConfiguredBuffApplications() ? UnitActionType.SupportAlly : UnitActionType.DealDamage;
+            return HasConfiguredBuffEntries(definition) ? UnitActionType.SupportAlly : UnitActionType.DealDamage;
         }
 
-        private bool HasConfiguredBuffApplications()
+        private static bool HasConfiguredBuffEntries(ActiveAbilityDefinition definition)
         {
-            var entries = ToActiveAbilityDefinition().EffectEntries;
-            for (var i = 0; i < entries.Count; i++)
-            {
-                var buffApplications = entries[i].BuffApplications;
-                for (var j = 0; j < buffApplications.Count; j++)
-                    if (buffApplications[j].IsConfigured)
-                        return true;
-            }
+            var buffEntries = definition.BuffEntries;
+            for (var i = 0; i < buffEntries.Count; i++)
+                if (buffEntries[i].IsConfigured)
+                    return true;
 
             return false;
         }

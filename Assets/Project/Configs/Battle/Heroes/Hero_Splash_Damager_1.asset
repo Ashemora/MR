@@ -19,17 +19,16 @@ MonoBehaviour:
     _displayName: Splash Damage
     _activationEnergyCost: 20
     _activationCooldownSeconds: 8
-    _effectEntries:
-    - _targeting:
+    _directAction:
+      _kind: 1
+      _value: 5
+      _targeting:
         _scope: 1
         _relation: 1
         _unitKind: 0
         _includeOwner: 0
         _selectionMode: 0
-        _filters: 
-      _directActions:
-      - _kind: 1
-        _value: 5
-      _buffApplications: []
+        _filters: []
       _ignoresAvatarGroupDefense: 1
+    _buffEntries: []
   _passiveAbilities: []

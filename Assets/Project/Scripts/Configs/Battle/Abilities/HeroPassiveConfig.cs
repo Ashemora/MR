@@ -19,8 +19,11 @@ namespace Project.Scripts.Configs.Battle.Abilities
         [SerializeField] private ActivationConditionGroupConfig _activationConditionGroup;
 
         [Space(10)]
-        [Tooltip("Что пассивка применяет при срабатывании")]
-        [SerializeField] private AbilityEffectEntryConfig[] _abilityEffectEntries;
+        [Tooltip("Прямое действие пассивки: урон, лечение или воскрешение. Не задано - пассивка только применяет баффы")]
+        [SerializeField] private DirectActionConfig _directAction;
+
+        [Tooltip("Дополнительные баффы, накладываемые при срабатывании. Каждая запись имеет собственный таргетинг")]
+        [SerializeField] private BuffEntryConfig[] _buffEntries;
 
         [Tooltip("Может ли пассивная способность активироваться повторно, пока ее эффект уже активен")]
         [SerializeField] private bool _canActivateWhileActive;
@@ -28,11 +31,11 @@ namespace Project.Scripts.Configs.Battle.Abilities
         [Tooltip("Максимум активаций за бой. Ноль означает без ограничений")]
         [SerializeField] private int _maxActivations;
 
-        
+
         public PassiveAbilityDefinition ToDefinition()
         {
             return new PassiveAbilityDefinition(_displayName, ToActivationConditionGroupDefinition(),
-                ToAbilityEffectEntryDefinitions(), _canActivateWhileActive, _maxActivations);
+                ToDirectActionDefinition(), ToBuffEntryDefinitions(), _canActivateWhileActive, _maxActivations);
         }
 
         private ActivationConditionGroupDefinition ToActivationConditionGroupDefinition()
@@ -40,14 +43,19 @@ namespace Project.Scripts.Configs.Battle.Abilities
             return null != _activationConditionGroup ? _activationConditionGroup.ToDefinition() : default;
         }
 
-        private AbilityEffectEntryDefinition[] ToAbilityEffectEntryDefinitions()
+        private DirectActionDefinition ToDirectActionDefinition()
         {
-            if (null == _abilityEffectEntries || _abilityEffectEntries.Length == 0)
-                return Array.Empty<AbilityEffectEntryDefinition>();
+            return null != _directAction ? _directAction.ToDefinition() : default;
+        }
 
-            var result = new AbilityEffectEntryDefinition[_abilityEffectEntries.Length];
-            for (var i = 0; i < _abilityEffectEntries.Length; i++)
-                result[i] = null != _abilityEffectEntries[i] ? _abilityEffectEntries[i].ToDefinition() : default;
+        private BuffEntryDefinition[] ToBuffEntryDefinitions()
+        {
+            if (null == _buffEntries || _buffEntries.Length == 0)
+                return Array.Empty<BuffEntryDefinition>();
+
+            var result = new BuffEntryDefinition[_buffEntries.Length];
+            for (var i = 0; i < _buffEntries.Length; i++)
+                result[i] = null != _buffEntries[i] ? _buffEntries[i].ToDefinition() : default;
 
             return result;
         }

@@ -19,18 +19,18 @@ MonoBehaviour:
     _displayName: Damage
     _activationEnergyCost: 5
     _activationCooldownSeconds: 10
-    _effectEntries:
-    - _targeting:
+    _directAction:
+      _kind: 1
+      _value: 10
+      _targeting:
         _scope: 2
         _relation: 1
         _unitKind: 0
         _includeOwner: 1
         _selectionMode: 0
         _filters: []
-      _directActions:
-      - _kind: 1
-        _value: 10
-      _buffApplications: []
+      _ignoresAvatarGroupDefense: 0
+    _buffEntries:
     - _targeting:
         _scope: 0
         _relation: 0
@@ -38,7 +38,6 @@ MonoBehaviour:
         _includeOwner: 1
         _selectionMode: 0
         _filters: []
-      _directActions: []
       _buffApplications:
       - _buff:
           _kind: 2

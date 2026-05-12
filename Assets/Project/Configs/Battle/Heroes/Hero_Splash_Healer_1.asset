@@ -19,17 +19,16 @@ MonoBehaviour:
     _displayName: Splash Heal
     _activationEnergyCost: 20
     _activationCooldownSeconds: 8
-    _effectEntries:
-    - _targeting:
+    _directAction:
+      _kind: 2
+      _value: 5
+      _targeting:
         _scope: 1
         _relation: 0
         _unitKind: 0
         _includeOwner: 1
         _selectionMode: 0
         _filters: []
-      _directActions:
-      - _kind: 2
-        _value: 5
-      _buffApplications: []
       _ignoresAvatarGroupDefense: 0
+    _buffEntries: []
   _passiveAbilities: []
