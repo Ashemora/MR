@@ -26,7 +26,6 @@ namespace Project.Scripts.Services.Combat.Abilities
         private readonly IAbilityRepeatModifierService _abilityRepeatModifierService;
         private readonly IAbilityAdditionalTargetModifierService _abilityAdditionalTargetModifierService;
         private readonly IAbilityEffectApplicationService _abilityEffectApplicationService;
-        private readonly IAbilityPowerModifierService _abilityPowerModifierService;
         private readonly INextAttackBuffService _nextAttackBuffService;
         private readonly EventBus _eventBus;
         private readonly IBattleClock _battleClock;
@@ -42,7 +41,6 @@ namespace Project.Scripts.Services.Combat.Abilities
             IAbilityRepeatModifierService abilityRepeatModifierService,
             IAbilityAdditionalTargetModifierService abilityAdditionalTargetModifierService,
             IAbilityEffectApplicationService abilityEffectApplicationService,
-            IAbilityPowerModifierService abilityPowerModifierService,
             INextAttackBuffService nextAttackBuffService,
             EventBus eventBus,
             IBattleClock battleClock,
@@ -56,7 +54,6 @@ namespace Project.Scripts.Services.Combat.Abilities
             _abilityRepeatModifierService = abilityRepeatModifierService;
             _abilityAdditionalTargetModifierService = abilityAdditionalTargetModifierService;
             _abilityEffectApplicationService = abilityEffectApplicationService;
-            _abilityPowerModifierService = abilityPowerModifierService;
             _nextAttackBuffService = nextAttackBuffService;
             _eventBus = eventBus;
             _battleClock = battleClock;
@@ -89,12 +86,8 @@ namespace Project.Scripts.Services.Combat.Abilities
             if (false == TryGetTargetState(target, out var isTargetAlive, out var isTargetHpFull, out var isTargetExposed))
                 return false;
 
-            if (false == AbilityTargetRules.IsTargetValid(sourceState.ActionType, sourceState.IsAlive, isTargetAlive,
-                    isTargetHpFull, isTargetExposed))
-                return false;
-
-            if (false == AbilityTargetRules.IsTargetAllowedByEffect(source, target, directAction, buffEntries,
-                    CollectUnitTargetCandidates()))
+            if (false == AbilityTargetRules.IsTargetValidForEffect(source, target, directAction, buffEntries,
+                    CollectUnitTargetCandidates(), sourceState.IsAlive, isTargetAlive, isTargetHpFull, isTargetExposed))
                 return false;
 
             var additionalTargets = SelectAdditionalTargets(source, target, sourceState.ActionType,
@@ -117,9 +110,8 @@ namespace Project.Scripts.Services.Combat.Abilities
                 occurredAtTick, directApplications, abilityStatsChanges, ref buffsChanged);
             ApplyAdditionalTargets(source, additionalTargets, directAction, buffEntries, nextAttackBonus,
                 occurredAtTick, directApplications, abilityStatsChanges, ref buffsChanged);
-            var primaryActionValue = ResolvePrimaryActionValue(source, directAction, nextAttackBonus);
             result = new AbilityExecutionResult(true, source, target, committedState.ActionType,
-                primaryActionValue, occurredAtTick, buffsChanged, directApplications, abilityStatsChanges);
+                occurredAtTick, buffsChanged, directApplications, abilityStatsChanges);
 
             return true;
         }
@@ -172,18 +164,6 @@ namespace Project.Scripts.Services.Combat.Abilities
                 : System.Array.Empty<BuffEntryDefinition>();
         }
 
-        private int ResolvePrimaryActionValue(UnitDescriptor source, DirectActionDefinition directAction,
-            int nextAttackBonus)
-        {
-            if (false == directAction.IsConfigured)
-                return 0;
-
-            var value = _abilityPowerModifierService.GetAbilityPower(source, directAction.Value);
-            return directAction.Kind == DirectActionKind.Damage
-                ? value + (nextAttackBonus < 0 ? 0 : nextAttackBonus)
-                : value;
-        }
-
         private static void AppendApplicationResult(AbilityEffectApplicationResult result, float presentationDelaySeconds,
             List<AbilityExecutionApplicationResult> directApplications,
             List<AbilityStatsChangeResult> abilityStatsChanges, ref bool buffsChanged)
@@ -217,7 +197,7 @@ namespace Project.Scripts.Services.Combat.Abilities
             }
 
             _eventBus.Publish(new AbilityExecutedEvent(result.Source, result.PrimaryTarget, result.ActionType,
-                result.ActionValue, result.OccurredAtTick));
+                result.OccurredAtTick));
         }
 
         private void PublishAbilityStatsChangedEvents(AbilityExecutionResult result)

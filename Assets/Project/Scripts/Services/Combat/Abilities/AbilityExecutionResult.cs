@@ -10,7 +10,6 @@ namespace Project.Scripts.Services.Combat.Abilities
         public UnitDescriptor Source { get; }
         public UnitDescriptor PrimaryTarget { get; }
         public UnitActionType ActionType { get; }
-        public int ActionValue { get; }
         public long OccurredAtTick { get; }
         public bool BuffsChanged { get; }
         public IReadOnlyList<AbilityExecutionApplicationResult> DirectApplications =>
@@ -24,7 +23,7 @@ namespace Project.Scripts.Services.Combat.Abilities
 
 
         public AbilityExecutionResult(bool wasExecuted, UnitDescriptor source, UnitDescriptor primaryTarget,
-            UnitActionType actionType, int actionValue, long occurredAtTick, bool buffsChanged,
+            UnitActionType actionType, long occurredAtTick, bool buffsChanged,
             IReadOnlyList<AbilityExecutionApplicationResult> directApplications,
             IReadOnlyList<AbilityStatsChangeResult> abilityStatsChanges)
         {
@@ -32,7 +31,6 @@ namespace Project.Scripts.Services.Combat.Abilities
             Source = source;
             PrimaryTarget = primaryTarget;
             ActionType = actionType;
-            ActionValue = actionValue < 0 ? 0 : actionValue;
             OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
             BuffsChanged = buffsChanged;
             _directApplications = CopyDirectApplications(directApplications);

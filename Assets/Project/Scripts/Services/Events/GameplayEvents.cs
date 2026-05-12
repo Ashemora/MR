@@ -313,17 +313,15 @@ namespace Project.Scripts.Services.Events
         public UnitDescriptor Source { get; }
         public UnitDescriptor Target { get; }
         public UnitActionType ActionType { get; }
-        public int Value { get; }
         public long OccurredAtTick { get; }
 
 
-        public AbilityExecutedEvent(UnitDescriptor source, UnitDescriptor target, UnitActionType actionType, int value,
+        public AbilityExecutedEvent(UnitDescriptor source, UnitDescriptor target, UnitActionType actionType,
             long occurredAtTick = 0)
         {
             Source = source;
             Target = target;
             ActionType = actionType;
-            Value = value;
             OccurredAtTick = occurredAtTick < 0 ? 0 : occurredAtTick;
         }
     }

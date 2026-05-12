@@ -22,12 +22,8 @@ namespace Project.Scripts.Shared.Abilities
                 if (IsSameUnit(candidate.Descriptor, primaryTarget))
                     continue;
 
-                if (false == AbilityTargetRules.IsTargetValid(actionType, true, candidate.IsAlive,
-                        candidate.IsHpFull, candidate.IsExposed))
-                    continue;
-
-                if (false == AbilityTargetRules.IsTargetAllowedByEffect(source, candidate.Descriptor, directAction,
-                        buffEntries, unitCandidates))
+                if (false == AbilityTargetRules.IsTargetValidForEffect(source, candidate.Descriptor, directAction,
+                        buffEntries, unitCandidates, true, candidate.IsAlive, candidate.IsHpFull, candidate.IsExposed))
                     continue;
 
                 rankedCandidates.Add(candidate);

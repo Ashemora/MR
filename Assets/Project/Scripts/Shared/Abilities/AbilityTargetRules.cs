@@ -6,63 +6,73 @@ namespace Project.Scripts.Shared.Abilities
 {
     public static class AbilityTargetRules
     {
-        public static bool IsTargetAllowedByEffect(UnitDescriptor source, UnitDescriptor target,
+        public static bool IsTargetValidForEffect(UnitDescriptor source, UnitDescriptor target,
             DirectActionDefinition directAction, IReadOnlyList<BuffEntryDefinition> buffEntries,
-            IReadOnlyList<UnitTargetCandidate> candidates)
+            IReadOnlyList<UnitTargetCandidate> candidates,
+            bool isSourceAlive, bool isTargetAlive, bool isTargetHpFull, bool isTargetExposed)
         {
-            if (null == candidates)
+            if (false == isSourceAlive || false == isTargetAlive || null == candidates)
                 return false;
 
-            if (directAction.IsConfigured)
+            var anyEffectTouches = false;
+
+            if (directAction.IsConfigured && EffectTouchesTarget(directAction.Targeting, source, target, candidates))
             {
-                var directTargets = UnitTargetingRules.SelectTargets(directAction.Targeting, source, target, candidates);
-                if (UnitTargetingRules.ContainsTarget(directTargets, target))
-                    return true;
+                anyEffectTouches = true;
+                if (false == IsDirectActionRecipientValid(directAction, isTargetHpFull, isTargetExposed))
+                    return false;
             }
 
-            if (null == buffEntries)
-                return false;
-
-            for (var i = 0; i < buffEntries.Count; i++)
+            if (null != buffEntries)
             {
-                var entry = buffEntries[i];
-                if (false == entry.IsConfigured)
-                    continue;
+                for (var i = 0; i < buffEntries.Count; i++)
+                {
+                    var entry = buffEntries[i];
+                    if (false == entry.IsConfigured)
+                        continue;
 
-                var targets = UnitTargetingRules.SelectTargets(entry.Targeting, source, target, candidates);
-                if (UnitTargetingRules.ContainsTarget(targets, target))
-                    return true;
+                    if (false == EffectTouchesTarget(entry.Targeting, source, target, candidates))
+                        continue;
+
+                    anyEffectTouches = true;
+                }
             }
 
-            return false;
+            return anyEffectTouches;
         }
 
-        public static bool IsTargetValid(UnitActionType actionType, bool isSourceAlive, bool isTargetAlive,
+        public static bool IsActionRecipientValid(DirectActionKind actionKind, bool isTargetAlive,
             bool isTargetHpFull, bool isTargetExposed)
         {
-            if (false == isSourceAlive || false == isTargetAlive)
+            if (false == isTargetAlive)
                 return false;
 
-            if (actionType == UnitActionType.DealDamage)
-                return CanDealDamage(isTargetExposed);
+            if (actionKind == DirectActionKind.Damage)
+                return isTargetExposed;
 
-            if (actionType == UnitActionType.HealAlly)
-                return CanHeal(isTargetHpFull);
-
-            if (actionType == UnitActionType.SupportAlly)
-                return true;
+            if (actionKind == DirectActionKind.Heal)
+                return false == isTargetHpFull;
 
             return false;
         }
 
-        private static bool CanDealDamage(bool isTargetExposed)
+        private static bool EffectTouchesTarget(UnitTargetingDefinition targeting, UnitDescriptor source,
+            UnitDescriptor target, IReadOnlyList<UnitTargetCandidate> candidates)
         {
-            return isTargetExposed;
+            var targets = UnitTargetingRules.SelectTargets(targeting, source, target, candidates);
+            return UnitTargetingRules.ContainsTarget(targets, target);
         }
 
-        private static bool CanHeal(bool isTargetHpFull)
+        private static bool IsDirectActionRecipientValid(DirectActionDefinition action, bool isTargetHpFull,
+            bool isTargetExposed)
         {
-            return false == isTargetHpFull;
+            if (action.Kind == DirectActionKind.Damage)
+                return isTargetExposed || action.IgnoresAvatarGroupDefense;
+
+            if (action.Kind == DirectActionKind.Heal)
+                return false == isTargetHpFull;
+
+            return false;
         }
     }
 }

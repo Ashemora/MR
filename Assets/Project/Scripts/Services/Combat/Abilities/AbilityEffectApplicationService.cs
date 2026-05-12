@@ -182,8 +182,7 @@ namespace Project.Scripts.Services.Combat.Abilities
                     out var isExposed))
                 return false;
 
-            return AbilityTargetRules.IsTargetValid(UnitActionTypeMapping.FromDirectActionKind(action.Kind), true,
-                isAlive, isHpFull, isExposed);
+            return AbilityTargetRules.IsActionRecipientValid(action.Kind, isAlive, isHpFull, isExposed);
         }
 
         private bool TryGetTargetState(UnitDescriptor target, bool ignoresAvatarGroupDefense, out bool isAlive,
