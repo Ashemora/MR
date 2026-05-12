@@ -10,23 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c1fea825070002c449f9d0545ccf77bb, type: 3}
-  m_Name: Hero_Healer_2
+  m_Name: Hero_AllAlliesNextAttackBuff5
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
-  _maxHP: 40
-  _displayName: Hero_Healer_2
-  _portrait: {fileID: 21300000, guid: 27e02dbeb09a77c46944c9428156ae3d, type: 3}
+  _maxHP: 50
+  _displayName: Hero_AllAlliesNextAttackBuff5
+  _portrait: {fileID: 0}
   _activeAbility:
-    _displayName: Heal
-    _activationEnergyCost: 15
-    _activationCooldownSeconds: 10
+    _displayName: Splash Buff
+    _activationEnergyCost: 20
+    _activationCooldownSeconds: 8
     _directAction:
-      _kind: 2
-      _value: 30
+      _kind: 0
+      _value: 0
       _targeting:
-        _scope: 2
+        _scope: 0
         _relation: 0
         _unitKind: 0
-        _includeOwner: 1
+        _includeOwner: 0
         _selectionMode: 0
         _filters: []
       _ignoresAvatarGroupDefense: 0
@@ -34,16 +34,16 @@ MonoBehaviour:
     - _targeting:
         _scope: 1
         _relation: 0
-        _unitKind: 1
-        _includeOwner: 1
+        _unitKind: 0
+        _includeOwner: 0
         _selectionMode: 0
         _filters: []
       _buffApplications:
       - _buff:
-          _kind: 1
+          _kind: 8
           _operation: 1
-          _value: 3
-          _lifetimeKind: 3
+          _value: 5
+          _lifetimeKind: 2
           _stackingMode: 0
         _durationSeconds: 0
   _passiveAbilities: []

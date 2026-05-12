@@ -6,6 +6,7 @@ namespace Project.Scripts.Shared.Passives
 {
     public readonly struct UnitPassiveSetup
     {
+        public UnitDescriptor Owner { get; }
         public BattleSide Side { get; }
         public int SlotIndex { get; }
         public TileKind SlotKind { get; }
@@ -13,9 +14,15 @@ namespace Project.Scripts.Shared.Passives
 
 
         public UnitPassiveSetup(BattleSide side, int slotIndex, TileKind slotKind, PassiveAbilityDefinition definition)
+            : this(UnitDescriptor.Hero(side, slotIndex), slotKind, definition)
         {
-            Side = side;
-            SlotIndex = slotIndex;
+        }
+
+        public UnitPassiveSetup(UnitDescriptor owner, TileKind slotKind, PassiveAbilityDefinition definition)
+        {
+            Owner = owner;
+            Side = owner.Side;
+            SlotIndex = owner.SlotIndex;
             SlotKind = slotKind;
             Definition = definition;
         }

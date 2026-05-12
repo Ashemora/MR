@@ -6,6 +6,7 @@ namespace Project.Scripts.Shared.Passives
 {
     public readonly struct UnitPassiveRuntimeState
     {
+        public UnitDescriptor Owner { get; }
         public BattleSide Side { get; }
         public int SlotIndex { get; }
         public TileKind SlotKind { get; }
@@ -26,9 +27,18 @@ namespace Project.Scripts.Shared.Passives
         public UnitPassiveRuntimeState(BattleSide side, int slotIndex, TileKind slotKind, 
             PassiveAbilityDefinition definition, bool isDisabled = false, int totalActivationCount = 0, 
             float[] conditionProgress = null, long[][] conditionOccurrenceTicks = null)
+            : this(UnitDescriptor.Hero(side, slotIndex), slotKind, definition, isDisabled, totalActivationCount,
+                conditionProgress, conditionOccurrenceTicks)
         {
-            Side = side;
-            SlotIndex = slotIndex;
+        }
+
+        public UnitPassiveRuntimeState(UnitDescriptor owner, TileKind slotKind, 
+            PassiveAbilityDefinition definition, bool isDisabled = false, int totalActivationCount = 0, 
+            float[] conditionProgress = null, long[][] conditionOccurrenceTicks = null)
+        {
+            Owner = owner;
+            Side = owner.Side;
+            SlotIndex = owner.SlotIndex;
             SlotKind = slotKind;
             Definition = definition;
             IsDisabled = isDisabled;
@@ -52,7 +62,7 @@ namespace Project.Scripts.Shared.Passives
             var nextProgress = CopyConditionProgress(Definition, _conditionProgress);
             nextProgress[conditionIndex] = progress < 0 ? 0 : progress;
 
-            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Owner, SlotKind, Definition, IsDisabled,
                 TotalActivationCount, nextProgress, _conditionOccurrenceTicks);
         }
 
@@ -90,7 +100,7 @@ namespace Project.Scripts.Shared.Passives
             var nextProgress = CopyConditionProgress(Definition, _conditionProgress);
             nextProgress[conditionIndex] = ticks.Length;
 
-            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Owner, SlotKind, Definition, IsDisabled,
                 TotalActivationCount, nextProgress, nextOccurrences);
         }
 
@@ -115,25 +125,25 @@ namespace Project.Scripts.Shared.Passives
             var nextProgress = CopyConditionProgress(Definition, _conditionProgress);
             nextProgress[conditionIndex] = ticks.Length;
 
-            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Owner, SlotKind, Definition, IsDisabled,
                 TotalActivationCount, nextProgress, nextOccurrences);
         }
 
         public UnitPassiveRuntimeState WithActivated()
         {
-            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Owner, SlotKind, Definition, IsDisabled,
                 TotalActivationCount + 1, _conditionProgress, _conditionOccurrenceTicks);
         }
 
         public UnitPassiveRuntimeState WithActivatedAndProgress(float[] conditionProgress)
         {
-            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, IsDisabled,
+            return new UnitPassiveRuntimeState(Owner, SlotKind, Definition, IsDisabled,
                 TotalActivationCount + 1, conditionProgress, _conditionOccurrenceTicks);
         }
 
         public UnitPassiveRuntimeState WithDisabled()
         {
-            return new UnitPassiveRuntimeState(Side, SlotIndex, SlotKind, Definition, true,
+            return new UnitPassiveRuntimeState(Owner, SlotKind, Definition, true,
                 TotalActivationCount, _conditionProgress, _conditionOccurrenceTicks);
         }
 

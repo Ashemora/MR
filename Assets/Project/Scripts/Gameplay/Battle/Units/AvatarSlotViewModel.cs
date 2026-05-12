@@ -17,8 +17,9 @@ namespace Project.Scripts.Gameplay.Battle.Units
         public BattleAnimationConfig AnimConfig { get; }
         public EventBus EventBus { get; }
         public UnitActionType AbilityType { get; }
-        public int ActivationEnergyCost { get; }
+        public int ActivationEnergyCost => ActivationEnergyCostChanged.Value;
         public int AbilityPower => AbilityPowerChanged.Value;
+        public ReactiveProperty<int> ActivationEnergyCostChanged { get; }
         public ReactiveProperty<int> AbilityPowerChanged { get; }
         public ReactiveProperty<float> HPFill { get; }
         public ReactiveProperty<bool> IsDefeated { get; } = new(false);
@@ -49,7 +50,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
             AnimConfig = animConfig;
             EventBus = eventBus;
             AbilityType = abilityType;
-            ActivationEnergyCost = activationEnergyCost;
+            ActivationEnergyCostChanged = new ReactiveProperty<int>(activationEnergyCost);
             AbilityPowerChanged = new ReactiveProperty<int>(abilityPower);
             _prevHP = initialHP;
             CurrentHP = initialHP;
@@ -76,6 +77,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
         {
             HPFill.Dispose();
             IsDefeated.Dispose();
+            ActivationEnergyCostChanged.Dispose();
             AbilityPowerChanged.Dispose();
             _healthBarUpdated.Dispose();
             _hit.Dispose();
@@ -100,7 +102,9 @@ namespace Project.Scripts.Gameplay.Battle.Units
             if (e.Side != Side)
                 return;
 
+            ActivationEnergyCostChanged.Value = e.ActivationEnergyCost;
             AbilityPowerChanged.Value = e.AbilityPower;
+            EnergyBar.UpdateActivationEnergyCost(e.ActivationEnergyCost);
         }
 
         private void ApplyHPChanged(int current, int max, bool silent = false)

@@ -246,12 +246,19 @@ namespace Project.Scripts.Services.Events
     public readonly struct AvatarAbilityPowerChangedEvent
     {
         public BattleSide Side { get; }
+        public int ActivationEnergyCost { get; }
         public int AbilityPower { get; }
 
 
         public AvatarAbilityPowerChangedEvent(BattleSide side, int abilityPower)
+            : this(side, 0, abilityPower)
+        {
+        }
+
+        public AvatarAbilityPowerChangedEvent(BattleSide side, int activationEnergyCost, int abilityPower)
         {
             Side = side;
+            ActivationEnergyCost = activationEnergyCost < 0 ? 0 : activationEnergyCost;
             AbilityPower = abilityPower;
         }
     }

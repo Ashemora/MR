@@ -29,7 +29,8 @@ namespace Project.Scripts.Configs.Levels
 
             return new BattleUnitSetup(UnitDescriptor.Avatar(side), true,
                 config.MaxHP, config.AbilityPower, config.ActivationEnergyCost,
-                config.ActivationCooldownSeconds, config.ToActiveAbilityDefinition(), TileKind.None);
+                config.ActivationCooldownSeconds, config.ToActiveAbilityDefinition(), TileKind.None,
+                CreatePassiveDefinitions(config.PassiveAbilities));
         }
 
         private static BattleUnitSetup[] CreateHeroes(BattleSide side, HeroConfig[] heroes,

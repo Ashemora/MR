@@ -127,9 +127,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
             BindDeathState(viewModel);
             BindAvailabilityState(viewModel);
             BindCooldownSweep(viewModel);
-            if (_energyCostLabel)
-                _energyCostLabel.text = $"{viewModel.ActivationEnergyCost}";
-
+            BindEnergyCostLabel(viewModel);
             BindAbilityPowerLabel(viewModel);
         }
 
@@ -323,6 +321,17 @@ namespace Project.Scripts.Gameplay.Battle.Units
             _abilityPowerTextTween.SetInstant(viewModel.AbilityPower);
             viewModel.AbilityPowerChanged
                 .Subscribe(power => _abilityPowerTextTween.AnimateTo(power, AbilityPowerAnimDuration, Ease.OutQuad))
+                .AddTo(_disposables);
+        }
+
+        private void BindEnergyCostLabel(AvatarSlotViewModel viewModel)
+        {
+            if (!_energyCostLabel)
+                return;
+
+            _energyCostLabel.text = $"{viewModel.ActivationEnergyCost}";
+            viewModel.ActivationEnergyCostChanged
+                .Subscribe(cost => _energyCostLabel.text = $"{cost}")
                 .AddTo(_disposables);
         }
 

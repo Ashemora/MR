@@ -268,14 +268,20 @@ namespace Project.Scripts.Services.Combat.Abilities
             if (false == unit.IsAssigned)
                 return false;
 
-            change = new AbilityStatsChangeResult(unit.Unit, 0, GetAbilityPower(unit.Unit, unit.BaseAbilityPower));
+            change = new AbilityStatsChangeResult(unit.Unit,
+                GetActivationEnergyCost(unit.Unit, unit.BaseActivationEnergyCost),
+                GetAbilityPower(unit.Unit, unit.BaseAbilityPower));
             return true;
         }
 
         private int GetActivationEnergyCost(BattleSide side, int slotIndex, int baseCost)
         {
-            return (_buffService as IHeroAbilityModifierService)?.GetActivationEnergyCost(side, slotIndex, baseCost)
-                   ?? baseCost;
+            return GetActivationEnergyCost(UnitDescriptor.Hero(side, slotIndex), baseCost);
+        }
+
+        private int GetActivationEnergyCost(UnitDescriptor unit, int baseCost)
+        {
+            return (_buffService as IHeroAbilityModifierService)?.GetActivationEnergyCost(unit, baseCost) ?? baseCost;
         }
 
         private int GetAbilityPower(UnitDescriptor target, int basePower)

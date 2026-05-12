@@ -70,8 +70,8 @@ namespace Project.Scripts.Services.Combat.Passives
             _specialTileUsedSubscription = _eventBus.Subscribe<BattleSideSpecialTileUsedEvent>(OnBattleSideSpecialTileUsed);
             _phaseChangedSubscription = _eventBus.Subscribe<BattleFlowPhaseChangedEvent>(OnBattleFlowPhaseChanged);
             _roundChangedSubscription = _eventBus.Subscribe<BattleFlowRoundChangedEvent>(OnBattleFlowRoundChanged);
-            _playerDefeatedSubscription = _eventBus.Subscribe<PlayerDefeatedEvent>(_ => RemoveBuffsForUnit(GetAvatarUnit(BattleSide.Player)));
-            _enemyDefeatedSubscription = _eventBus.Subscribe<EnemyDefeatedEvent>(_ => RemoveBuffsForUnit(GetAvatarUnit(BattleSide.Enemy)));
+            _playerDefeatedSubscription = _eventBus.Subscribe<PlayerDefeatedEvent>(_ => OnAvatarDefeated(BattleSide.Player));
+            _enemyDefeatedSubscription = _eventBus.Subscribe<EnemyDefeatedEvent>(_ => OnAvatarDefeated(BattleSide.Enemy));
         }
 
         public void Dispose()
@@ -109,24 +109,32 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private void AddSidePassives(List<UnitPassiveSetup> setups, BattleSide side)
         {
+            AddUnitPassives(setups, GetAvatarUnit(side), GetAvatarSetup(side));
+
             for (var slotIndex = 0; slotIndex < SlotCount; slotIndex++)
             {
                 var hero = _battleSetup.GetHero(side, slotIndex);
-                if (false == hero.IsAssigned)
+                AddUnitPassives(setups, UnitDescriptor.Hero(side, slotIndex), hero);
+            }
+        }
+
+        private static void AddUnitPassives(List<UnitPassiveSetup> setups, UnitDescriptor owner,
+            BattleUnitSetup unit)
+        {
+            if (false == unit.IsAssigned)
+                return;
+
+            var passiveDefinitions = unit.PassiveAbilities;
+            if (passiveDefinitions.Count == 0)
+                return;
+
+            for (var passiveIndex = 0; passiveIndex < passiveDefinitions.Count; passiveIndex++)
+            {
+                var definition = passiveDefinitions[passiveIndex];
+                if (false == definition.IsConfigured)
                     continue;
 
-                var passiveDefinitions = hero.PassiveAbilities;
-                if (passiveDefinitions.Count == 0)
-                    continue;
-
-                for (var passiveIndex = 0; passiveIndex < passiveDefinitions.Count; passiveIndex++)
-                {
-                    var definition = passiveDefinitions[passiveIndex];
-                    if (false == definition.IsConfigured)
-                        continue;
-
-                    setups.Add(new UnitPassiveSetup(side, slotIndex, hero.SlotKind, definition));
-                }
+                setups.Add(new UnitPassiveSetup(owner, unit.SlotKind, definition));
             }
         }
 
@@ -136,11 +144,12 @@ namespace Project.Scripts.Services.Combat.Passives
                 UnitDescriptor.Hero(e.Side, e.SlotIndex),
                 occurredAtTick: ResolveOccurredAtTick(e.OccurredAtTick)));
 
-            _engine.ResetOwnerProgress(e.Side, e.SlotIndex);
-            var passiveDisabled = _engine.DisableOwner(e.Side, e.SlotIndex);
+            var owner = UnitDescriptor.Hero(e.Side, e.SlotIndex);
+            _engine.ResetOwnerProgress(owner);
+            var passiveDisabled = _engine.DisableOwner(owner);
             if (passiveDisabled)
             {
-                ClearPendingActivations(e.Side, e.SlotIndex);
+                ClearPendingActivations(owner);
                 _eventBus.Publish(new HeroPassiveDisabledEvent(e.Side, e.SlotIndex));
             }
 
@@ -151,8 +160,9 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private void OnHeroResurrected(HeroResurrectedEvent e)
         {
-            _engine.ResetOwnerProgress(e.Side, e.SlotIndex);
-            ClearPendingActivations(e.Side, e.SlotIndex);
+            var owner = UnitDescriptor.Hero(e.Side, e.SlotIndex);
+            _engine.ResetOwnerProgress(owner);
+            ClearPendingActivations(owner);
             RunOwnerBuffCleanup(e.Side, e.SlotIndex);
         }
 
@@ -177,6 +187,16 @@ namespace Project.Scripts.Services.Combat.Passives
             _eventBus.Publish(new BuffsChangedEvent());
             PublishAllAbilityStatsChanged();
             RefreshAllSlotKindPassiveStates();
+        }
+
+        private void OnAvatarDefeated(BattleSide side)
+        {
+            var owner = GetAvatarUnit(side);
+            _engine.ResetOwnerProgress(owner);
+            if (_engine.DisableOwner(owner))
+                ClearPendingActivations(owner);
+
+            RemoveBuffsForUnit(owner);
         }
 
         private void OnAbilityExecuted(AbilityExecutedEvent e)
@@ -323,7 +343,7 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private bool HasActiveBuffForPassiveOwner(UnitPassiveRuntimeState state)
         {
-            return _buffService.HasBuffFromSource(UnitDescriptor.Hero(state.Side, state.SlotIndex));
+            return _buffService.HasBuffFromSource(state.Owner);
         }
 
         private long ResolveOccurredAtTick(long occurredAtTick)
@@ -408,10 +428,15 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private void ClearPendingActivations(BattleSide side, int slotIndex)
         {
+            ClearPendingActivations(UnitDescriptor.Hero(side, slotIndex));
+        }
+
+        private void ClearPendingActivations(UnitDescriptor owner)
+        {
             var states = _engine.States;
             EnsurePendingActivationCapacity(states.Count);
             for (var i = 0; i < states.Count; i++)
-                if (states[i].Side == side && states[i].SlotIndex == slotIndex)
+                if (IsSameUnit(states[i].Owner, owner))
                     _pendingActivationCounts[i] = 0;
         }
 
@@ -425,7 +450,7 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private void ApplyPassiveEffects(UnitPassiveRuntimeState state)
         {
-            var source = UnitDescriptor.Hero(state.Side, state.SlotIndex);
+            var source = state.Owner;
             var result = _abilityEffectApplicationService.Apply(source, default, state.Definition.DirectAction,
                 state.Definition.BuffEntries, state.SlotKind, _currentRound, _currentPhase, _battleClock.CurrentTick);
             PublishAbilityApplicationResultEvents(result);
@@ -461,7 +486,8 @@ namespace Project.Scripts.Services.Combat.Passives
                     continue;
                 }
 
-                _eventBus.Publish(new AvatarAbilityPowerChangedEvent(change.Target.Side, change.AbilityPower));
+                _eventBus.Publish(new AvatarAbilityPowerChangedEvent(change.Target.Side,
+                    change.ActivationEnergyCost, change.AbilityPower));
             }
         }
 
@@ -478,8 +504,12 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private int GetActivationEnergyCost(BattleSide side, int slotIndex, int baseCost)
         {
-            return (_buffService as IHeroAbilityModifierService)?.GetActivationEnergyCost(side, slotIndex, baseCost)
-                   ?? baseCost;
+            return GetActivationEnergyCost(UnitDescriptor.Hero(side, slotIndex), baseCost);
+        }
+
+        private int GetActivationEnergyCost(UnitDescriptor unit, int baseCost)
+        {
+            return (_buffService as IHeroAbilityModifierService)?.GetActivationEnergyCost(unit, baseCost) ?? baseCost;
         }
 
         private int GetAbilityPower(BattleSide side, int slotIndex, int basePower)
@@ -503,17 +533,18 @@ namespace Project.Scripts.Services.Combat.Passives
                 PublishHeroAbilityStatsChanged(BattleSide.Enemy, i);
             }
 
-            PublishAvatarAbilityPowerChanged(BattleSide.Player);
-            PublishAvatarAbilityPowerChanged(BattleSide.Enemy);
+            PublishAvatarAbilityStatsChanged(BattleSide.Player);
+            PublishAvatarAbilityStatsChanged(BattleSide.Enemy);
         }
 
-        private void PublishAvatarAbilityPowerChanged(BattleSide side)
+        private void PublishAvatarAbilityStatsChanged(BattleSide side)
         {
             var unit = side == BattleSide.Player ? _battleSetup.PlayerAvatar : _battleSetup.EnemyAvatar;
             if (false == unit.IsAssigned)
                 return;
 
             _eventBus.Publish(new AvatarAbilityPowerChangedEvent(side,
+                GetActivationEnergyCost(unit.Unit, unit.BaseActivationEnergyCost),
                 GetAbilityPower(unit.Unit, unit.BaseAbilityPower)));
         }
 
@@ -563,9 +594,19 @@ namespace Project.Scripts.Services.Combat.Passives
             return avatar.IsAssigned ? avatar.Unit : UnitDescriptor.Avatar(side);
         }
 
+        private BattleUnitSetup GetAvatarSetup(BattleSide side)
+        {
+            return side == BattleSide.Player ? _battleSetup.PlayerAvatar : _battleSetup.EnemyAvatar;
+        }
+
         private static int GetSideIndex(BattleSide side)
         {
             return side == BattleSide.Player ? 0 : 1;
+        }
+
+        private static bool IsSameUnit(UnitDescriptor left, UnitDescriptor right)
+        {
+            return left.Side == right.Side && left.Kind == right.Kind && left.SlotIndex == right.SlotIndex;
         }
     }
 }

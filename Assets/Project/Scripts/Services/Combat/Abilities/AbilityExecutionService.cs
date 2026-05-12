@@ -213,7 +213,8 @@ namespace Project.Scripts.Services.Combat.Abilities
                     continue;
                 }
 
-                _eventBus.Publish(new AvatarAbilityPowerChangedEvent(change.Target.Side, change.AbilityPower));
+                _eventBus.Publish(new AvatarAbilityPowerChangedEvent(change.Target.Side,
+                    change.ActivationEnergyCost, change.AbilityPower));
             }
         }
 
@@ -238,14 +239,12 @@ namespace Project.Scripts.Services.Combat.Abilities
 
         private int GetRepeatCount(UnitDescriptor source)
         {
-            return source.Kind == UnitKind.Hero ? _abilityRepeatModifierService.GetRepeatCount(source) : 0;
+            return _abilityRepeatModifierService.GetRepeatCount(source);
         }
 
         private int GetAdditionalTargetCount(UnitDescriptor source)
         {
-            return source.Kind == UnitKind.Hero
-                ? _abilityAdditionalTargetModifierService.GetAdditionalTargetCount(source)
-                : 0;
+            return _abilityAdditionalTargetModifierService.GetAdditionalTargetCount(source);
         }
 
         private TileKind GetSourceSlotKind(UnitDescriptor source)

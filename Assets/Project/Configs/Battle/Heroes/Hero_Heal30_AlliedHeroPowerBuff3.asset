@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c1fea825070002c449f9d0545ccf77bb, type: 3}
-  m_Name: Hero_Healer_1
-  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.HeroConfig
-  _maxHP: 50
-  _displayName: Hero_Healer_1
-  _portrait: {fileID: 21300000, guid: ed3505a1d6ffbda408fab5732ee4a51a, type: 3}
+  m_Name: Hero_Heal30_AlliedHeroPowerBuff3
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
+  _maxHP: 40
+  _displayName: Hero_Heal30_AlliedHeroPowerBuff3
+  _portrait: {fileID: 21300000, guid: 27e02dbeb09a77c46944c9428156ae3d, type: 3}
   _activeAbility:
     _displayName: Heal
-    _activationEnergyCost: 20
+    _activationEnergyCost: 15
     _activationCooldownSeconds: 10
     _directAction:
       _kind: 2
-      _value: 20
+      _value: 30
       _targeting:
         _scope: 2
         _relation: 0
@@ -32,18 +32,18 @@ MonoBehaviour:
       _ignoresAvatarGroupDefense: 0
     _buffEntries:
     - _targeting:
-        _scope: 0
+        _scope: 1
         _relation: 0
-        _unitKind: 0
+        _unitKind: 1
         _includeOwner: 1
         _selectionMode: 0
         _filters: []
       _buffApplications:
       - _buff:
-          _kind: 4
-          _operation: 2
-          _value: 25
-          _lifetimeKind: 4
-          _stackingMode: 1
+          _kind: 1
+          _operation: 1
+          _value: 3
+          _lifetimeKind: 3
+          _stackingMode: 0
         _durationSeconds: 0
   _passiveAbilities: []

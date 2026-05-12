@@ -92,10 +92,12 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == _unitStateService.TryGetUnit(source, out var unitState) || false == CanActivateAvatar(unitState))
                 return false;
 
-            if (false == _battleSideEnergyService.TrySpend(unitState.Unit.Side, unitState.BaseActivationEnergyCost))
+            var activationEnergyCost = GetActivationEnergyCost(unitState);
+            if (false == _battleSideEnergyService.TrySpend(unitState.Unit.Side, activationEnergyCost))
                 return false;
 
             _unitActivationCooldownService.StartCooldown(unitState.Unit);
+            ConsumeNextActivationBuffs(unitState);
             state = new UnitAbilityActivationState(unitState.ActionType, unitState.IsAlive);
 
             return true;
@@ -124,7 +126,7 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == _unitStateService.TryGetUnit(source, out var unitState) || false == CanActivateHero(unitState))
                 return false;
 
-            var activationEnergyCost = GetHeroActivationEnergyCost(unitState);
+            var activationEnergyCost = GetActivationEnergyCost(unitState);
             if (false == _battleSideEnergyService.TrySpend(unitState.Unit.Side, activationEnergyCost))
                 return false;
 
@@ -143,7 +145,7 @@ namespace Project.Scripts.Services.Combat.Units
             if (_unitActivationCooldownService.IsOnCooldown(state.Unit))
                 return false;
 
-            if (false == _battleSideEnergyService.CanSpend(state.Unit.Side, state.BaseActivationEnergyCost))
+            if (false == _battleSideEnergyService.CanSpend(state.Unit.Side, GetActivationEnergyCost(state)))
                 return false;
 
             return HasAnyValidEffect(state);
@@ -157,7 +159,7 @@ namespace Project.Scripts.Services.Combat.Units
             if (_unitActivationCooldownService.IsOnCooldown(state.Unit))
                 return false;
 
-            if (false == _battleSideEnergyService.CanSpend(state.Unit.Side, GetHeroActivationEnergyCost(state)))
+            if (false == _battleSideEnergyService.CanSpend(state.Unit.Side, GetActivationEnergyCost(state)))
                 return false;
 
             return HasAnyValidEffect(state);
@@ -206,10 +208,9 @@ namespace Project.Scripts.Services.Combat.Units
             }
         }
 
-        private int GetHeroActivationEnergyCost(UnitRuntimeState state)
+        private int GetActivationEnergyCost(UnitRuntimeState state)
         {
-            return _heroAbilityModifierService.GetActivationEnergyCost(state.Unit.Side, state.Unit.SlotIndex,
-                state.BaseActivationEnergyCost);
+            return _heroAbilityModifierService.GetActivationEnergyCost(state.Unit, state.BaseActivationEnergyCost);
         }
 
         private int GetHeroAbilityPower(UnitRuntimeState state)
@@ -223,8 +224,21 @@ namespace Project.Scripts.Services.Combat.Units
                 return;
 
             _eventBus.Publish(new BuffsChangedEvent());
-            _eventBus.Publish(new HeroAbilityStatsChangedEvent(state.Unit.Side, state.Unit.SlotIndex,
-                GetHeroActivationEnergyCost(state), GetHeroAbilityPower(state)));
+            PublishAbilityStatsChanged(state);
+        }
+
+        private void PublishAbilityStatsChanged(UnitRuntimeState state)
+        {
+            var activationEnergyCost = GetActivationEnergyCost(state);
+            var abilityPower = GetHeroAbilityPower(state);
+            if (state.Unit.Kind == UnitKind.Hero)
+            {
+                _eventBus.Publish(new HeroAbilityStatsChangedEvent(state.Unit.Side, state.Unit.SlotIndex,
+                    activationEnergyCost, abilityPower));
+                return;
+            }
+
+            _eventBus.Publish(new AvatarAbilityPowerChangedEvent(state.Unit.Side, activationEnergyCost, abilityPower));
         }
     }
 }

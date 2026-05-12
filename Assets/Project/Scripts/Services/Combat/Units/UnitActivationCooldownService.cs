@@ -2,7 +2,6 @@ using System;
 using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleSetup;
-
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.Units;
@@ -127,7 +126,7 @@ namespace Project.Scripts.Services.Combat.Units
         {
             if (side == BattleSide.Player)
             {
-                var duration = GetModifiedAvatarDuration(_playerAvatarDuration);
+                var duration = GetModifiedDuration(UnitDescriptor.Avatar(BattleSide.Player), _playerAvatarDuration);
                 if (duration <= 0f)
                     return;
 
@@ -138,7 +137,7 @@ namespace Project.Scripts.Services.Combat.Units
                 return;
             }
 
-            var enemyDuration = GetModifiedAvatarDuration(_enemyAvatarDuration);
+            var enemyDuration = GetModifiedDuration(UnitDescriptor.Avatar(BattleSide.Enemy), _enemyAvatarDuration);
             if (enemyDuration <= 0f)
                 return;
 
@@ -286,14 +285,14 @@ namespace Project.Scripts.Services.Combat.Units
 
         private float GetModifiedHeroDuration(BattleSide side, int slotIndex, float baseDuration)
         {
-            var modifiedDuration = _heroCooldownModifierService.GetActivationCooldown(side, slotIndex, baseDuration);
-            
-            return CooldownRules.ApplyMinimumUnitActivationCooldown(modifiedDuration, _minUnitActivationCooldownSeconds);
+            return GetModifiedDuration(UnitDescriptor.Hero(side, slotIndex), baseDuration);
         }
 
-        private float GetModifiedAvatarDuration(float baseDuration)
+        private float GetModifiedDuration(UnitDescriptor unit, float baseDuration)
         {
-            return CooldownRules.ApplyMinimumUnitActivationCooldown(baseDuration, _minUnitActivationCooldownSeconds);
+            var modifiedDuration = _heroCooldownModifierService.GetActivationCooldown(unit, baseDuration);
+
+            return CooldownRules.ApplyMinimumUnitActivationCooldown(modifiedDuration, _minUnitActivationCooldownSeconds);
         }
 
         private static void FillHeroDurations(float[] target, BattleSetup battleSetup, BattleSide side)

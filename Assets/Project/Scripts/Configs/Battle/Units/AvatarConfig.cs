@@ -17,6 +17,9 @@ namespace Project.Scripts.Configs.Battle.Units
         [Tooltip("Активная способность аватара")]
         [SerializeField] private ActiveAbilityConfig _activeAbility;
 
+        [Tooltip("Пассивные способности аватара. Пустой список означает, что пассивных способностей нет")]
+        [SerializeField] private HeroPassiveConfig[] _passiveAbilities;
+
 
         public int MaxHP => _maxHP;
         public int ActivationEnergyCost => _activeAbility?.ActivationEnergyCost ?? 0;
@@ -24,6 +27,7 @@ namespace Project.Scripts.Configs.Battle.Units
         public int AbilityPower => ToActiveAbilityDefinition().DirectAction.Value;
         public Sprite Portrait => _portrait;
         public float ActivationCooldownSeconds => _activeAbility?.ActivationCooldownSeconds ?? 0f;
+        public HeroPassiveConfig[] PassiveAbilities => _passiveAbilities;
 
 
         public ActiveAbilityDefinition ToActiveAbilityDefinition()

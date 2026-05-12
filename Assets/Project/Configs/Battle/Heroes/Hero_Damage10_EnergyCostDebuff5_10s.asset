@@ -10,40 +10,42 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c1fea825070002c449f9d0545ccf77bb, type: 3}
-  m_Name: Hero_Damager_1
-  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.HeroConfig
+  m_Name: Hero_Damage10_EnergyCostDebuff5_10s
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
   _maxHP: 50
-  _displayName: Hero_Damager_1
-  _portrait: {fileID: 21300000, guid: d64c345563825e5468d81f94e7b15af5, type: 3}
+  _displayName: Hero_Damage10_EnergyCostDebuff5_10s
+  _portrait: {fileID: 0}
   _activeAbility:
-    _displayName: Damage
+    _displayName: Damage Energy Cost Debuff
     _activationEnergyCost: 20
     _activationCooldownSeconds: 8
     _directAction:
       _kind: 1
-      _value: 20
+      _value: 10
       _targeting:
         _scope: 2
         _relation: 1
         _unitKind: 0
         _includeOwner: 1
         _selectionMode: 0
-        _filters: []
+        _filters:
+        - 0
       _ignoresAvatarGroupDefense: 0
     _buffEntries:
     - _targeting:
-        _scope: 0
-        _relation: 0
+        _scope: 2
+        _relation: 1
         _unitKind: 0
         _includeOwner: 1
         _selectionMode: 0
-        _filters: []
+        _filters:
+        - 0
       _buffApplications:
       - _buff:
-          _kind: 4
-          _operation: 2
-          _value: 25
-          _lifetimeKind: 4
-          _stackingMode: 1
-        _durationSeconds: 0
+          _kind: 2
+          _operation: 1
+          _value: 5
+          _lifetimeKind: 0
+          _stackingMode: 0
+        _durationSeconds: 10
   _passiveAbilities: []

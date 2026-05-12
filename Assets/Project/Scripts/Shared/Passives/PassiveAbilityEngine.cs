@@ -34,8 +34,7 @@ namespace Project.Scripts.Shared.Passives
                     continue;
 
                 states.Add(new UnitPassiveRuntimeState(
-                    setup.Side,
-                    setup.SlotIndex,
+                    setup.Owner,
                     setup.SlotKind,
                     setup.Definition));
             }
@@ -219,11 +218,16 @@ namespace Project.Scripts.Shared.Passives
 
         public bool ResetOwnerProgress(BattleSide side, int slotIndex)
         {
+            return ResetOwnerProgress(UnitDescriptor.Hero(side, slotIndex));
+        }
+
+        public bool ResetOwnerProgress(UnitDescriptor owner)
+        {
             var changed = false;
             for (var i = 0; i < _states.Length; i++)
             {
                 var state = _states[i];
-                if (state.Side != side || state.SlotIndex != slotIndex)
+                if (false == IsSameOwner(state.Owner, owner))
                     continue;
 
                 var conditions = state.Definition.ActivationConditions.Conditions;
@@ -250,11 +254,16 @@ namespace Project.Scripts.Shared.Passives
 
         public bool DisableOwner(BattleSide side, int slotIndex)
         {
+            return DisableOwner(UnitDescriptor.Hero(side, slotIndex));
+        }
+
+        public bool DisableOwner(UnitDescriptor owner)
+        {
             var changed = false;
             for (var i = 0; i < _states.Length; i++)
             {
                 var state = _states[i];
-                if (state.Side != side || state.SlotIndex != slotIndex || state.IsDisabled)
+                if (false == IsSameOwner(state.Owner, owner) || state.IsDisabled)
                     continue;
 
                 _states[i] = state.WithDisabled();
@@ -262,6 +271,11 @@ namespace Project.Scripts.Shared.Passives
             }
 
             return changed;
+        }
+
+        private static bool IsSameOwner(UnitDescriptor left, UnitDescriptor right)
+        {
+            return left.Side == right.Side && left.Kind == right.Kind && left.SlotIndex == right.SlotIndex;
         }
     }
 }

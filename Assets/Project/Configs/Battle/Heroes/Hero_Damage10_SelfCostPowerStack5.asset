@@ -10,40 +10,47 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c1fea825070002c449f9d0545ccf77bb, type: 3}
-  m_Name: Hero_Splash_Buffer_1
+  m_Name: Hero_Damage10_SelfCostPowerStack5
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
-  _maxHP: 50
-  _displayName: Hero_Splash_Buffer_1
-  _portrait: {fileID: 0}
+  _maxHP: 65
+  _displayName: Hero_Damage10_SelfCostPowerStack5
+  _portrait: {fileID: 21300000, guid: 7aa2f66b0d575ae48a9d71a2cf7377d6, type: 3}
   _activeAbility:
-    _displayName: Splash Buff
-    _activationEnergyCost: 20
-    _activationCooldownSeconds: 8
+    _displayName: Damage
+    _activationEnergyCost: 5
+    _activationCooldownSeconds: 10
     _directAction:
-      _kind: 0
-      _value: 0
+      _kind: 1
+      _value: 10
       _targeting:
-        _scope: 0
-        _relation: 0
+        _scope: 2
+        _relation: 1
         _unitKind: 0
-        _includeOwner: 0
+        _includeOwner: 1
         _selectionMode: 0
         _filters: []
       _ignoresAvatarGroupDefense: 0
     _buffEntries:
     - _targeting:
-        _scope: 1
+        _scope: 0
         _relation: 0
         _unitKind: 0
-        _includeOwner: 0
+        _includeOwner: 1
         _selectionMode: 0
         _filters: []
       _buffApplications:
       - _buff:
-          _kind: 8
+          _kind: 2
           _operation: 1
           _value: 5
-          _lifetimeKind: 2
+          _lifetimeKind: 0
+          _stackingMode: 0
+        _durationSeconds: 0
+      - _buff:
+          _kind: 1
+          _operation: 1
+          _value: 5
+          _lifetimeKind: 0
           _stackingMode: 0
         _durationSeconds: 0
   _passiveAbilities: []

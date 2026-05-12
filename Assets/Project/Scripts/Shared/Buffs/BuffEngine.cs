@@ -113,12 +113,22 @@ namespace Project.Scripts.Shared.Buffs
 
         public float GetModifiedActivationEnergyCost(float baseCost, BattleSide side, int slotIndex)
         {
-            return GetModifiedHeroValue(baseCost, side, slotIndex, BuffKind.ModifyActivationEnergyCost);
+            return GetModifiedActivationEnergyCost(baseCost, UnitDescriptor.Hero(side, slotIndex));
+        }
+
+        public float GetModifiedActivationEnergyCost(float baseCost, UnitDescriptor target)
+        {
+            return GetModifiedUnitValue(baseCost, target, BuffKind.ModifyActivationEnergyCost);
         }
 
         public float GetModifiedActivationCooldown(float baseCooldown, BattleSide side, int slotIndex)
         {
-            return GetModifiedHeroValue(baseCooldown, side, slotIndex, BuffKind.ModifyActivationCooldown);
+            return GetModifiedActivationCooldown(baseCooldown, UnitDescriptor.Hero(side, slotIndex));
+        }
+
+        public float GetModifiedActivationCooldown(float baseCooldown, UnitDescriptor target)
+        {
+            return GetModifiedUnitValue(baseCooldown, target, BuffKind.ModifyActivationCooldown);
         }
 
         public float GetModifiedMatchEnergy(float baseEnergy, BattleSide side, TileKind tileKind)
@@ -340,11 +350,6 @@ namespace Project.Scripts.Shared.Buffs
                     return true;
 
             return false;
-        }
-
-        private float GetModifiedHeroValue(float baseValue, BattleSide side, int slotIndex, BuffKind kind)
-        {
-            return GetModifiedUnitValue(baseValue, UnitDescriptor.Hero(side, slotIndex), kind);
         }
 
         private float GetModifiedUnitValue(float baseValue, UnitDescriptor target, BuffKind kind)

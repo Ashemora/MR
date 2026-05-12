@@ -21,7 +21,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
         private readonly BattleSide _side;
-        private readonly int _activationEnergyCost;
+        private int _activationEnergyCost;
+        private int _currentEnergy;
         private bool _hasSufficientEnergy;
         private bool _isOnCooldown;
 
@@ -40,6 +41,12 @@ namespace Project.Scripts.Gameplay.Battle.Units
             _subscriptions.Add(_battleActionRuntimeService.State.Subscribe(_ => RefreshReadyState()));
         }
 
+        public void UpdateActivationEnergyCost(int activationEnergyCost)
+        {
+            _activationEnergyCost = activationEnergyCost < 0 ? 0 : activationEnergyCost;
+            RefreshEnergyState(_currentEnergy);
+        }
+
         public void Dispose()
         {
             FillFraction.Dispose();
@@ -55,8 +62,14 @@ namespace Project.Scripts.Gameplay.Battle.Units
             if (e.Side != _side)
                 return;
 
-            FillFraction.Value = _activationEnergyCost > 0 ? Mathf.Clamp01((float)e.Current / _activationEnergyCost) : 0f;
-            _hasSufficientEnergy = _activationEnergyCost <= 0 || e.Current >= _activationEnergyCost;
+            RefreshEnergyState(e.Current);
+        }
+
+        private void RefreshEnergyState(int currentEnergy)
+        {
+            _currentEnergy = currentEnergy < 0 ? 0 : currentEnergy;
+            FillFraction.Value = _activationEnergyCost > 0 ? Mathf.Clamp01((float)_currentEnergy / _activationEnergyCost) : 0f;
+            _hasSufficientEnergy = _activationEnergyCost <= 0 || _currentEnergy >= _activationEnergyCost;
             RefreshReadyState();
         }
 

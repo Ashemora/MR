@@ -97,10 +97,15 @@ namespace Project.Scripts.Services.Combat.Buffs
 
         public int GetActivationEnergyCost(BattleSide side, int slotIndex, int baseCost)
         {
+            return GetActivationEnergyCost(UnitDescriptor.Hero(side, slotIndex), baseCost);
+        }
+
+        public int GetActivationEnergyCost(UnitDescriptor unit, int baseCost)
+        {
             if (baseCost <= 0)
                 return 0;
 
-            return BuffRules.ToDisplayInt(_engine.GetModifiedActivationEnergyCost(baseCost, side, slotIndex));
+            return BuffRules.ToDisplayInt(_engine.GetModifiedActivationEnergyCost(baseCost, unit));
         }
 
         public int GetAbilityPower(BattleSide side, int slotIndex, int basePower)
@@ -113,12 +118,12 @@ namespace Project.Scripts.Services.Combat.Buffs
             return BuffRules.ToDisplayInt(_engine.GetModifiedAbilityPower(basePower, target));
         }
 
-        public float GetActivationCooldown(BattleSide side, int slotIndex, float baseCooldown)
+        public float GetActivationCooldown(UnitDescriptor unit, float baseCooldown)
         {
             if (baseCooldown <= 0f)
                 return 0f;
 
-            var cooldown = _engine.GetModifiedActivationCooldown(baseCooldown, side, slotIndex);
+            var cooldown = _engine.GetModifiedActivationCooldown(baseCooldown, unit);
             
             return cooldown < 0f ? 0f : cooldown;
         }
@@ -180,8 +185,8 @@ namespace Project.Scripts.Services.Combat.Buffs
                 PublishHeroAbilityStatsChanged(BattleSide.Enemy, i);
             }
 
-            PublishAvatarAbilityPowerChanged(BattleSide.Player);
-            PublishAvatarAbilityPowerChanged(BattleSide.Enemy);
+            PublishAvatarAbilityStatsChanged(BattleSide.Player);
+            PublishAvatarAbilityStatsChanged(BattleSide.Enemy);
         }
 
         private void PublishHeroAbilityStatsChanged(BattleSide side, int slotIndex)
@@ -195,13 +200,14 @@ namespace Project.Scripts.Services.Combat.Buffs
                 GetAbilityPower(unit.Unit, unit.BaseAbilityPower)));
         }
 
-        private void PublishAvatarAbilityPowerChanged(BattleSide side)
+        private void PublishAvatarAbilityStatsChanged(BattleSide side)
         {
             var unit = side == BattleSide.Player ? _battleSetup.PlayerAvatar : _battleSetup.EnemyAvatar;
             if (false == unit.IsAssigned)
                 return;
 
             _eventBus.Publish(new AvatarAbilityPowerChangedEvent(side,
+                GetActivationEnergyCost(unit.Unit, unit.BaseActivationEnergyCost),
                 GetAbilityPower(unit.Unit, unit.BaseAbilityPower)));
         }
     }
