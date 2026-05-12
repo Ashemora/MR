@@ -480,9 +480,10 @@ MonoBehaviour:
   _layoutHeight: 3.95
   _backgroundRenderer: {fileID: 571019119815049429}
   _floorTransform: {fileID: 6110930603434998795}
+  _floorRenderer: {fileID: 3944629240573097262}
+  _floorInset: {x: 0.17, y: 0.17}
   _playerPanel: {fileID: 1505756466492368983}
   _enemyPanel: {fileID: 5831259512321365763}
-  _floorScaleYPerLayoutHeight: 89.50952
   _playerPanelBottomPadding: 1.11
   _enemyPanelTopPadding: 1.09
   _layoutBottomAnchor: {fileID: 2222222222222222222}
@@ -542,7 +543,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 455, y: 353.56262, z: 1}
+  m_LocalScale: {x: 466, y: 361.00003, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8560689031664744664}

@@ -91,7 +91,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 455, y: 644.46857, z: 1}
+  m_LocalScale: {x: 466, y: 686, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7529990018700308368}
@@ -380,9 +380,10 @@ MonoBehaviour:
   _layoutHeight: 7.2
   _backgroundRenderer: {fileID: 3194825444127583480}
   _floorTransform: {fileID: 4359364502027965681}
+  _floorRenderer: {fileID: 8051902927609202908}
+  _floorInset: {x: 0.17, y: 0.17}
   _playerPanel: {fileID: 5398520734938363147}
   _enemyPanel: {fileID: 4218581164328996590}
-  _floorScaleYPerLayoutHeight: 89.50952
   _playerPanelBottomPadding: 1.11
   _enemyPanelTopPadding: 1.09
   _layoutBottomAnchor: {fileID: 7014407828839332699}

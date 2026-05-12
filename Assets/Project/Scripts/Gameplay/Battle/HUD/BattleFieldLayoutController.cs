@@ -14,17 +14,20 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         [Tooltip("Sliced SpriteRenderer фоновой рамки боевого поля.")]
         [SerializeField] private SpriteRenderer _backgroundRenderer;
 
-        [Tooltip("Внутренняя подложка поля, масштабируется по Y пропорционально Layout Height.")]
+        [Tooltip("Внутренняя подложка поля, масштабируется по X/Y под размеры Background.")]
         [SerializeField] private Transform _floorTransform;
+
+        [Tooltip("SpriteRenderer подложки поля; используется для расчёта localScale из sprite.bounds.")]
+        [SerializeField] private SpriteRenderer _floorRenderer;
+
+        [Tooltip("Отступ Floor с каждой стороны от Background в world units (учитывает прозрачные пиксели рамки). X — по горизонтали, Y — по вертикали.")]
+        [SerializeField] private Vector2 _floorInset = Vector2.zero;
 
         [Tooltip("Панель героев игрока, позиционируется от нижней границы Layout Height.")]
         [SerializeField] private Transform _playerPanel;
 
         [Tooltip("Панель героев врага, позиционируется от верхней границы Layout Height.")]
         [SerializeField] private Transform _enemyPanel;
-
-        [Tooltip("Floor.localScale.y на одну единицу Layout Height.")]
-        [SerializeField] private float _floorScaleYPerLayoutHeight = 89.50952f;
 
         [Tooltip("Отступ PlayerPanel от нижней границы Layout Height.")]
         [SerializeField] private float _playerPanelBottomPadding = 1.11f;
@@ -216,9 +219,14 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             if (_floorTransform)
             {
                 var scale = _floorTransform.localScale;
-                var floorScaleY = safeHeight * _floorScaleYPerLayoutHeight;
-                if (false == Mathf.Approximately(scale.y, floorScaleY))
-                    _floorTransform.localScale = new Vector3(scale.x, floorScaleY, scale.z);
+                var backgroundWidth = _backgroundRenderer ? _backgroundRenderer.size.x : 0f;
+                var floorTargetWidth = Mathf.Max(0f, backgroundWidth - _floorInset.x * 2f);
+                var floorTargetHeight = Mathf.Max(0f, safeHeight - _floorInset.y * 2f);
+                var floorScaleX = CalculateScaleFromSpriteSize(_floorRenderer, floorTargetWidth, true);
+                var floorScaleY = CalculateScaleFromSpriteSize(_floorRenderer, floorTargetHeight, false);
+                if (false == Mathf.Approximately(scale.x, floorScaleX)
+                    || false == Mathf.Approximately(scale.y, floorScaleY))
+                    _floorTransform.localScale = new Vector3(floorScaleX, floorScaleY, scale.z);
             }
 
             if (_phaseOverlay)
@@ -345,6 +353,18 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             var spriteWidth = targetRenderer.sprite.bounds.size.x;
             
             return spriteWidth > 0f ? width / spriteWidth : 1f;
+        }
+
+        private static float CalculateScaleFromSpriteSize(SpriteRenderer targetRenderer, float worldSize, bool axisX)
+        {
+            if (false == targetRenderer || false == targetRenderer.sprite)
+                return 1f;
+
+            var spriteSize = axisX
+                ? targetRenderer.sprite.bounds.size.x
+                : targetRenderer.sprite.bounds.size.y;
+
+            return spriteSize > 0f ? worldSize / spriteSize : 1f;
         }
 
         private static float CalculateRendererScaleY(SpriteRenderer targetRenderer, float height)
