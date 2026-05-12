@@ -14,9 +14,8 @@ namespace Project.Scripts.Services.Combat.Units
         private readonly IBattleSideEnergyService _battleSideEnergyService;
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
         private readonly IUnitActivationCooldownService _unitActivationCooldownService;
-        private readonly IAbilityPowerModifierService _abilityPowerModifierService;
         private readonly IHeroAbilityModifierService _heroAbilityModifierService;
-        private readonly INextAttackBuffService _nextAttackBuffService;
+        private readonly IAbilityPowerModifierService _abilityPowerModifierService;
         private readonly INextActivationBuffService _nextActivationBuffService;
         private readonly EventBus _eventBus;
 
@@ -26,9 +25,8 @@ namespace Project.Scripts.Services.Combat.Units
             IBattleSideEnergyService battleSideEnergyService,
             IBattleActionRuntimeService battleActionRuntimeService,
             IUnitActivationCooldownService unitActivationCooldownService,
-            IAbilityPowerModifierService abilityPowerModifierService,
             IHeroAbilityModifierService heroAbilityModifierService,
-            INextAttackBuffService nextAttackBuffService,
+            IAbilityPowerModifierService abilityPowerModifierService,
             INextActivationBuffService nextActivationBuffService,
             EventBus eventBus)
         {
@@ -36,9 +34,8 @@ namespace Project.Scripts.Services.Combat.Units
             _battleSideEnergyService = battleSideEnergyService;
             _battleActionRuntimeService = battleActionRuntimeService;
             _unitActivationCooldownService = unitActivationCooldownService;
-            _abilityPowerModifierService = abilityPowerModifierService;
             _heroAbilityModifierService = heroAbilityModifierService;
-            _nextAttackBuffService = nextAttackBuffService;
+            _abilityPowerModifierService = abilityPowerModifierService;
             _nextActivationBuffService = nextActivationBuffService;
             _eventBus = eventBus;
         }
@@ -71,10 +68,8 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == CanActivateAvatar(unitState))
                 return false;
 
-            var actionValue = GetActionValueWithNextAttackBuffPreview(unitState.Unit, unitState.Unit.ActionType,
-                _abilityPowerModifierService.GetAbilityPower(unitState.Unit, unitState.BaseAbilityPower));
-            state = new UnitAbilityActivationState(unitState.Unit.ActionType, actionValue, unitState.IsAlive);
-            
+            state = new UnitAbilityActivationState(unitState.Unit.ActionType, unitState.IsAlive);
+
             return true;
         }
 
@@ -91,10 +86,8 @@ namespace Project.Scripts.Services.Combat.Units
                 return false;
 
             _unitActivationCooldownService.StartCooldown(unitState.Unit);
-            var actionValue = GetActionValueWithNextAttackBuff(unitState.Unit, unitState.Unit.ActionType,
-                _abilityPowerModifierService.GetAbilityPower(unitState.Unit, unitState.BaseAbilityPower));
-            state = new UnitAbilityActivationState(unitState.Unit.ActionType, actionValue, unitState.IsAlive);
-            
+            state = new UnitAbilityActivationState(unitState.Unit.ActionType, unitState.IsAlive);
+
             return true;
         }
 
@@ -107,10 +100,8 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == CanActivateHero(unitState))
                 return false;
 
-            var actionValue = GetActionValueWithNextAttackBuffPreview(unitState.Unit, unitState.Unit.ActionType,
-                GetHeroAbilityPower(unitState));
-            state = new UnitAbilityActivationState(unitState.Unit.ActionType, actionValue, unitState.IsAlive);
-            
+            state = new UnitAbilityActivationState(unitState.Unit.ActionType, unitState.IsAlive);
+
             return true;
         }
 
@@ -128,11 +119,9 @@ namespace Project.Scripts.Services.Combat.Units
                 return false;
 
             _unitActivationCooldownService.StartCooldown(unitState.Unit);
-            var actionValue = GetActionValueWithNextAttackBuff(unitState.Unit, unitState.Unit.ActionType,
-                GetHeroAbilityPower(unitState));
             ConsumeNextActivationBuffs(unitState);
-            state = new UnitAbilityActivationState(unitState.Unit.ActionType, actionValue, unitState.IsAlive);
-            
+            state = new UnitAbilityActivationState(unitState.Unit.ActionType, unitState.IsAlive);
+
             return true;
         }
 
@@ -191,8 +180,7 @@ namespace Project.Scripts.Services.Combat.Units
 
         private int GetHeroAbilityPower(UnitRuntimeState state)
         {
-            return _heroAbilityModifierService.GetAbilityPower(state.Unit.Side, state.Unit.SlotIndex,
-                state.BaseAbilityPower);
+            return _abilityPowerModifierService.GetAbilityPower(state.Unit, state.BaseAbilityPower);
         }
 
         private void ConsumeNextActivationBuffs(UnitRuntimeState state)
@@ -203,24 +191,6 @@ namespace Project.Scripts.Services.Combat.Units
             _eventBus.Publish(new BuffsChangedEvent());
             _eventBus.Publish(new HeroAbilityStatsChangedEvent(state.Unit.Side, state.Unit.SlotIndex,
                 GetHeroActivationEnergyCost(state), GetHeroAbilityPower(state)));
-        }
-
-        private int GetActionValueWithNextAttackBuffPreview(UnitDescriptor source, UnitActionType actionType,
-            int baseActionValue)
-        {
-            if (actionType != UnitActionType.DealDamage)
-                return baseActionValue;
-
-            return baseActionValue + _nextAttackBuffService.Get(source);
-        }
-
-        private int GetActionValueWithNextAttackBuff(UnitDescriptor source, UnitActionType actionType,
-            int baseActionValue)
-        {
-            if (actionType != UnitActionType.DealDamage)
-                return baseActionValue;
-
-            return baseActionValue + _nextAttackBuffService.Consume(source);
         }
     }
 }

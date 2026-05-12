@@ -11,6 +11,6 @@ namespace Project.Scripts.Services.Combat.Abilities
         AbilityEffectApplicationResult Apply(UnitDescriptor source, UnitDescriptor selectedTarget,
             DirectActionDefinition directAction, IReadOnlyList<BuffEntryDefinition> buffEntries,
             TileKind sourceSlotKind, int currentRound, BattlePhaseKind currentPhase, long occurredAtTick,
-            int applicationIndex = 0, bool isRepeat = false);
+            int applicationIndex = 0, bool isRepeat = false, int nextAttackBonus = 0);
     }
 }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Clock;
+using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Shared.BattleFlow;
@@ -25,6 +26,8 @@ namespace Project.Scripts.Services.Combat.Abilities
         private readonly IAbilityRepeatModifierService _abilityRepeatModifierService;
         private readonly IAbilityAdditionalTargetModifierService _abilityAdditionalTargetModifierService;
         private readonly IAbilityEffectApplicationService _abilityEffectApplicationService;
+        private readonly IAbilityPowerModifierService _abilityPowerModifierService;
+        private readonly INextAttackBuffService _nextAttackBuffService;
         private readonly EventBus _eventBus;
         private readonly IBattleClock _battleClock;
         private readonly BattleSetup _battleSetup;
@@ -39,6 +42,8 @@ namespace Project.Scripts.Services.Combat.Abilities
             IAbilityRepeatModifierService abilityRepeatModifierService,
             IAbilityAdditionalTargetModifierService abilityAdditionalTargetModifierService,
             IAbilityEffectApplicationService abilityEffectApplicationService,
+            IAbilityPowerModifierService abilityPowerModifierService,
+            INextAttackBuffService nextAttackBuffService,
             EventBus eventBus,
             IBattleClock battleClock,
             BattleSetup battleSetup)
@@ -51,6 +56,8 @@ namespace Project.Scripts.Services.Combat.Abilities
             _abilityRepeatModifierService = abilityRepeatModifierService;
             _abilityAdditionalTargetModifierService = abilityAdditionalTargetModifierService;
             _abilityEffectApplicationService = abilityEffectApplicationService;
+            _abilityPowerModifierService = abilityPowerModifierService;
+            _nextAttackBuffService = nextAttackBuffService;
             _eventBus = eventBus;
             _battleClock = battleClock;
             _battleSetup = battleSetup;
@@ -74,12 +81,10 @@ namespace Project.Scripts.Services.Combat.Abilities
             if (false == _unitAbilityActivationService.TryPreview(source, out var sourceState))
                 return false;
 
-            if (sourceState.ActionType != UnitActionType.SupportAlly && sourceState.ActionValue <= 0)
-                return false;
-
-            var previewDirectAction = AbilityRuntimeDefinitionResolver.CreateCommittedDirectAction(_battleSetup, source,
-                sourceState.ActionType, sourceState.ActionValue);
+            var directAction = GetDirectAction(source);
             var buffEntries = GetBuffEntries(source);
+            if (sourceState.ActionType != UnitActionType.SupportAlly && false == directAction.IsConfigured)
+                return false;
 
             if (false == TryGetTargetState(target, out var isTargetAlive, out var isTargetHpFull, out var isTargetExposed))
                 return false;
@@ -88,47 +93,48 @@ namespace Project.Scripts.Services.Combat.Abilities
                     isTargetHpFull, isTargetExposed))
                 return false;
 
-            if (false == AbilityTargetRules.IsTargetAllowedByEffect(source, target, previewDirectAction, buffEntries,
+            if (false == AbilityTargetRules.IsTargetAllowedByEffect(source, target, directAction, buffEntries,
                     CollectUnitTargetCandidates()))
                 return false;
 
             var additionalTargets = SelectAdditionalTargets(source, target, sourceState.ActionType,
-                previewDirectAction, buffEntries);
+                directAction, buffEntries);
 
             if (false == _unitAbilityActivationService.TryCommit(source, out var committedState))
                 return false;
 
-            if (committedState.ActionType != sourceState.ActionType || committedState.ActionValue != sourceState.ActionValue)
+            if (committedState.ActionType != sourceState.ActionType)
                 return false;
 
+            var nextAttackBonus = directAction.Kind == DirectActionKind.Damage
+                ? _nextAttackBuffService.Consume(source)
+                : 0;
             var occurredAtTick = _battleClock.CurrentTick;
             var directApplications = new List<AbilityExecutionApplicationResult>();
             var abilityStatsChanges = new List<AbilityStatsChangeResult>();
             var buffsChanged = false;
-            ApplyPrimaryTarget(source, target, committedState.ActionType, committedState.ActionValue,
-                GetRepeatCount(source), occurredAtTick, directApplications, abilityStatsChanges, ref buffsChanged);
-            ApplyAdditionalTargets(source, additionalTargets, committedState.ActionType, committedState.ActionValue,
+            ApplyPrimaryTarget(source, target, directAction, buffEntries, GetRepeatCount(source), nextAttackBonus,
                 occurredAtTick, directApplications, abilityStatsChanges, ref buffsChanged);
+            ApplyAdditionalTargets(source, additionalTargets, directAction, buffEntries, nextAttackBonus,
+                occurredAtTick, directApplications, abilityStatsChanges, ref buffsChanged);
+            var primaryActionValue = ResolvePrimaryActionValue(source, directAction, nextAttackBonus);
             result = new AbilityExecutionResult(true, source, target, committedState.ActionType,
-                committedState.ActionValue, occurredAtTick, buffsChanged, directApplications, abilityStatsChanges);
-            
+                primaryActionValue, occurredAtTick, buffsChanged, directApplications, abilityStatsChanges);
+
             return true;
         }
 
-        private void ApplyPrimaryTarget(UnitDescriptor source, UnitDescriptor target, UnitActionType actionType,
-            int actionValue, int repeatCount, long occurredAtTick,
+        private void ApplyPrimaryTarget(UnitDescriptor source, UnitDescriptor target, DirectActionDefinition directAction,
+            IReadOnlyList<BuffEntryDefinition> buffEntries, int repeatCount, int nextAttackBonus, long occurredAtTick,
             List<AbilityExecutionApplicationResult> directApplications,
             List<AbilityStatsChangeResult> abilityStatsChanges, ref bool buffsChanged)
         {
-            var directAction = AbilityRuntimeDefinitionResolver.CreateCommittedDirectAction(_battleSetup, source,
-                actionType, actionValue);
-            var buffEntries = GetBuffEntries(source);
             var totalApplications = 1 + (repeatCount < 0 ? 0 : repeatCount);
             for (var applicationIndex = 0; applicationIndex < totalApplications; applicationIndex++)
             {
                 var result = _abilityEffectApplicationService.Apply(source, target, directAction, buffEntries,
                     GetSourceSlotKind(source), 0, BattlePhaseKind.Hero, occurredAtTick, applicationIndex,
-                    applicationIndex > 0);
+                    applicationIndex > 0, nextAttackBonus);
                 AppendApplicationResult(result, applicationIndex * RepeatApplicationDelaySeconds, directApplications,
                     abilityStatsChanges, ref buffsChanged);
                 if (false == result.WasChanged)
@@ -137,22 +143,26 @@ namespace Project.Scripts.Services.Combat.Abilities
         }
 
         private void ApplyAdditionalTargets(UnitDescriptor source, IReadOnlyList<UnitDescriptor> targets,
-            UnitActionType actionType, int actionValue, long occurredAtTick,
-            List<AbilityExecutionApplicationResult> directApplications,
+            DirectActionDefinition directAction, IReadOnlyList<BuffEntryDefinition> buffEntries, int nextAttackBonus,
+            long occurredAtTick, List<AbilityExecutionApplicationResult> directApplications,
             List<AbilityStatsChangeResult> abilityStatsChanges, ref bool buffsChanged)
         {
             if (targets == null || targets.Count == 0)
                 return;
 
-            var directAction = AbilityRuntimeDefinitionResolver.CreateCommittedDirectAction(_battleSetup, source,
-                actionType, actionValue);
-            var buffEntries = GetBuffEntries(source);
             for (var i = 0; i < targets.Count; i++)
             {
                 var result = _abilityEffectApplicationService.Apply(source, targets[i], directAction, buffEntries,
-                    GetSourceSlotKind(source), 0, BattlePhaseKind.Hero, occurredAtTick, i + 1, true);
+                    GetSourceSlotKind(source), 0, BattlePhaseKind.Hero, occurredAtTick, i + 1, true, nextAttackBonus);
                 AppendApplicationResult(result, 0f, directApplications, abilityStatsChanges, ref buffsChanged);
             }
+        }
+
+        private DirectActionDefinition GetDirectAction(UnitDescriptor source)
+        {
+            return _battleSetup.TryGetUnit(source, out var unitSetup)
+                ? unitSetup.ActiveAbility.DirectAction
+                : default;
         }
 
         private IReadOnlyList<BuffEntryDefinition> GetBuffEntries(UnitDescriptor source)
@@ -160,6 +170,18 @@ namespace Project.Scripts.Services.Combat.Abilities
             return _battleSetup.TryGetUnit(source, out var unitSetup)
                 ? unitSetup.ActiveAbility.BuffEntries
                 : System.Array.Empty<BuffEntryDefinition>();
+        }
+
+        private int ResolvePrimaryActionValue(UnitDescriptor source, DirectActionDefinition directAction,
+            int nextAttackBonus)
+        {
+            if (false == directAction.IsConfigured)
+                return 0;
+
+            var value = _abilityPowerModifierService.GetAbilityPower(source, directAction.Value);
+            return directAction.Kind == DirectActionKind.Damage
+                ? value + (nextAttackBonus < 0 ? 0 : nextAttackBonus)
+                : value;
         }
 
         private static void AppendApplicationResult(AbilityEffectApplicationResult result, float presentationDelaySeconds,

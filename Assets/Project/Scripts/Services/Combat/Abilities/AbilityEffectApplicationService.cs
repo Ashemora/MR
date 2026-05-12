@@ -40,7 +40,7 @@ namespace Project.Scripts.Services.Combat.Abilities
         public AbilityEffectApplicationResult Apply(UnitDescriptor source, UnitDescriptor selectedTarget,
             DirectActionDefinition directAction, IReadOnlyList<BuffEntryDefinition> buffEntries,
             TileKind sourceSlotKind, int currentRound, BattlePhaseKind currentPhase, long occurredAtTick,
-            int applicationIndex = 0, bool isRepeat = false)
+            int applicationIndex = 0, bool isRepeat = false, int nextAttackBonus = 0)
         {
             var directApplications = new List<AbilityDirectApplicationResult>();
             var abilityStatsChanges = new List<AbilityStatsChangeResult>();
@@ -48,7 +48,7 @@ namespace Project.Scripts.Services.Combat.Abilities
             var candidates = CollectCandidates();
 
             ApplyDirectAction(source, selectedTarget, directAction, candidates, occurredAtTick, applicationIndex,
-                isRepeat, directApplications);
+                isRepeat, nextAttackBonus, directApplications);
             buffApplicationCount += ApplyBuffEntries(source, selectedTarget, buffEntries, sourceSlotKind,
                 currentRound, currentPhase, candidates, abilityStatsChanges);
 
@@ -57,7 +57,8 @@ namespace Project.Scripts.Services.Combat.Abilities
 
         private void ApplyDirectAction(UnitDescriptor source, UnitDescriptor selectedTarget,
             DirectActionDefinition action, IReadOnlyList<UnitTargetCandidate> candidates, long occurredAtTick,
-            int applicationIndex, bool isRepeat, List<AbilityDirectApplicationResult> directApplications)
+            int applicationIndex, bool isRepeat, int nextAttackBonus,
+            List<AbilityDirectApplicationResult> directApplications)
         {
             if (false == action.IsConfigured)
                 return;
@@ -69,10 +70,11 @@ namespace Project.Scripts.Services.Combat.Abilities
                 if (false == CanApplyDirectAction(action, target))
                     continue;
 
-                if (ExecuteDirectAction(target, action))
+                var finalValue = ExecuteDirectAction(source, target, action, nextAttackBonus);
+                if (finalValue > 0)
                     directApplications.Add(new AbilityDirectApplicationResult(source, target,
                         UnitActionTypeMapping.FromDirectActionKind(action.Kind),
-                        action.Value, applicationIndex, isRepeat, occurredAtTick));
+                        finalValue, applicationIndex, isRepeat, occurredAtTick));
             }
         }
 
@@ -126,21 +128,30 @@ namespace Project.Scripts.Services.Combat.Abilities
             return appliedCount;
         }
 
-        private bool ExecuteDirectAction(UnitDescriptor target, DirectActionDefinition action)
+        private int ExecuteDirectAction(UnitDescriptor source, UnitDescriptor target, DirectActionDefinition action,
+            int nextAttackBonus)
         {
             if (action.Kind == DirectActionKind.Damage)
             {
-                ApplyDamage(target, action.Value);
-                return true;
+                var value = GetAbilityPower(source, action.Value) + (nextAttackBonus < 0 ? 0 : nextAttackBonus);
+                if (value <= 0)
+                    return 0;
+
+                ApplyDamage(target, value);
+                return value;
             }
 
             if (action.Kind == DirectActionKind.Heal)
             {
-                ApplyHeal(target, action.Value);
-                return true;
+                var value = GetAbilityPower(source, action.Value);
+                if (value <= 0)
+                    return 0;
+
+                ApplyHeal(target, value);
+                return value;
             }
 
-            return false;
+            return 0;
         }
 
         private void ApplyDamage(UnitDescriptor target, int value)
