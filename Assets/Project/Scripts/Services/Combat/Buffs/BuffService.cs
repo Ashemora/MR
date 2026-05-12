@@ -14,7 +14,8 @@ namespace Project.Scripts.Services.Combat.Buffs
     public class BuffService : IBuffService, IEnergyGainModifierService, IHeroAbilityModifierService,
         IAbilityPowerModifierService, INextAttackBuffService, IBombRadiusModifierService,
         IHeroCooldownModifierService, INextActivationBuffService, IAbilityRepeatModifierService,
-        IAbilityAdditionalTargetModifierService, ILineRuneModifierService, IResurrectOnDeathBuffService
+        IAbilityAdditionalTargetModifierService, ILineRuneModifierService, IResurrectOnDeathBuffService,
+        IStunStatusService
     {
         public IReadOnlyList<BuffRuntimeState> Buffs => _engine.Buffs;
 
@@ -36,7 +37,12 @@ namespace Project.Scripts.Services.Combat.Buffs
 
         public bool Tick(float deltaTime)
         {
-            if (false == _engine.Tick(deltaTime))
+            var stunTargets = CaptureStunTargets();
+            var buffsRemoved = _engine.Tick(deltaTime);
+            PublishStunStatuses(stunTargets);
+            PublishActiveStunStatuses(stunTargets);
+
+            if (false == buffsRemoved)
                 return false;
 
             _eventBus.Publish(new BuffsChangedEvent());
@@ -48,13 +54,22 @@ namespace Project.Scripts.Services.Combat.Buffs
         public bool AddBuff(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind, BuffDefinition definition,
             int currentRound, BattlePhaseKind currentPhase, float durationSeconds = 0f)
         {
-            return _engine.AddBuff(source, target, sourceSlotKind, definition, currentRound, currentPhase,
+            var added = _engine.AddBuff(source, target, sourceSlotKind, definition, currentRound, currentPhase,
                 durationSeconds);
+            if (added && definition.Kind == BuffKind.Stun)
+                PublishStunStatus(target);
+
+            return added;
         }
 
         public bool RemoveByUnit(UnitDescriptor unit)
         {
-            return _engine.RemoveByUnit(unit);
+            var stunTargets = CaptureStunTargets();
+            var removed = _engine.RemoveByUnit(unit);
+            if (removed)
+                PublishStunStatuses(stunTargets);
+
+            return removed;
         }
 
         public bool ExpireUntilEndOfNextMainPhaseBuffs(BattlePhaseKind previousPhase, BattlePhaseKind nextPhase)
@@ -70,6 +85,16 @@ namespace Project.Scripts.Services.Combat.Buffs
         public bool HasBuffFromSource(UnitDescriptor source)
         {
             return _engine.HasBuffFromSource(source);
+        }
+
+        public StunStatusSnapshot GetStunStatus(UnitDescriptor target)
+        {
+            return _engine.GetStunStatus(target);
+        }
+
+        public bool IsStunned(UnitDescriptor target)
+        {
+            return GetStunStatus(target).IsActive;
         }
 
         public float CalculateEnergy(BattleSide side, EnergyGainBreakdown breakdown)
@@ -175,6 +200,71 @@ namespace Project.Scripts.Services.Combat.Buffs
 
             for (var i = 0; i < targets.Count; i++)
                 _engine.AddBuff(targets[i], targets[i], TileKind.None, definition, 0, BattlePhaseKind.Hero);
+        }
+
+        private List<UnitDescriptor> CaptureStunTargets()
+        {
+            var result = new List<UnitDescriptor>();
+            var buffs = _engine.Buffs;
+            for (var i = 0; i < buffs.Count; i++)
+            {
+                var buff = buffs[i];
+                if (buff.Definition.Kind == BuffKind.Stun)
+                    AddUnique(result, buff.Target);
+            }
+
+            return result;
+        }
+
+        private void PublishActiveStunStatuses(List<UnitDescriptor> knownTargets)
+        {
+            var buffs = _engine.Buffs;
+            for (var i = 0; i < buffs.Count; i++)
+            {
+                var buff = buffs[i];
+                if (buff.Definition.Kind != BuffKind.Stun)
+                    continue;
+
+                if (ContainsUnit(knownTargets, buff.Target))
+                    continue;
+
+                PublishStunStatus(buff.Target);
+                AddUnique(knownTargets, buff.Target);
+            }
+        }
+
+        private void PublishStunStatuses(List<UnitDescriptor> targets)
+        {
+            for (var i = 0; i < targets.Count; i++)
+                PublishStunStatus(targets[i]);
+        }
+
+        private void PublishStunStatus(UnitDescriptor target)
+        {
+            var status = _engine.GetStunStatus(target);
+            _eventBus.Publish(new UnitStunChangedEvent(target, status.RemainingSeconds, status.DurationSeconds));
+        }
+
+        private static void AddUnique(List<UnitDescriptor> units, UnitDescriptor unit)
+        {
+            if (ContainsUnit(units, unit))
+                return;
+
+            units.Add(unit);
+        }
+
+        private static bool ContainsUnit(IReadOnlyList<UnitDescriptor> units, UnitDescriptor unit)
+        {
+            for (var i = 0; i < units.Count; i++)
+                if (IsSameUnit(units[i], unit))
+                    return true;
+
+            return false;
+        }
+
+        private static bool IsSameUnit(UnitDescriptor left, UnitDescriptor right)
+        {
+            return left.Side == right.Side && left.Kind == right.Kind && left.SlotIndex == right.SlotIndex;
         }
 
         private void PublishAllAbilityStatsChanged()

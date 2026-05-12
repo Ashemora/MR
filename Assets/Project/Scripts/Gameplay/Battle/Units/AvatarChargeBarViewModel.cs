@@ -16,6 +16,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
         public ReactiveProperty<UnitActivationBlockReason> ActivationBlockReason { get; } = new (UnitActivationBlockReason.None);
         public ReactiveProperty<bool> IsAvailabilityDimmed { get; } = new (false);
         public ReactiveProperty<(float Remaining, float Duration)> CooldownProgress { get; } = new ((0f, 0f));
+        public ReactiveProperty<(float Remaining, float Duration)> StunProgress { get; } = new ((0f, 0f));
 
 
         private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
@@ -25,6 +26,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
         private int _currentEnergy;
         private bool _hasSufficientEnergy;
         private bool _isOnCooldown;
+        private bool _isStunned;
 
 
         public AvatarChargeBarViewModel(EventBus eventBus, BattleSide side, int activationEnergyCost,
@@ -38,6 +40,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             _subscriptions.Add(eventBus.Subscribe<BattleSideEnergyChangedEvent>(OnBattleSideEnergyChanged));
             _subscriptions.Add(eventBus.Subscribe<AvatarCooldownChangedEvent>(OnAvatarCooldownChanged));
+            _subscriptions.Add(eventBus.Subscribe<UnitStunChangedEvent>(OnUnitStunChanged));
             _subscriptions.Add(_battleActionRuntimeService.State.Subscribe(_ => RefreshReadyState()));
         }
 
@@ -54,6 +57,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
             ActivationBlockReason.Dispose();
             IsAvailabilityDimmed.Dispose();
             CooldownProgress.Dispose();
+            StunProgress.Dispose();
             _subscriptions.Dispose();
         }
 
@@ -94,6 +98,15 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 return;
             }
 
+            if (_isStunned)
+            {
+                IsReady.Value = false;
+                ActivationBlockReason.Value = UnitActivationBlockReason.Stunned;
+                RefreshAvailabilityVisualState();
+
+                return;
+            }
+
             if (_isOnCooldown)
             {
                 IsReady.Value = false;
@@ -115,6 +128,16 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             _isOnCooldown = e.RemainingSeconds > 0f;
             CooldownProgress.Value = (e.RemainingSeconds, e.DurationSeconds);
+            RefreshReadyState();
+        }
+
+        private void OnUnitStunChanged(UnitStunChangedEvent e)
+        {
+            if (e.Unit.Kind != UnitKind.Avatar || e.Unit.Side != _side)
+                return;
+
+            _isStunned = e.RemainingSeconds > 0f;
+            StunProgress.Value = (e.RemainingSeconds, e.DurationSeconds);
             RefreshReadyState();
         }
 

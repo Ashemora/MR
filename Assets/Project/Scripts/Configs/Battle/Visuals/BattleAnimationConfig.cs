@@ -74,6 +74,12 @@ namespace Project.Scripts.Configs.Battle.Visuals
         [SerializeField] private Color _resurrectTargetColor = new(0.65f, 0.2f, 1f, 1f);
 
         [Header("Cooldown Visuals")]
+        [Tooltip("Цвет круговой заливки обычного кулдауна способности")]
+        [SerializeField] private Color _cooldownSweepColor = new(0f, 0f, 0f, 0.65f);
+
+        [Tooltip("Цвет круговой заливки оглушения")]
+        [SerializeField] private Color _stunSweepColor = new(0.1f, 0.45f, 1f, 0.7f);
+
         [Tooltip("Переводить портрет в черно-белый режим во время кулдауна способности")]
         [SerializeField] private bool _cooldownGrayscaleEnabled = true;
 
@@ -116,6 +122,8 @@ namespace Project.Scripts.Configs.Battle.Visuals
         public Color AttackTargetColor => _attackTargetColor;
         public Color HealTargetColor => _healTargetColor;
         public Color ResurrectTargetColor => _resurrectTargetColor;
+        public Color CooldownSweepColor => _cooldownSweepColor;
+        public Color StunSweepColor => _stunSweepColor;
         public Color DamageNumberColor => _damageNumberColor;
         public Color HealNumberColor => _healNumberColor;
         public float FloatDamageDistance => _floatDamageDistance;

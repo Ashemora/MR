@@ -17,4 +17,10 @@ namespace Project.Scripts.Services.Combat.Buffs
         bool HasMatchEnergyBuff(BattleSide side, TileKind tileKind);
         bool HasBuffFromSource(UnitDescriptor source);
     }
+
+    public interface IStunStatusService
+    {
+        StunStatusSnapshot GetStunStatus(UnitDescriptor target);
+        bool IsStunned(UnitDescriptor target);
+    }
 }

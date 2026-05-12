@@ -5,6 +5,7 @@ namespace Project.Scripts.Shared.Units
         None,
         BlockedByPhase,
         Cooldown,
-        InsufficientEnergy
+        InsufficientEnergy,
+        Stunned
     }
 }

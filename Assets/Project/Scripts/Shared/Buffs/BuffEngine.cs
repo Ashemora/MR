@@ -24,6 +24,9 @@ namespace Project.Scripts.Shared.Buffs
             if (false == definition.IsConfigured)
                 return false;
 
+            if (definition.Kind == BuffKind.Stun && durationSeconds <= 0f)
+                return false;
+
             if (definition.StackingMode == BuffStackingMode.IgnoreNew)
             {
                 for (var i = 0; i < _buffs.Count; i++)
@@ -348,6 +351,26 @@ namespace Project.Scripts.Shared.Buffs
                     return true;
 
             return false;
+        }
+
+        public StunStatusSnapshot GetStunStatus(UnitDescriptor target)
+        {
+            var targetKey = BattleUnitKey.FromDescriptor(target);
+            var best = default(StunStatusSnapshot);
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.Kind != BuffKind.Stun || false == buff.UsesDuration)
+                    continue;
+
+                if (BattleUnitKey.FromDescriptor(buff.Target) != targetKey)
+                    continue;
+
+                if (buff.RemainingDurationSeconds > best.RemainingSeconds)
+                    best = new StunStatusSnapshot(buff.RemainingDurationSeconds, buff.DurationSeconds);
+            }
+
+            return best;
         }
 
         private float GetModifiedUnitValue(float baseValue, UnitDescriptor target, BuffKind kind)

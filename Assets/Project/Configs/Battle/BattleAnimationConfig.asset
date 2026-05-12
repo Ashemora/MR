@@ -33,6 +33,8 @@ MonoBehaviour:
   _attackTargetColor: {r: 1, g: 0.15, b: 0.15, a: 1}
   _healTargetColor: {r: 0.15, g: 1, b: 0.25, a: 1}
   _resurrectTargetColor: {r: 0.65, g: 0.2, b: 1, a: 1}
+  _cooldownSweepColor: {r: 0, g: 0, b: 0, a: 0.65}
+  _stunSweepColor: {r: 0.18518585, g: 0.83632493, b: 0.957547, a: 0.5019608}
   _cooldownGrayscaleEnabled: 0
   _shieldPulse:
     _scaleMultiplier: 1.25

@@ -5,6 +5,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
     public class CooldownSweepView : MonoBehaviour
     {
         private static readonly int ProgressShaderId = Shader.PropertyToID("_Progress");
+        private static readonly int OverlayColorShaderId = Shader.PropertyToID("_OverlayColor");
 
         
         [Tooltip("SpriteRenderer for the radial cooldown overlay - same sprite as portrait, sorting order above it")]
@@ -24,6 +25,11 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         public void SetCooldown(float remaining, float duration)
         {
+            SetCooldown(remaining, duration, new Color(0f, 0f, 0f, 0.65f));
+        }
+
+        public void SetCooldown(float remaining, float duration, Color overlayColor)
+        {
             if (!_overlay)
                 return;
 
@@ -35,6 +41,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             _propertyBlock ??= new MaterialPropertyBlock();
             _propertyBlock.SetFloat(ProgressShaderId, progress);
+            _propertyBlock.SetColor(OverlayColorShaderId, overlayColor);
             _overlay.SetPropertyBlock(_propertyBlock);
         }
     }

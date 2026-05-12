@@ -211,6 +211,21 @@ namespace Project.Scripts.Services.Events
     {
     }
 
+    public readonly struct UnitStunChangedEvent
+    {
+        public UnitDescriptor Unit { get; }
+        public float RemainingSeconds { get; }
+        public float DurationSeconds { get; }
+
+
+        public UnitStunChangedEvent(UnitDescriptor unit, float remainingSeconds, float durationSeconds)
+        {
+            Unit = unit;
+            RemainingSeconds = remainingSeconds < 0f ? 0f : remainingSeconds;
+            DurationSeconds = durationSeconds < 0f ? 0f : durationSeconds;
+        }
+    }
+
     public readonly struct HeroSlotKindPassiveStateChangedEvent
     {
         public BattleSide Side { get; }

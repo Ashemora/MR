@@ -21,6 +21,7 @@ namespace Project.Scripts.Services.Combat.Units
         private readonly IBattleSideEnergyService _battleSideEnergyService;
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
         private readonly IUnitActivationCooldownService _unitActivationCooldownService;
+        private readonly IStunStatusService _stunStatusService;
         private readonly IHeroAbilityModifierService _heroAbilityModifierService;
         private readonly IAbilityPowerModifierService _abilityPowerModifierService;
         private readonly INextActivationBuffService _nextActivationBuffService;
@@ -33,6 +34,7 @@ namespace Project.Scripts.Services.Combat.Units
             IBattleSideEnergyService battleSideEnergyService,
             IBattleActionRuntimeService battleActionRuntimeService,
             IUnitActivationCooldownService unitActivationCooldownService,
+            IStunStatusService stunStatusService,
             IHeroAbilityModifierService heroAbilityModifierService,
             IAbilityPowerModifierService abilityPowerModifierService,
             INextActivationBuffService nextActivationBuffService,
@@ -43,6 +45,7 @@ namespace Project.Scripts.Services.Combat.Units
             _battleSideEnergyService = battleSideEnergyService;
             _battleActionRuntimeService = battleActionRuntimeService;
             _unitActivationCooldownService = unitActivationCooldownService;
+            _stunStatusService = stunStatusService;
             _heroAbilityModifierService = heroAbilityModifierService;
             _abilityPowerModifierService = abilityPowerModifierService;
             _nextActivationBuffService = nextActivationBuffService;
@@ -142,6 +145,9 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == state.IsAssigned || false == state.IsAlive)
                 return false;
 
+            if (_stunStatusService.IsStunned(state.Unit))
+                return false;
+
             if (_unitActivationCooldownService.IsOnCooldown(state.Unit))
                 return false;
 
@@ -154,6 +160,9 @@ namespace Project.Scripts.Services.Combat.Units
         private bool CanActivateHero(UnitRuntimeState state)
         {
             if (false == state.IsAssigned || false == state.IsAlive)
+                return false;
+
+            if (_stunStatusService.IsStunned(state.Unit))
                 return false;
 
             if (_unitActivationCooldownService.IsOnCooldown(state.Unit))

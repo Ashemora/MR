@@ -19,5 +19,10 @@ MonoBehaviour:
   _maxHeroActivationDelay: 4
   _matchEnergyTickInterval: 2.5
   _baseMatchEnergyPerTick: 5
+  _cascadeVariation: 0.4
+  _goodCascadeChance: 0.12
+  _greatCascadeChance: 0.04
+  _goodCascadeMultiplier: 1.2
+  _greatCascadeMultiplier: 1.4
   _minAvatarActivationDelay: 0.5
   _maxAvatarActivationDelay: 2

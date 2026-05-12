@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1fea825070002c449f9d0545ccf77bb, type: 3}
+  m_Name: Hero_Damage15_Stun3s
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
+  _maxHP: 50
+  _displayName: Hero_Damage15_Stun3s
+  _portrait: {fileID: 21300000, guid: 817a7fc62db565a48a096c7cc0fe595a, type: 3}
+  _activeAbility:
+    _displayName: Stunning Strike
+    _activationEnergyCost: 25
+    _activationCooldownSeconds: 10
+    _directAction:
+      _kind: 1
+      _value: 15
+      _operation: 1
+      _targeting:
+        _scope: 2
+        _relation: 1
+        _unitKind: 0
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: []
+      _ignoresAvatarGroupDefense: 0
+    _buffEntries:
+    - _targeting:
+        _scope: 2
+        _relation: 1
+        _unitKind: 0
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: []
+      _buffApplications:
+      - _buff:
+          _kind: 13
+          _operation: 0
+          _value: 0
+          _lifetimeKind: 0
+          _stackingMode: 0
+        _durationSeconds: 3
+  _passiveAbilities: []

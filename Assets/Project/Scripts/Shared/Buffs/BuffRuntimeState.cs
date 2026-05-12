@@ -12,6 +12,7 @@ namespace Project.Scripts.Shared.Buffs
         public BuffDefinition Definition { get; }
         public int StackCount { get; }
         public BattlePhaseKind ExpiresAfterMainPhase { get; }
+        public float DurationSeconds { get; }
         public float RemainingDurationSeconds { get; }
         public bool UsesDuration => RemainingDurationSeconds > 0f;
 
@@ -36,7 +37,22 @@ namespace Project.Scripts.Shared.Buffs
             Definition = definition;
             StackCount = stackCount < 1 ? 1 : stackCount;
             ExpiresAfterMainPhase = expiresAfterMainPhase;
-            RemainingDurationSeconds = durationSeconds < 0f ? 0f : durationSeconds;
+            DurationSeconds = durationSeconds < 0f ? 0f : durationSeconds;
+            RemainingDurationSeconds = DurationSeconds;
+        }
+
+        private BuffRuntimeState(UnitDescriptor source, UnitDescriptor target, TileKind sourceSlotKind,
+            BuffDefinition definition, int stackCount, BattlePhaseKind expiresAfterMainPhase, float durationSeconds,
+            float remainingDurationSeconds)
+        {
+            Source = source;
+            Target = target;
+            SourceSlotKind = sourceSlotKind;
+            Definition = definition;
+            StackCount = stackCount < 1 ? 1 : stackCount;
+            ExpiresAfterMainPhase = expiresAfterMainPhase;
+            DurationSeconds = durationSeconds < 0f ? 0f : durationSeconds;
+            RemainingDurationSeconds = remainingDurationSeconds < 0f ? 0f : remainingDurationSeconds;
         }
 
         public BuffRuntimeState WithDurationTicked(float deltaTime)
@@ -49,7 +65,7 @@ namespace Project.Scripts.Shared.Buffs
                 nextDuration = 0f;
 
             return new BuffRuntimeState(Source, Target, SourceSlotKind, Definition, StackCount,
-                ExpiresAfterMainPhase, nextDuration);
+                ExpiresAfterMainPhase, DurationSeconds, nextDuration);
         }
 
         private static BattlePhaseKind GetNextMainPhase(BattlePhaseKind currentPhase)

@@ -263,49 +263,64 @@ namespace Project.Scripts.Services.Bot
                 if (_battleFlowService.Snapshot.Phase != BattlePhaseKind.Hero)
                     continue;
 
-                var slots = _heroService.GetSlots(BattleSide.Enemy);
-                var pickedIndex = _engine.PickRandomAssignedSlot(slots);
+                var currentEnemySlots = _heroService.GetSlots(BattleSide.Enemy);
+                var pickedIndex = PickReadyHeroActivationIndex(currentEnemySlots);
 
                 if (pickedIndex < 0)
-                    continue;
-
-                var currentEnemySlots = _heroService.GetSlots(BattleSide.Enemy);
-                var updatedSlot = currentEnemySlots[pickedIndex];
-
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, pickedIndex);
-                if (false == _unitAbilityActivationService.TryPreview(source, out _) || _heroActivationPending[pickedIndex])
-                    continue;
-
-                if (updatedSlot.ActionType == UnitActionType.HealAlly)
-                {
-                    bool hasHealTarget;
-
-                    if (false == _groupDefense.IsExposed(BattleSide.Enemy))
-                    {
-                        var t = _engine.PickWeakestGroupHero(
-                            currentEnemySlots,
-                            _slotLayoutConfig.Group1SlotIndices,
-                            _slotLayoutConfig.Group2SlotIndices);
-                        hasHealTarget = t >= 0 && t != pickedIndex;
-                    }
-                    else
-                    {
-                        var t = _engine.PickMostWoundedHero(currentEnemySlots);
-                        hasHealTarget = false == _avatarService.IsHpFull(BattleSide.Enemy)
-                            || (t >= 0 && t != pickedIndex);
-                    }
-
-                    if (!hasHealTarget)
-                        continue;
-                }
-
-                if (updatedSlot.ActionType == UnitActionType.ResurrectAlly
-                    && PickDeadHero(currentEnemySlots, pickedIndex) < 0)
                     continue;
 
                 _heroActivationPending[pickedIndex] = true;
                 ActivateWithDelay(pickedIndex, ct).Forget();
             }
+        }
+
+        private int PickReadyHeroActivationIndex(IReadOnlyList<HeroSlotState> slots)
+        {
+            var candidates = new List<int>(slots.Count);
+            for (var i = 0; i < slots.Count; i++)
+            {
+                if (_heroActivationPending[i])
+                    continue;
+
+                var source = UnitDescriptor.Hero(BattleSide.Enemy, i);
+                if (false == _unitAbilityActivationService.TryPreview(source, out _))
+                    continue;
+
+                if (false == HasViableHeroActivationTarget(i, slots))
+                    continue;
+
+                candidates.Add(i);
+            }
+
+            return _engine.PickRandomIndex(candidates);
+        }
+
+        private bool HasViableHeroActivationTarget(int slotIndex, IReadOnlyList<HeroSlotState> slots)
+        {
+            var actionType = slots[slotIndex].ActionType;
+            if (actionType == UnitActionType.HealAlly)
+                return HasHeroHealTarget(slotIndex, slots);
+
+            if (actionType == UnitActionType.ResurrectAlly)
+                return PickDeadHero(slots, slotIndex) >= 0;
+
+            return true;
+        }
+
+        private bool HasHeroHealTarget(int slotIndex, IReadOnlyList<HeroSlotState> slots)
+        {
+            if (false == _groupDefense.IsExposed(BattleSide.Enemy))
+            {
+                var targetIndex = _engine.PickWeakestGroupHero(
+                    slots,
+                    _slotLayoutConfig.Group1SlotIndices,
+                    _slotLayoutConfig.Group2SlotIndices);
+                return targetIndex >= 0 && targetIndex != slotIndex;
+            }
+
+            var mostWoundedIndex = _engine.PickMostWoundedHero(slots);
+            return false == _avatarService.IsHpFull(BattleSide.Enemy)
+                   || (mostWoundedIndex >= 0 && mostWoundedIndex != slotIndex);
         }
 
         private async UniTaskVoid ActivateWithDelay(int slotIndex, CancellationToken ct)

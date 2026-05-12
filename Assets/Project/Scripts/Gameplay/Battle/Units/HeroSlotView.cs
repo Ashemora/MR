@@ -87,6 +87,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
         private UnitDeathConfig _deathConfig;
         private CompositeDisposable _disposables;
         private Color _originalPortraitColor;
+        private (float Remaining, float Duration) _cooldownProgress;
+        private (float Remaining, float Duration) _stunProgress;
         private Vector3 _originalLocalPos;
         private Color[] _originalDeathColors;
         private Tween _hitFlashTween;
@@ -113,6 +115,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             _disposables?.Dispose();
             _disposables = new CompositeDisposable();
+            _cooldownProgress = default;
+            _stunProgress = default;
             _originalLocalPos = transform.localPosition;
             ResetPortraitDeathFill();
             CacheDeathColors();
@@ -300,10 +304,33 @@ namespace Project.Scripts.Gameplay.Battle.Units
             viewModel.CooldownProgress
                 .Subscribe(info =>
                 {
-                    _cooldownSweep?.SetCooldown(info.Remaining, info.Duration);
-                    SetPortraitGrayscale(info.Remaining > 0f && _config && _config.CooldownGrayscaleEnabled);
+                    _cooldownProgress = info;
+                    ApplyCooldownSweep();
                 })
                 .AddTo(_disposables);
+
+            viewModel.StunProgress
+                .Subscribe(info =>
+                {
+                    _stunProgress = info;
+                    ApplyCooldownSweep();
+                })
+                .AddTo(_disposables);
+        }
+
+        private void ApplyCooldownSweep()
+        {
+            if (_stunProgress.Remaining > 0f)
+            {
+                _cooldownSweep?.SetCooldown(_stunProgress.Remaining, _stunProgress.Duration,
+                    _config ? _config.StunSweepColor : Color.blue);
+                SetPortraitGrayscale(false);
+                return;
+            }
+
+            _cooldownSweep?.SetCooldown(_cooldownProgress.Remaining, _cooldownProgress.Duration,
+                _config ? _config.CooldownSweepColor : new Color(0f, 0f, 0f, 0.65f));
+            SetPortraitGrayscale(_cooldownProgress.Remaining > 0f && _config && _config.CooldownGrayscaleEnabled);
         }
 
         private void BindSlotKindPassiveState(HeroSlotViewModel viewModel)

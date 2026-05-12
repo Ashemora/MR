@@ -56,7 +56,8 @@ Shader "Custom/SpriteCooldownSweep"
 
         float4 frag(Varyings input) : SV_Target
         {
-            float spriteAlpha = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv).a;
+            float4 sprite = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+            float spriteAlpha = sprite.a;
 
             if (spriteAlpha <= 0.0)
                 discard;
@@ -68,7 +69,8 @@ Shader "Custom/SpriteCooldownSweep"
             if (angle > _Progress)
                 discard;
 
-            return float4(_OverlayColor.rgb, _OverlayColor.a * spriteAlpha * input.color.a);
+            float3 overlayRgb = _OverlayColor.rgb * sprite.rgb;
+            return float4(overlayRgb, _OverlayColor.a * spriteAlpha * input.color.a);
         }
         ENDHLSL
 

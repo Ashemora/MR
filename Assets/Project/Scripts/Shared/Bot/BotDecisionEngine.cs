@@ -74,6 +74,14 @@ namespace Project.Scripts.Shared.Bot
             return -1;
         }
 
+        public int PickRandomIndex(IReadOnlyList<int> indices)
+        {
+            if (null == indices || indices.Count == 0)
+                return -1;
+
+            return indices[_rng.Next(indices.Count)];
+        }
+
         public int PickGroupBreakTarget(IReadOnlyList<HeroSlotState> playerSlots, int[] group1Indices, 
             int[] group2Indices)
         {

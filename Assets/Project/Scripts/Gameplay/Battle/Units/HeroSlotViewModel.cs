@@ -28,6 +28,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
         public ReactiveProperty<bool> IsAvailabilityDimmed { get; } = new(false);
         public ReactiveProperty<bool> IsSlotKindPassiveActive { get; } = new(false);
         public ReactiveProperty<(float Remaining, float Duration)> CooldownProgress { get; } = new((0f, 0f));
+        public ReactiveProperty<(float Remaining, float Duration)> StunProgress { get; } = new((0f, 0f));
         public ReactiveProperty<float> HPFill { get; }
         public ReactiveProperty<bool>  IsDefeated { get; } = new(false);
         public int CurrentHP { get; private set; }
@@ -46,6 +47,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
         private int _currentEnergy;
         private bool _hasSufficientEnergy;
         private bool _isOnCooldown;
+        private bool _isStunned;
 
 
         public HeroSlotViewModel(int slotIndex, BattleSide side, HeroSlotState state, Color color, 
@@ -74,6 +76,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
             _subscriptions.Add(_battleActionRuntimeService.State.Subscribe(_ => RefreshActivatable()));
             _subscriptions.Add(eventBus.Subscribe<BattleSideEnergyChangedEvent>(OnBattleSideEnergyChanged));
             _subscriptions.Add(eventBus.Subscribe<HeroCooldownChangedEvent>(OnHeroCooldownChanged));
+            _subscriptions.Add(eventBus.Subscribe<UnitStunChangedEvent>(OnUnitStunChanged));
         }
 
         public void UpdateHP(int current, int max, bool silent = false)
@@ -135,6 +138,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
             IsAvailabilityDimmed.Dispose();
             IsSlotKindPassiveActive.Dispose();
             CooldownProgress.Dispose();
+            StunProgress.Dispose();
             HPFill.Dispose();
             IsDefeated.Dispose();
             _healthBarUpdated.Dispose();
@@ -171,6 +175,15 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 ActivationBlockReason.Value = UnitActivationBlockReason.BlockedByPhase;
                 RefreshAvailabilityVisualState();
                 
+                return;
+            }
+
+            if (_isStunned)
+            {
+                IsActivatable.Value = false;
+                ActivationBlockReason.Value = UnitActivationBlockReason.Stunned;
+                RefreshAvailabilityVisualState();
+
                 return;
             }
 
@@ -214,6 +227,16 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             _isOnCooldown = e.RemainingSeconds > 0f;
             CooldownProgress.Value = (e.RemainingSeconds, e.DurationSeconds);
+            RefreshActivatable();
+        }
+
+        private void OnUnitStunChanged(UnitStunChangedEvent e)
+        {
+            if (e.Unit.Kind != UnitKind.Hero || e.Unit.Side != Side || e.Unit.SlotIndex != SlotIndex)
+                return;
+
+            _isStunned = e.RemainingSeconds > 0f;
+            StunProgress.Value = (e.RemainingSeconds, e.DurationSeconds);
             RefreshActivatable();
         }
 
