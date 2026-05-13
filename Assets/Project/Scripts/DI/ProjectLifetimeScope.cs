@@ -26,6 +26,7 @@ namespace Project.Scripts.DI
             builder.RegisterInstance(_mainConfig.AudioSFXConfig);
             builder.RegisterInstance(_mainConfig.SpecialTileConfig);
             builder.RegisterInstance(_mainConfig.LevelDatabase);
+            builder.RegisterInstance(_mainConfig.PlayerBattleConfig);
             builder.RegisterInstance(_mainConfig.UIConfig);
             builder.RegisterInstance(_mainConfig.BoardAnnouncementConfig);
             builder.RegisterInstance(_mainConfig.MoveBarConfig);

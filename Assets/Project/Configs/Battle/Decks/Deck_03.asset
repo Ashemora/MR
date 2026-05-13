@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a005f442e4abae24f9cb21ecded2290e, type: 3}
+  m_Name: Deck_03
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.Units.UnitDeckConfig
+  _displayName: Deck 03
+  _avatarConfig: {fileID: 11400000, guid: 10f28ac1346170149be5630d8e075bac, type: 2}
+  _heroes:
+  - {fileID: 11400000, guid: d58a5fe3509de434a98e96d78ae26093, type: 2}
+  - {fileID: 11400000, guid: c40684606f95ebb41b02fac1f62d500d, type: 2}
+  - {fileID: 11400000, guid: d6d78ff54c191463caafec257a81561f, type: 2}
+  - {fileID: 11400000, guid: 201855d7b78214970acde475c79a1909, type: 2}

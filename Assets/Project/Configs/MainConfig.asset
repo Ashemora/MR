@@ -23,6 +23,7 @@ MonoBehaviour:
   _cascadeEnergyConfig: {fileID: 11400000, guid: 367bc2c4bb5f8c5498d44f1f92e0f2b3, type: 2}
   _specialTileConfig: {fileID: 11400000, guid: bf43509404b084149a8b2978f4619c2d, type: 2}
   _levelDatabase: {fileID: 11400000, guid: 528394c8e2714e3489a9a33180a6de4c, type: 2}
+  _playerBattleConfig: {fileID: 11400000, guid: c2b04e1ada334171b574bef8c6131812, type: 2}
   _uiConfig: {fileID: 11400000, guid: 63526929da5930348899f6e6bbc1be6c, type: 2}
   _boardAnnouncementConfig: {fileID: 11400000, guid: 4f4cc5986c0342a4bb2b96d23c8d67a1, type: 2}
   _moveBarConfig: {fileID: 11400000, guid: 1d120bb07ff23a948a01c2604afe52b3, type: 2}

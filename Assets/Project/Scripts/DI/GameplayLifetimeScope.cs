@@ -1,3 +1,4 @@
+using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Gameplay;
@@ -38,7 +39,9 @@ namespace Project.Scripts.DI
             var levelConfig = levelDatabase.GetById(LevelProgressionService.CurrentLevelId);
             builder.RegisterInstance(levelConfig);
             var slotLayoutConfig = Parent.Container.Resolve<SlotLayoutConfig>();
-            builder.RegisterInstance(BattleSetupFactory.Create(levelConfig, slotLayoutConfig));
+            var playerBattleConfig = Parent.Container.Resolve<PlayerBattleConfig>();
+            builder.RegisterInstance(BattleSetupFactory.Create(playerBattleConfig.DefaultUnitDeck,
+                levelConfig.OpponentUnitDeck, slotLayoutConfig));
 
             builder.RegisterComponentInHierarchy<GameplayEntryPoint>();
             builder.Register<BoardSystemsFactory>(Lifetime.Singleton);

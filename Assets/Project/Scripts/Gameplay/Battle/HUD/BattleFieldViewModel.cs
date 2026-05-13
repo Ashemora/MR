@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Battle.Units;
 using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Configs.Battle.Layout;
@@ -57,6 +58,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         private readonly IUnitActivationCooldownService _unitActivationCooldownService;
         private readonly TileKindPaletteConfig _palette;
         private readonly LevelConfig _levelConfig;
+        private readonly PlayerBattleConfig _playerBattleConfig;
         private readonly SlotLayoutConfig _slotLayoutConfig;
         private readonly IGameStateService _gameStateService;
         private readonly IBattleFlowService _battleFlowService;
@@ -83,6 +85,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             IUnitActivationCooldownService unitActivationCooldownService,
             TileKindPaletteConfig palette,
             LevelConfig levelConfig,
+            PlayerBattleConfig playerBattleConfig,
             SlotLayoutConfig slotLayoutConfig,
             IGameStateService gameStateService,
             IBattleFlowService battleFlowService,
@@ -102,6 +105,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             _unitActivationCooldownService = unitActivationCooldownService;
             _palette = palette;
             _levelConfig = levelConfig;
+            _playerBattleConfig = playerBattleConfig;
             _slotLayoutConfig = slotLayoutConfig;
             _gameStateService = gameStateService;
             _battleFlowService = battleFlowService;
@@ -128,18 +132,22 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             var avatarColor = _palette.GetColor(_slotLayoutConfig.AvatarSlotKind, Color.gray);
             var playerAvatar = _avatarService.GetAvatar(BattleSide.Player);
             var enemyAvatar = _avatarService.GetAvatar(BattleSide.Enemy);
+            var playerDeck = _playerBattleConfig.DefaultUnitDeck;
+            var opponentDeck = _levelConfig.OpponentUnitDeck;
+            var playerAvatarConfig = playerDeck.AvatarConfig;
+            var enemyAvatarConfig = opponentDeck.AvatarConfig;
 
             PlayerAvatar = new AvatarSlotViewModel(
                 _eventBus,
                 BattleSide.Player,
                 avatarColor,
-                _levelConfig.PlayerAvatarConfig.Portrait,
+                playerAvatarConfig.Portrait,
                 playerAvatar.CurrentHP,
                 playerAvatar.MaxHP,
                 _battleAnimationConfig,
-                _levelConfig.PlayerAvatarConfig.AbilityType,
-                _levelConfig.PlayerAvatarConfig.ActivationEnergyCost,
-                GetAvatarAbilityPower(BattleSide.Player, _levelConfig.PlayerAvatarConfig),
+                playerAvatarConfig.AbilityType,
+                playerAvatarConfig.ActivationEnergyCost,
+                GetAvatarAbilityPower(BattleSide.Player, playerAvatarConfig),
                 _unitActivationCooldownService,
                 _battleActionRuntimeService);
 
@@ -147,25 +155,25 @@ namespace Project.Scripts.Gameplay.Battle.HUD
                 _eventBus,
                 BattleSide.Enemy,
                 avatarColor,
-                _levelConfig.EnemyAvatarConfig.Portrait,
+                enemyAvatarConfig.Portrait,
                 enemyAvatar.CurrentHP,
                 enemyAvatar.MaxHP,
                 _battleAnimationConfig,
-                _levelConfig.EnemyAvatarConfig.AbilityType,
-                _levelConfig.EnemyAvatarConfig.ActivationEnergyCost,
-                GetAvatarAbilityPower(BattleSide.Enemy, _levelConfig.EnemyAvatarConfig),
+                enemyAvatarConfig.AbilityType,
+                enemyAvatarConfig.ActivationEnergyCost,
+                GetAvatarAbilityPower(BattleSide.Enemy, enemyAvatarConfig),
                 _unitActivationCooldownService,
                 _battleActionRuntimeService);
 
             _playerHeroSlots = CreateHeroSlotViewModels(
                 BattleSide.Player,
                 _heroService.GetSlots(BattleSide.Player),
-                _levelConfig.PlayerHeroes);
+                playerDeck.Heroes);
 
             _enemyHeroSlots = CreateHeroSlotViewModels(
                 BattleSide.Enemy,
                 _heroService.GetSlots(BattleSide.Enemy),
-                _levelConfig.EnemyHeroes);
+                opponentDeck.Heroes);
 
             Disposables.Add(_eventBus.Subscribe<HeroHPChangedEvent>(OnHeroHPChanged));
             Disposables.Add(_eventBus.Subscribe<HeroDefeatedEvent>(OnHeroDefeated));

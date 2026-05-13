@@ -24,17 +24,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 46853c594e257054baaee71fc76fa00b, type: 2}
   - {fileID: 11400000, guid: 438f2a2ac5c21944a9de839fc3622991, type: 2}
   - {fileID: 11400000, guid: dc1cae93b0911fd4facc660a6f3387b9, type: 2}
-  _goalType: 0
-  _playerAvatarConfig: {fileID: 11400000, guid: 10f28ac1346170149be5630d8e075bac, type: 2}
-  _enemyAvatarConfig: {fileID: 11400000, guid: 10f28ac1346170149be5630d8e075bac, type: 2}
-  _playerHeroes:
-  - {fileID: 11400000, guid: d58a5fe3509de434a98e96d78ae26093, type: 2}
-  - {fileID: 11400000, guid: c40684606f95ebb41b02fac1f62d500d, type: 2}
-  - {fileID: 11400000, guid: d6d78ff54c191463caafec257a81561f, type: 2}
-  - {fileID: 11400000, guid: 201855d7b78214970acde475c79a1909, type: 2}
-  _enemyHeroes:
-  - {fileID: 11400000, guid: d58a5fe3509de434a98e96d78ae26093, type: 2}
-  - {fileID: 11400000, guid: d58a5fe3509de434a98e96d78ae26093, type: 2}
-  - {fileID: 11400000, guid: c40684606f95ebb41b02fac1f62d500d, type: 2}
-  - {fileID: 11400000, guid: c40684606f95ebb41b02fac1f62d500d, type: 2}
+  _opponentUnitDeck: {fileID: 11400000, guid: 914529448e64448cb3144ba57a303919, type: 2}
   _botConfig: {fileID: 11400000, guid: e08640440e2033e4489542e45deb29d0, type: 2}

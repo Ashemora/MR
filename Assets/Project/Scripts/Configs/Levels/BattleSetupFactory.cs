@@ -11,15 +11,16 @@ namespace Project.Scripts.Configs.Levels
 {
     public static class BattleSetupFactory
     {
-        public static BattleSetup Create(LevelConfig levelConfig, SlotLayoutConfig slotLayoutConfig)
+        public static BattleSetup Create(UnitDeckConfig playerDeck, UnitDeckConfig opponentDeck,
+            SlotLayoutConfig slotLayoutConfig)
         {
             return new BattleSetup(
-                CreateAvatar(BattleSide.Player, levelConfig.PlayerAvatarConfig),
-                CreateAvatar(BattleSide.Enemy, levelConfig.EnemyAvatarConfig),
-                CreateHeroes(BattleSide.Player, levelConfig.PlayerHeroes, slotLayoutConfig),
-                CreateHeroes(BattleSide.Enemy, levelConfig.EnemyHeroes, slotLayoutConfig));
+                CreateAvatar(BattleSide.Player, playerDeck ? playerDeck.AvatarConfig : null),
+                CreateAvatar(BattleSide.Enemy, opponentDeck ? opponentDeck.AvatarConfig : null),
+                CreateHeroes(BattleSide.Player, playerDeck ? playerDeck.Heroes : null, slotLayoutConfig),
+                CreateHeroes(BattleSide.Enemy, opponentDeck ? opponentDeck.Heroes : null, slotLayoutConfig));
         }
-        
+
 
         private static BattleUnitSetup CreateAvatar(BattleSide side, AvatarConfig config)
         {

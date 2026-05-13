@@ -1,3 +1,4 @@
+using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Battle.Units;
 using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Configs.Battle.Energy;
@@ -48,6 +49,9 @@ namespace Project.Scripts.Configs
 
         [Tooltip("База уровней: список всех уровней с их конфигами")]
         [SerializeField] private LevelDatabase _levelDatabase;
+
+        [Tooltip("Боевые настройки игрока: базовая дека до появления выбора в лобби")]
+        [SerializeField] private PlayerBattleConfig _playerBattleConfig;
 
         [Tooltip("Настройки UI: шрифты, цвета, анимации интерфейса")]
         [SerializeField] private UIConfig _uiConfig;
@@ -106,6 +110,7 @@ namespace Project.Scripts.Configs
         public CascadeEnergyConfig CascadeEnergyConfig => _cascadeEnergyConfig;
         public SpecialTileConfig SpecialTileConfig => _specialTileConfig;
         public LevelDatabase LevelDatabase => _levelDatabase;
+        public PlayerBattleConfig PlayerBattleConfig => _playerBattleConfig;
         public UIConfig UIConfig => _uiConfig;
         public BoardAnnouncementConfig BoardAnnouncementConfig => _boardAnnouncementConfig;
         public MoveBarConfig MoveBarConfig => _moveBarConfig;
