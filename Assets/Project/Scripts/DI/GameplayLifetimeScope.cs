@@ -66,6 +66,7 @@ namespace Project.Scripts.DI
                 .As<IAbilityRepeatModifierService>()
                 .As<IAbilityAdditionalTargetModifierService>()
                 .As<IResurrectOnDeathBuffService>()
+                .As<IShieldService>()
                 .As<IStunStatusService>();
             builder.RegisterEntryPoint<HeroPassiveService>().As<IHeroPassiveService>();
             builder.RegisterEntryPoint<BattleSideEnergyService>().As<IBattleSideEnergyService>();

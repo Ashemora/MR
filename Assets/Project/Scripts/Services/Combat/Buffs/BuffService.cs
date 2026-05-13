@@ -7,6 +7,7 @@ using Project.Scripts.Shared.Tiles;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Energy;
 using Project.Scripts.Shared.Buffs;
+using Project.Scripts.Shared.Targeting;
 using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Buffs
@@ -15,7 +16,7 @@ namespace Project.Scripts.Services.Combat.Buffs
         IAbilityPowerModifierService, INextAttackBuffService, IBombRadiusModifierService,
         IHeroCooldownModifierService, INextActivationBuffService, IAbilityRepeatModifierService,
         IAbilityAdditionalTargetModifierService, ILineRuneModifierService, IResurrectOnDeathBuffService,
-        IStunStatusService
+        IShieldService, IStunStatusService
     {
         public IReadOnlyList<BuffRuntimeState> Buffs => _engine.Buffs;
 
@@ -38,6 +39,7 @@ namespace Project.Scripts.Services.Combat.Buffs
         public bool Tick(float deltaTime)
         {
             var stunTargets = CaptureStunTargets();
+            var shieldTargets = CaptureShieldTargets();
             var buffsRemoved = _engine.Tick(deltaTime);
             PublishStunStatuses(stunTargets);
             PublishActiveStunStatuses(stunTargets);
@@ -45,6 +47,7 @@ namespace Project.Scripts.Services.Combat.Buffs
             if (false == buffsRemoved)
                 return false;
 
+            PublishShieldStatuses(shieldTargets);
             _eventBus.Publish(new BuffsChangedEvent());
             PublishAllAbilityStatsChanged();
             
@@ -59,22 +62,44 @@ namespace Project.Scripts.Services.Combat.Buffs
             if (added && definition.Kind == BuffKind.Stun)
                 PublishStunStatus(target);
 
+            if (added && definition.Kind == BuffKind.Shield)
+                PublishShieldStatus(target);
+
             return added;
         }
 
         public bool RemoveByUnit(UnitDescriptor unit)
         {
             var stunTargets = CaptureStunTargets();
+            var shieldTargets = CaptureShieldTargetsForUnit(unit);
             var removed = _engine.RemoveByUnit(unit);
             if (removed)
+            {
                 PublishStunStatuses(stunTargets);
+                PublishShieldStatuses(shieldTargets);
+            }
 
             return removed;
         }
 
         public bool ExpireUntilEndOfNextMainPhaseBuffs(BattlePhaseKind previousPhase, BattlePhaseKind nextPhase)
         {
-            return _engine.ExpireUntilEndOfNextMainPhaseBuffs(previousPhase, nextPhase);
+            var shieldTargets = CaptureShieldTargets();
+            var removed = _engine.ExpireUntilEndOfNextMainPhaseBuffs(previousPhase, nextPhase);
+            if (removed)
+                PublishShieldStatuses(shieldTargets);
+
+            return removed;
+        }
+
+        public bool ExpireUntilEndOfRoundBuffs(int completedRound)
+        {
+            var shieldTargets = CaptureShieldTargets();
+            var removed = _engine.ExpireUntilEndOfRoundBuffs(completedRound);
+            if (removed)
+                PublishShieldStatuses(shieldTargets);
+
+            return removed;
         }
 
         public bool HasMatchEnergyBuff(BattleSide side, TileKind tileKind)
@@ -95,6 +120,23 @@ namespace Project.Scripts.Services.Combat.Buffs
         public bool IsStunned(UnitDescriptor target)
         {
             return GetStunStatus(target).IsActive;
+        }
+
+        public ShieldSnapshot GetShield(UnitDescriptor target)
+        {
+            return _engine.GetShield(target);
+        }
+
+        public ShieldAbsorptionResult AbsorbDamage(UnitDescriptor target, int damage, BattlePhaseKind currentPhase)
+        {
+            var result = _engine.AbsorbShieldDamage(target, damage, currentPhase);
+            if (result.ShieldChanged)
+            {
+                PublishShieldStatus(target);
+                _eventBus.Publish(new BuffsChangedEvent());
+            }
+
+            return result;
         }
 
         public float CalculateEnergy(BattleSide side, EnergyGainBreakdown breakdown)
@@ -216,6 +258,41 @@ namespace Project.Scripts.Services.Combat.Buffs
             return result;
         }
 
+        private List<UnitDescriptor> CaptureShieldTargets()
+        {
+            var result = new List<UnitDescriptor>();
+            var buffs = _engine.Buffs;
+            for (var i = 0; i < buffs.Count; i++)
+            {
+                var buff = buffs[i];
+                if (buff.Definition.Kind == BuffKind.Shield)
+                    AddUnique(result, buff.Target);
+            }
+
+            return result;
+        }
+
+        private List<UnitDescriptor> CaptureShieldTargetsForUnit(UnitDescriptor unit)
+        {
+            var result = new List<UnitDescriptor>();
+            var unitKey = BattleUnitKey.FromDescriptor(unit);
+            var buffs = _engine.Buffs;
+            for (var i = 0; i < buffs.Count; i++)
+            {
+                var buff = buffs[i];
+                if (buff.Definition.Kind != BuffKind.Shield)
+                    continue;
+
+                if (BattleUnitKey.FromDescriptor(buff.Source) != unitKey
+                    && BattleUnitKey.FromDescriptor(buff.Target) != unitKey)
+                    continue;
+
+                AddUnique(result, buff.Target);
+            }
+
+            return result;
+        }
+
         private void PublishActiveStunStatuses(List<UnitDescriptor> knownTargets)
         {
             var buffs = _engine.Buffs;
@@ -243,6 +320,18 @@ namespace Project.Scripts.Services.Combat.Buffs
         {
             var status = _engine.GetStunStatus(target);
             _eventBus.Publish(new UnitStunChangedEvent(target, status.RemainingSeconds, status.DurationSeconds));
+        }
+
+        private void PublishShieldStatuses(List<UnitDescriptor> targets)
+        {
+            for (var i = 0; i < targets.Count; i++)
+                PublishShieldStatus(targets[i]);
+        }
+
+        private void PublishShieldStatus(UnitDescriptor target)
+        {
+            var shield = _engine.GetShield(target);
+            _eventBus.Publish(new UnitShieldChangedEvent(target, shield.Current, shield.Capacity));
         }
 
         private static void AddUnique(List<UnitDescriptor> units, UnitDescriptor unit)

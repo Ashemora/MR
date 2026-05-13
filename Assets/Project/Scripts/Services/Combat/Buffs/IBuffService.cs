@@ -14,8 +14,15 @@ namespace Project.Scripts.Services.Combat.Buffs
             int currentRound, BattlePhaseKind currentPhase, float durationSeconds = 0f);
         bool RemoveByUnit(UnitDescriptor unit);
         bool ExpireUntilEndOfNextMainPhaseBuffs(BattlePhaseKind previousPhase, BattlePhaseKind nextPhase);
+        bool ExpireUntilEndOfRoundBuffs(int completedRound);
         bool HasMatchEnergyBuff(BattleSide side, TileKind tileKind);
         bool HasBuffFromSource(UnitDescriptor source);
+    }
+
+    public interface IShieldService
+    {
+        ShieldSnapshot GetShield(UnitDescriptor target);
+        ShieldAbsorptionResult AbsorbDamage(UnitDescriptor target, int damage, BattlePhaseKind currentPhase);
     }
 
     public interface IStunStatusService

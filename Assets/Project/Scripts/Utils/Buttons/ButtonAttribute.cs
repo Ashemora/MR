@@ -8,18 +8,21 @@ namespace Project.Scripts.Utils.Buttons
     {
         public string MethodName { get; }
         public ButtonPosition Position { get; }
+        public bool DrawField { get; }
 
 
         public ButtonAttribute()
         {
             MethodName = null;
             Position = ButtonPosition.Below;
+            DrawField = true;
         }
 
-        public ButtonAttribute(string methodName, ButtonPosition position = ButtonPosition.Below)
+        public ButtonAttribute(string methodName, ButtonPosition position = ButtonPosition.Below, bool drawField = true)
         {
             MethodName = methodName;
             Position = position;
+            DrawField = drawField;
         }
     }
 }

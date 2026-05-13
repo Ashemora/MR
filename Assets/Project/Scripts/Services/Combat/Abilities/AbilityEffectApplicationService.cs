@@ -120,6 +120,9 @@ namespace Project.Scripts.Services.Combat.Abilities
                 if (false == application.IsConfigured)
                     continue;
 
+                if (false == CanApplyBuffApplication(application.Buff, target))
+                    continue;
+
                 if (_buffService.AddBuff(source, target, sourceSlotKind, application.Buff, currentRound, currentPhase,
                         application.DurationSeconds))
                 {
@@ -130,6 +133,14 @@ namespace Project.Scripts.Services.Combat.Abilities
             }
 
             return appliedCount;
+        }
+
+        private bool CanApplyBuffApplication(BuffDefinition buff, UnitDescriptor target)
+        {
+            if (buff.Kind != BuffKind.Shield)
+                return true;
+
+            return TryGetTargetState(target, true, out var isAlive, out _, out _) && isAlive;
         }
 
         private int ExecuteDirectAction(UnitDescriptor source, UnitDescriptor target, DirectActionDefinition action,

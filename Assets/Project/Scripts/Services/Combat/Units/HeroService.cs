@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Clock;
+using Project.Scripts.Services.BattleFlow;
 using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Shared.Heroes;
@@ -17,20 +18,25 @@ namespace Project.Scripts.Services.Combat.Units
 
         private readonly EventBus _eventBus;
         private readonly IResurrectOnDeathBuffService _resurrectOnDeathBuffService;
+        private readonly IShieldService _shieldService;
         private readonly IGameStateService _gameStateService;
         private readonly IBattleClock _battleClock;
+        private readonly IBattleFlowService _battleFlowService;
         private readonly HeroSlotState[] _playerSlots = new HeroSlotState[SlotCount];
         private readonly HeroSlotState[] _enemySlots = new HeroSlotState[SlotCount];
 
 
         public HeroService(EventBus eventBus, BattleSetup battleSetup,
             IResurrectOnDeathBuffService resurrectOnDeathBuffService,
-            IGameStateService gameStateService, IBattleClock battleClock)
+            IShieldService shieldService, IGameStateService gameStateService, IBattleClock battleClock,
+            IBattleFlowService battleFlowService)
         {
             _eventBus = eventBus;
             _resurrectOnDeathBuffService = resurrectOnDeathBuffService;
+            _shieldService = shieldService;
             _gameStateService = gameStateService;
             _battleClock = battleClock;
+            _battleFlowService = battleFlowService;
 
             InitSlots(_playerSlots, battleSetup, BattleSide.Player);
             InitSlots(_enemySlots, battleSetup, BattleSide.Enemy);
@@ -48,6 +54,12 @@ namespace Project.Scripts.Services.Combat.Units
         public void ApplyDamageToHero(BattleSide side, int slotIndex, int amount, bool silent = false)
         {
             if (slotIndex is < 0 or >= SlotCount || amount <= 0)
+                return;
+
+            var target = UnitDescriptor.Hero(side, slotIndex);
+            var absorption = _shieldService.AbsorbDamage(target, amount, _battleFlowService.Snapshot.Phase);
+            amount = absorption.RemainingDamage;
+            if (amount <= 0)
                 return;
 
             ref var slot = ref GetSlotRef(side, slotIndex);

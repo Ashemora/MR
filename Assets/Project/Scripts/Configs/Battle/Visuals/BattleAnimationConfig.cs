@@ -24,7 +24,27 @@ namespace Project.Scripts.Configs.Battle.Visuals
         [Tooltip("Кривая ослабления для обеих фаз отбрасывания")]
         [SerializeField] private Ease _knockbackEase = Ease.OutQuad;
 
-        [Header("HP Bar Animation")]
+        [Header("HP Bar Visuals")]
+        [Tooltip("Цвет основной полосы HP")]
+        [SerializeField] private Color _hpBarColor = new(0.82f, 0.21f, 0.17f, 1f);
+
+        [Tooltip("Цвет лаг-полосы HP позади основной полосы")]
+        [SerializeField] private Color _hpBarLagColor = new(1f, 0.65f, 0f, 1f);
+
+        [Tooltip("Цвет текста значения HP")]
+        [SerializeField] private Color _hpTextColor = Color.white;
+
+        [Header("Shield Bar Visuals")]
+        [Tooltip("Цвет основной полосы щита")]
+        [SerializeField] private Color _shieldBarColor = new(0.25f, 0.8f, 1f, 1f);
+
+        [Tooltip("Цвет лаг-полосы щита позади основной полосы")]
+        [SerializeField] private Color _shieldBarLagColor = new(0.15f, 0.45f, 0.75f, 0.75f);
+
+        [Tooltip("Цвет текста значения щита")]
+        [SerializeField] private Color _shieldTextColor = new(0.6f, 0.95f, 1f, 1f);
+
+        [Header("Bar Animation")]
         [Tooltip("Задержка в секундах перед началом опустошения лаг-полосы после получения урона")]
         [SerializeField] private float _hpBarLagDelay = 0.2f;
 
@@ -110,11 +130,17 @@ namespace Project.Scripts.Configs.Battle.Visuals
         public float KnockbackDistance => _knockbackDistance;
         public float KnockbackDuration => _knockbackDuration;
         public Ease KnockbackEase => _knockbackEase;
+        public Color HPBarColor => _hpBarColor;
+        public Color HPBarLagColor => _hpBarLagColor;
+        public Color HPTextColor => _hpTextColor;
         public float HPBarLagDelay => _hpBarLagDelay;
         public float HPBarLagDuration => _hpBarLagDuration;
         public Ease HPBarLagEase => _hpBarLagEase;
         public float HPBarHealDuration => _hpBarHealDuration;
         public Ease HPBarHealEase => _hpBarHealEase;
+        public Color ShieldBarColor => _shieldBarColor;
+        public Color ShieldBarLagColor => _shieldBarLagColor;
+        public Color ShieldTextColor => _shieldTextColor;
         public float EnergyTransferDuration => _energyTransferDuration;
         public float EnergyTransferWaveAmplitude => _energyTransferWaveAmplitude;
         public Ease EnergyTransferFlightEase => _energyTransferFlightEase;

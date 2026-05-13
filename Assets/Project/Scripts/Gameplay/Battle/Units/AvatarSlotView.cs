@@ -52,6 +52,18 @@ namespace Project.Scripts.Gameplay.Battle.Units
         [Tooltip("Текст HP (только текущее значение) - скрывается при MaxHP = 0 (бессмертный юнит)")]
         [SerializeField] private TMP_Text _hpText;
 
+        [Tooltip("Корневой объект визуала щита. Если назначен, скрывается целиком пока щита нет")]
+        [SerializeField] private GameObject _shieldRoot;
+
+        [Tooltip("Основная полоса щита - отображает суммарную текущую прочность всех shield-слоев")]
+        [SerializeField] private BarRenderer _shieldBar;
+
+        [Tooltip("Лаг-полоса щита позади основной полосы")]
+        [SerializeField] private BarRenderer _shieldLagBar;
+
+        [Tooltip("Текст щита (только текущее значение) - скрывается, когда щита нет")]
+        [SerializeField] private TMP_Text _shieldText;
+
         [Tooltip("Текст стоимости активации способности в единицах энергии")]
         [SerializeField] private TMP_Text _energyCostLabel;
 
@@ -127,6 +139,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             BindPortrait(viewModel);
             BindHPBars(viewModel);
+            BindShieldBars(viewModel);
             BindHitReaction(viewModel);
             BindDeathState(viewModel);
             BindAvailabilityState(viewModel);
@@ -253,6 +266,8 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
         private void BindHPBars(AvatarSlotViewModel viewModel)
         {
+            ApplyHPVisualConfig();
+
             if (_hpBar)
                 _hpBar.SnapFill(viewModel.HPFill.CurrentValue);
 
@@ -266,6 +281,24 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             viewModel.HealthBarUpdated
                 .Subscribe(ApplyHealthBarUpdate)
+                .AddTo(_disposables);
+        }
+
+        private void BindShieldBars(AvatarSlotViewModel viewModel)
+        {
+            ApplyShieldVisualConfig();
+
+            if (_shieldBar)
+                _shieldBar.SnapFill(viewModel.ShieldFill.CurrentValue);
+
+            if (_shieldLagBar)
+                _shieldLagBar.SnapFill(viewModel.ShieldFill.CurrentValue);
+
+            ApplyShieldText(viewModel.CurrentShield);
+            SetShieldObjectsActive(viewModel.CurrentShield > 0);
+
+            viewModel.ShieldBarUpdated
+                .Subscribe(ApplyShieldBarUpdate)
                 .AddTo(_disposables);
         }
 
@@ -352,11 +385,23 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 return;
 
             _abilityPowerTextTween?.Dispose();
+            ApplyAbilityPowerLabelState(viewModel);
             _abilityPowerTextTween = new AnimatedIntegerText(_abilityPowerLabel);
             _abilityPowerTextTween.SetInstant(viewModel.AbilityPower);
             viewModel.AbilityPowerChanged
-                .Subscribe(power => _abilityPowerTextTween.AnimateTo(power, AbilityPowerAnimDuration, Ease.OutQuad))
+                .Subscribe(power =>
+                {
+                    ApplyAbilityPowerLabelState(viewModel);
+                    if (viewModel.ShouldShowAbilityPower)
+                        _abilityPowerTextTween.AnimateTo(power, AbilityPowerAnimDuration, Ease.OutQuad);
+                })
                 .AddTo(_disposables);
+        }
+
+        private void ApplyAbilityPowerLabelState(AvatarSlotViewModel viewModel)
+        {
+            if (_abilityPowerLabel)
+                _abilityPowerLabel.gameObject.SetActive(viewModel.ShouldShowAbilityPower);
         }
 
         private void BindEnergyCostLabel(AvatarSlotViewModel viewModel)
@@ -423,12 +468,88 @@ namespace Project.Scripts.Gameplay.Battle.Units
             _hpLagBar?.SetFillAnimated(update.Fill, healDuration);
         }
 
+        private void ApplyShieldBarUpdate(ShieldBarUpdate update)
+        {
+            ApplyShieldText(update.CurrentShield);
+            SetShieldObjectsActive(update.CurrentShield > 0);
+
+            if (update.Mode == HealthBarUpdateMode.Snap)
+            {
+                _shieldBar?.SnapFill(update.Fill);
+                _shieldLagBar?.SnapFill(update.Fill);
+                return;
+            }
+
+            if (update.Mode == HealthBarUpdateMode.Damage)
+            {
+                _shieldBar?.SetFill(update.Fill);
+
+                if (_config)
+                    _shieldLagBar?.SetFillAnimated(update.Fill, _config.HPBarLagDuration, _config.HPBarLagDelay);
+                else
+                    _shieldLagBar?.SetFill(update.Fill);
+
+                return;
+            }
+
+            _shieldBar?.SnapFill(update.Fill);
+            _shieldLagBar?.SnapFill(update.Fill);
+        }
+
         private void SetHPText(int currentHP, int maxHP)
         {
             if (false == _hpText)
                 return;
 
             _hpText.text = maxHP > 0 ? $"{currentHP}" : string.Empty;
+        }
+
+        private void ApplyHPVisualConfig()
+        {
+            if (false == _config)
+                return;
+
+            _hpBar?.SetFillColor(_config.HPBarColor);
+            _hpLagBar?.SetFillColor(_config.HPBarLagColor);
+
+            if (_hpText)
+                _hpText.color = _config.HPTextColor;
+        }
+
+        private void ApplyShieldText(int currentShield)
+        {
+            if (_shieldText)
+                _shieldText.text = currentShield > 0 ? $"{currentShield}" : string.Empty;
+        }
+
+        private void ApplyShieldVisualConfig()
+        {
+            if (false == _config)
+                return;
+
+            _shieldBar?.SetFillColor(_config.ShieldBarColor);
+            _shieldLagBar?.SetFillColor(_config.ShieldBarLagColor);
+
+            if (_shieldText)
+                _shieldText.color = _config.ShieldTextColor;
+        }
+
+        private void SetShieldObjectsActive(bool active)
+        {
+            if (_shieldRoot)
+            {
+                _shieldRoot.SetActive(active);
+                return;
+            }
+
+            if (_shieldBar)
+                _shieldBar.gameObject.SetActive(active);
+
+            if (_shieldLagBar)
+                _shieldLagBar.gameObject.SetActive(active);
+
+            if (_shieldText)
+                _shieldText.gameObject.SetActive(active);
         }
 
         private void FinalizeDeathState(float hpFill)

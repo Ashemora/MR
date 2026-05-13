@@ -14,6 +14,10 @@ namespace Project.Scripts.Utils.Editor.Buttons
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            var attr = (ButtonAttribute)attribute;
+            if (false == attr.DrawField)
+                return ButtonHeight;
+
             var fieldHeight = EditorGUI.GetPropertyHeight(property, label, true);
             return fieldHeight + ButtonHeight + Spacing;
         }
@@ -21,6 +25,12 @@ namespace Project.Scripts.Utils.Editor.Buttons
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var attr = (ButtonAttribute)attribute;
+            if (false == attr.DrawField)
+            {
+                ButtonsRenderer.DrawButton(position, property.serializedObject.targetObjects, attr.MethodName);
+                return;
+            }
+
             var fieldHeight = EditorGUI.GetPropertyHeight(property, label, true);
 
             Rect fieldRect;

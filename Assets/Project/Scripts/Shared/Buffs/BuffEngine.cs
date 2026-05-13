@@ -27,6 +27,9 @@ namespace Project.Scripts.Shared.Buffs
             if (definition.Kind == BuffKind.Stun && durationSeconds <= 0f)
                 return false;
 
+            if (definition.Kind == BuffKind.Shield && IsUnsupportedShieldLifetime(definition.LifetimeKind))
+                return false;
+
             if (definition.StackingMode == BuffStackingMode.IgnoreNew)
             {
                 for (var i = 0; i < _buffs.Count; i++)
@@ -34,8 +37,12 @@ namespace Project.Scripts.Shared.Buffs
                         return false;
             }
 
-            _buffs.Add(new BuffRuntimeState(source, target, sourceSlotKind, definition, 1, currentRound,
-                currentPhase, durationSeconds));
+            var state = new BuffRuntimeState(source, target, sourceSlotKind, definition, 1, currentRound,
+                currentPhase, durationSeconds);
+            if (definition.Kind == BuffKind.Shield && state.ShieldCapacity <= 0)
+                return false;
+
+            _buffs.Add(state);
             
             return true;
         }
@@ -102,6 +109,83 @@ namespace Project.Scripts.Shared.Buffs
             }
 
             return removed;
+        }
+
+        public bool ExpireUntilEndOfRoundBuffs(int completedRound)
+        {
+            if (completedRound <= 0)
+                return false;
+
+            var removed = false;
+            for (var i = _buffs.Count - 1; i >= 0; i--)
+            {
+                var buff = _buffs[i];
+                if (buff.Definition.LifetimeKind != BuffLifetimeKind.UntilEndOfRound)
+                    continue;
+
+                if (buff.ExpiresAfterRound != completedRound)
+                    continue;
+
+                _buffs.RemoveAt(i);
+                removed = true;
+            }
+
+            return removed;
+        }
+
+        public ShieldSnapshot GetShield(UnitDescriptor target)
+        {
+            var targetKey = BattleUnitKey.FromDescriptor(target);
+            var current = 0;
+            var capacity = 0;
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (false == buff.IsActiveShield)
+                    continue;
+
+                if (BattleUnitKey.FromDescriptor(buff.Target) != targetKey)
+                    continue;
+
+                current += buff.ShieldRemaining;
+                capacity += buff.ShieldCapacity;
+            }
+
+            return new ShieldSnapshot(target, current, capacity);
+        }
+
+        public ShieldAbsorptionResult AbsorbShieldDamage(UnitDescriptor target, int damage,
+            BattlePhaseKind currentPhase)
+        {
+            if (damage <= 0)
+                return new ShieldAbsorptionResult(target, 0, 0, 0, GetShield(target));
+
+            var remainingDamage = damage;
+            var absorbedDamage = 0;
+            while (remainingDamage > 0)
+            {
+                var shieldIndex = FindNextShieldLayerIndex(target, currentPhase);
+                if (shieldIndex < 0)
+                    break;
+
+                var shield = _buffs[shieldIndex];
+                var absorbedByLayer = remainingDamage < shield.ShieldRemaining
+                    ? remainingDamage
+                    : shield.ShieldRemaining;
+                remainingDamage -= absorbedByLayer;
+                absorbedDamage += absorbedByLayer;
+
+                var nextShieldRemaining = shield.ShieldRemaining - absorbedByLayer;
+                if (nextShieldRemaining <= 0)
+                {
+                    _buffs.RemoveAt(shieldIndex);
+                    continue;
+                }
+
+                _buffs[shieldIndex] = shield.WithShieldRemaining(nextShieldRemaining);
+            }
+
+            return new ShieldAbsorptionResult(target, damage, absorbedDamage, remainingDamage, GetShield(target));
         }
 
         public float GetModifiedAbilityPower(float basePower, BattleSide side, int slotIndex)
@@ -396,6 +480,89 @@ namespace Project.Scripts.Shared.Buffs
         {
             return buff.Definition.Kind == BuffKind.NextAttackDamage
                    && BattleUnitKey.FromDescriptor(buff.Target) == BattleUnitKey.FromDescriptor(source);
+        }
+
+        private int FindNextShieldLayerIndex(UnitDescriptor target, BattlePhaseKind currentPhase)
+        {
+            var targetKey = BattleUnitKey.FromDescriptor(target);
+            var result = -1;
+            for (var i = 0; i < _buffs.Count; i++)
+            {
+                var buff = _buffs[i];
+                if (false == buff.IsActiveShield)
+                    continue;
+
+                if (BattleUnitKey.FromDescriptor(buff.Target) != targetKey)
+                    continue;
+
+                if (result < 0 || CompareShieldConsumptionPriority(buff, _buffs[result], currentPhase) < 0)
+                    result = i;
+            }
+
+            return result;
+        }
+
+        private static int CompareShieldConsumptionPriority(BuffRuntimeState left, BuffRuntimeState right,
+            BattlePhaseKind currentPhase)
+        {
+            var leftRank = GetShieldExpirationRank(left);
+            var rightRank = GetShieldExpirationRank(right);
+            if (leftRank != rightRank)
+                return leftRank < rightRank ? -1 : 1;
+
+            if (left.UsesDuration && right.UsesDuration
+                                  && false == left.RemainingDurationSeconds.Equals(right.RemainingDurationSeconds))
+                return left.RemainingDurationSeconds < right.RemainingDurationSeconds ? -1 : 1;
+
+            if (left.Definition.LifetimeKind == BuffLifetimeKind.UntilEndOfNextMainPhase
+                && right.Definition.LifetimeKind == BuffLifetimeKind.UntilEndOfNextMainPhase)
+            {
+                var leftDistance = GetMainPhaseExpirationDistance(currentPhase, left.ExpiresAfterMainPhase);
+                var rightDistance = GetMainPhaseExpirationDistance(currentPhase, right.ExpiresAfterMainPhase);
+                if (leftDistance != rightDistance)
+                    return leftDistance < rightDistance ? -1 : 1;
+            }
+
+            if (left.Definition.LifetimeKind == BuffLifetimeKind.UntilEndOfRound
+                && right.Definition.LifetimeKind == BuffLifetimeKind.UntilEndOfRound
+                && left.ExpiresAfterRound != right.ExpiresAfterRound)
+                return left.ExpiresAfterRound < right.ExpiresAfterRound ? -1 : 1;
+
+            return 0;
+        }
+
+        private static int GetShieldExpirationRank(BuffRuntimeState buff)
+        {
+            if (buff.UsesDuration)
+                return 0;
+
+            if (buff.Definition.LifetimeKind == BuffLifetimeKind.UntilEndOfNextMainPhase)
+                return 1;
+
+            if (buff.Definition.LifetimeKind == BuffLifetimeKind.UntilEndOfRound)
+                return 2;
+
+            return 3;
+        }
+
+        private static int GetMainPhaseExpirationDistance(BattlePhaseKind currentPhase,
+            BattlePhaseKind expiresAfterMainPhase)
+        {
+            if (currentPhase == expiresAfterMainPhase)
+                return 0;
+
+            if (currentPhase == BattlePhaseKind.Match && expiresAfterMainPhase == BattlePhaseKind.Hero)
+                return 1;
+
+            if (currentPhase == BattlePhaseKind.Hero && expiresAfterMainPhase == BattlePhaseKind.Match)
+                return 1;
+
+            return 2;
+        }
+
+        private static bool IsUnsupportedShieldLifetime(BuffLifetimeKind lifetimeKind)
+        {
+            return lifetimeKind is BuffLifetimeKind.NextAttack or BuffLifetimeKind.NextActivation;
         }
 
         private static bool IsSameStack(BuffRuntimeState buff, UnitDescriptor source, UnitDescriptor target,

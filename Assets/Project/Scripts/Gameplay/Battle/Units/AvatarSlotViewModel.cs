@@ -19,19 +19,25 @@ namespace Project.Scripts.Gameplay.Battle.Units
         public UnitActionType AbilityType { get; }
         public int ActivationEnergyCost => ActivationEnergyCostChanged.Value;
         public int AbilityPower => AbilityPowerChanged.Value;
+        public bool ShouldShowAbilityPower => AbilityType is UnitActionType.DealDamage or UnitActionType.HealAlly;
         public ReactiveProperty<int> ActivationEnergyCostChanged { get; }
         public ReactiveProperty<int> AbilityPowerChanged { get; }
         public ReactiveProperty<float> HPFill { get; }
+        public ReactiveProperty<float> ShieldFill { get; } = new(0f);
         public ReactiveProperty<bool> IsDefeated { get; } = new(false);
         public int CurrentHP { get; private set; }
         public int MaxHP { get; private set; }
+        public int CurrentShield { get; private set; }
+        public int MaxShield { get; private set; }
         public Observable<HealthBarUpdate> HealthBarUpdated => _healthBarUpdated;
+        public Observable<ShieldBarUpdate> ShieldBarUpdated => _shieldBarUpdated;
         public Observable<int> Hit => _hit;
         public Observable<int> Heal => _heal;
         public AvatarChargeBarViewModel EnergyBar { get; }
 
 
         private readonly Subject<HealthBarUpdate> _healthBarUpdated = new();
+        private readonly Subject<ShieldBarUpdate> _shieldBarUpdated = new();
         private readonly Subject<int> _hit = new();
         private readonly Subject<int> _heal = new();
         private readonly CompositeDisposable _subscriptions = new();
@@ -71,15 +77,18 @@ namespace Project.Scripts.Gameplay.Battle.Units
             }
 
             _subscriptions.Add(eventBus.Subscribe<AvatarAbilityPowerChangedEvent>(OnAvatarAbilityPowerChanged));
+            _subscriptions.Add(eventBus.Subscribe<UnitShieldChangedEvent>(OnUnitShieldChanged));
         }
 
         public void Dispose()
         {
             HPFill.Dispose();
+            ShieldFill.Dispose();
             IsDefeated.Dispose();
             ActivationEnergyCostChanged.Dispose();
             AbilityPowerChanged.Dispose();
             _healthBarUpdated.Dispose();
+            _shieldBarUpdated.Dispose();
             _hit.Dispose();
             _heal.Dispose();
             EnergyBar.Dispose();
@@ -105,6 +114,14 @@ namespace Project.Scripts.Gameplay.Battle.Units
             ActivationEnergyCostChanged.Value = e.ActivationEnergyCost;
             AbilityPowerChanged.Value = e.AbilityPower;
             EnergyBar.UpdateActivationEnergyCost(e.ActivationEnergyCost);
+        }
+
+        private void OnUnitShieldChanged(UnitShieldChangedEvent e)
+        {
+            if (e.Unit.Kind != UnitKind.Avatar || e.Unit.Side != Side)
+                return;
+
+            ApplyShieldChanged(e.Current, e.Capacity);
         }
 
         private void ApplyHPChanged(int current, int max, bool silent = false)
@@ -142,6 +159,23 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
             if (current <= 0)
                 IsDefeated.Value = true;
+        }
+
+        private void ApplyShieldChanged(int current, int max)
+        {
+            var previousShield = CurrentShield;
+
+            CurrentShield = current < 0 ? 0 : current;
+            MaxShield = max < 0 ? 0 : max;
+            var fill = MaxShield > 0 ? (float)CurrentShield / MaxShield : 0f;
+            ShieldFill.Value = fill;
+
+            var mode = CurrentShield < previousShield
+                ? HealthBarUpdateMode.Damage
+                : CurrentShield > previousShield
+                    ? HealthBarUpdateMode.Heal
+                    : HealthBarUpdateMode.Snap;
+            _shieldBarUpdated.OnNext(new ShieldBarUpdate(fill, mode, CurrentShield, MaxShield));
         }
 
         private void OnDefeated()

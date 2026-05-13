@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1fea825070002c449f9d0545ccf77bb, type: 3}
+  m_Name: Hero_Shield30_Ally
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.HeroConfig
+  _maxHP: 50
+  _displayName: Hero_Shield20_Ally
+  _portrait: {fileID: 21300000, guid: 27e02dbeb09a77c46944c9428156ae3d, type: 3}
+  _activeAbility:
+    _displayName: Shield Ally
+    _activationEnergyCost: 15
+    _activationCooldownSeconds: 8
+    _directAction:
+      _kind: 0
+      _value: 0
+      _operation: 1
+      _targeting:
+        _scope: 0
+        _relation: 0
+        _unitKind: 0
+        _includeOwner: 0
+        _selectionMode: 0
+        _filters: 
+      _ignoresAvatarGroupDefense: 0
+    _buffEntries:
+    - _targeting:
+        _scope: 2
+        _relation: 0
+        _unitKind: 0
+        _includeOwner: 1
+        _selectionMode: 0
+        _filters: 
+      _buffApplications:
+      - _buff:
+          _kind: 12
+          _operation: 1
+          _value: 30
+          _lifetimeKind: 0
+          _stackingMode: 0
+        _durationSeconds: 0
+  _passiveAbilities: []

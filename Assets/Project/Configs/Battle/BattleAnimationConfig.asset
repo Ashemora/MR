@@ -18,6 +18,12 @@ MonoBehaviour:
   _knockbackDistance: 0.2
   _knockbackDuration: 0.3
   _knockbackEase: 6
+  _hpBarColor: {r: 0.82, g: 0.21, b: 0.17, a: 1}
+  _hpBarLagColor: {r: 1, g: 0.65, b: 0, a: 1}
+  _hpTextColor: {r: 1, g: 1, b: 1, a: 1}
+  _shieldBarColor: {r: 0.16862746, g: 0.46666667, b: 0.81960785, a: 1}
+  _shieldBarLagColor: {r: 0.34643096, g: 0.79891646, b: 0.8160376, a: 0.75}
+  _shieldTextColor: {r: 1, g: 1, b: 1, a: 1}
   _hpBarLagDelay: 0.2
   _hpBarLagDuration: 1
   _hpBarLagEase: 9

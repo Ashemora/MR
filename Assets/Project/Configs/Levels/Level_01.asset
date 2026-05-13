@@ -30,7 +30,7 @@ MonoBehaviour:
   _playerHeroes:
   - {fileID: 11400000, guid: d58a5fe3509de434a98e96d78ae26093, type: 2}
   - {fileID: 11400000, guid: 201855d7b78214970acde475c79a1909, type: 2}
-  - {fileID: 11400000, guid: c40684606f95ebb41b02fac1f62d500d, type: 2}
+  - {fileID: 11400000, guid: 4ce1061ed4d64db1b7fd48da6455a1f6, type: 2}
   - {fileID: 11400000, guid: d6d78ff54c191463caafec257a81561f, type: 2}
   _enemyHeroes:
   - {fileID: 11400000, guid: d58a5fe3509de434a98e96d78ae26093, type: 2}

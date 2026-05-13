@@ -306,7 +306,20 @@ namespace Project.Scripts.Services.Combat.Passives
 
         private void OnBattleFlowRoundChanged(BattleFlowRoundChangedEvent e)
         {
+            if (_currentRound > 0 && e.CurrentRound != _currentRound)
+                ExpireUntilEndOfRoundBuffs(_currentRound);
+
             _currentRound = e.CurrentRound;
+        }
+
+        private void ExpireUntilEndOfRoundBuffs(int completedRound)
+        {
+            if (false == _buffService.ExpireUntilEndOfRoundBuffs(completedRound))
+                return;
+
+            _eventBus.Publish(new BuffsChangedEvent());
+            PublishAllAbilityStatsChanged();
+            RefreshAllSlotKindPassiveStates();
         }
 
         private ActivationConditionEvent CreateUnitActivationEvent(ActivationConditionKind kind,

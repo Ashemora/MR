@@ -5,6 +5,7 @@ namespace Project.Scripts.Shared.Buffs
         Battle = 0,
         NextAttack = 2,
         NextActivation = 3,
-        UntilEndOfNextMainPhase = 4
+        UntilEndOfNextMainPhase = 4,
+        UntilEndOfRound = 5
     }
 }

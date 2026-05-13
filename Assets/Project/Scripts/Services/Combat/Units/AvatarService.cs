@@ -1,5 +1,7 @@
 using System;
 using Project.Scripts.Configs;
+using Project.Scripts.Services.BattleFlow;
+using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleSetup;
 using UnityEngine;
@@ -13,17 +15,21 @@ namespace Project.Scripts.Services.Combat.Units
         private readonly EventBus _eventBus;
         private readonly DebugConfig _debugConfig;
         private readonly IAvatarGroupDefenseService _groupDefense;
+        private readonly IShieldService _shieldService;
+        private readonly IBattleFlowService _battleFlowService;
         private readonly BattleSetup _battleSetup;
         private int _playerHP;
         private int _enemyHP;
 
 
         public AvatarService(EventBus eventBus, DebugConfig debugConfig, BattleSetup battleSetup,
-            IAvatarGroupDefenseService groupDefense)
+            IAvatarGroupDefenseService groupDefense, IShieldService shieldService, IBattleFlowService battleFlowService)
         {
             _eventBus = eventBus;
             _debugConfig = debugConfig;
             _groupDefense = groupDefense;
+            _shieldService = shieldService;
+            _battleFlowService = battleFlowService;
             _battleSetup = battleSetup;
             _playerHP = battleSetup.PlayerAvatar.MaxHP;
             _enemyHP = battleSetup.EnemyAvatar.MaxHP;
@@ -55,10 +61,15 @@ namespace Project.Scripts.Services.Combat.Units
             if (false == _groupDefense.IsExposed(side))
                 return;
 
+            var incomingDamage = amount;
+            amount = AbsorbShieldDamage(UnitDescriptor.Avatar(side), amount);
+            if (amount <= 0)
+                return;
+
             if (side == BattleSide.Enemy && _debugConfig.LogCombatDamage)
             {
                 var avatar = GetAvatar(side);
-                Debug.Log($"[Combat] Damage applied to enemy for {amount} (HP: {avatar.CurrentHP} -> {Math.Max(0, avatar.CurrentHP - amount)}/{avatar.MaxHP})");
+                Debug.Log($"[Combat] Damage applied to enemy for {amount} (incoming: {incomingDamage}, HP: {avatar.CurrentHP} -> {Math.Max(0, avatar.CurrentHP - amount)}/{avatar.MaxHP})");
             }
 
             ApplyHealthDelta(side, -amount, silent);
@@ -74,6 +85,10 @@ namespace Project.Scripts.Services.Combat.Units
 
         public void ForceApplyDamage(BattleSide side, int amount, bool suppressDefeatedEvent = false)
         {
+            if (amount <= 0)
+                return;
+
+            amount = AbsorbShieldDamage(UnitDescriptor.Avatar(side), amount);
             if (amount <= 0)
                 return;
 
@@ -102,6 +117,11 @@ namespace Project.Scripts.Services.Combat.Units
         private BattleUnitSetup GetSetup(BattleSide side)
         {
             return side == BattleSide.Player ? _battleSetup.PlayerAvatar : _battleSetup.EnemyAvatar;
+        }
+
+        private int AbsorbShieldDamage(UnitDescriptor target, int damage)
+        {
+            return _shieldService.AbsorbDamage(target, damage, _battleFlowService.Snapshot.Phase).RemainingDamage;
         }
 
         private int GetCurrentHP(BattleSide side)

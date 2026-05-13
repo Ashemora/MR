@@ -20,6 +20,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
         public UnitActionType ActionType { get; }
         public int ActivationEnergyCost => ActivationEnergyCostChanged.Value;
         public int AbilityPower => AbilityPowerChanged.Value;
+        public bool ShouldShowAbilityPower => ActionType is UnitActionType.DealDamage or UnitActionType.HealAlly;
         public bool IsPlayerSlot => Side == BattleSide.Player;
         public ReactiveProperty<bool>  IsActivatable { get; } = new(false);
         public ReactiveProperty<UnitActivationBlockReason> ActivationBlockReason { get; } = new(UnitActivationBlockReason.None);
@@ -30,15 +31,20 @@ namespace Project.Scripts.Gameplay.Battle.Units
         public ReactiveProperty<(float Remaining, float Duration)> CooldownProgress { get; } = new((0f, 0f));
         public ReactiveProperty<(float Remaining, float Duration)> StunProgress { get; } = new((0f, 0f));
         public ReactiveProperty<float> HPFill { get; }
+        public ReactiveProperty<float> ShieldFill { get; } = new(0f);
         public ReactiveProperty<bool>  IsDefeated { get; } = new(false);
         public int CurrentHP { get; private set; }
         public int MaxHP { get; private set; }
+        public int CurrentShield { get; private set; }
+        public int MaxShield { get; private set; }
         public Observable<HealthBarUpdate> HealthBarUpdated => _healthBarUpdated;
+        public Observable<ShieldBarUpdate> ShieldBarUpdated => _shieldBarUpdated;
         public Observable<int> Hit => _hit;
         public Observable<int> Heal => _heal;
 
 
         private readonly Subject<HealthBarUpdate> _healthBarUpdated = new();
+        private readonly Subject<ShieldBarUpdate> _shieldBarUpdated = new();
         private readonly Subject<int> _hit = new();
         private readonly Subject<int> _heal = new();
         private readonly CompositeDisposable _subscriptions = new();
@@ -77,6 +83,7 @@ namespace Project.Scripts.Gameplay.Battle.Units
             _subscriptions.Add(eventBus.Subscribe<BattleSideEnergyChangedEvent>(OnBattleSideEnergyChanged));
             _subscriptions.Add(eventBus.Subscribe<HeroCooldownChangedEvent>(OnHeroCooldownChanged));
             _subscriptions.Add(eventBus.Subscribe<UnitStunChangedEvent>(OnUnitStunChanged));
+            _subscriptions.Add(eventBus.Subscribe<UnitShieldChangedEvent>(OnUnitShieldChanged));
         }
 
         public void UpdateHP(int current, int max, bool silent = false)
@@ -129,6 +136,23 @@ namespace Project.Scripts.Gameplay.Battle.Units
             RefreshActivatable();
         }
 
+        public void UpdateShield(int current, int max)
+        {
+            var previousShield = CurrentShield;
+
+            CurrentShield = current < 0 ? 0 : current;
+            MaxShield = max < 0 ? 0 : max;
+            var fill = MaxShield > 0 ? (float)CurrentShield / MaxShield : 0f;
+            ShieldFill.Value = fill;
+
+            var mode = CurrentShield < previousShield
+                ? HealthBarUpdateMode.Damage
+                : CurrentShield > previousShield
+                    ? HealthBarUpdateMode.Heal
+                    : HealthBarUpdateMode.Snap;
+            _shieldBarUpdated.OnNext(new ShieldBarUpdate(fill, mode, CurrentShield, MaxShield));
+        }
+
         public void Dispose()
         {
             IsActivatable.Dispose();
@@ -140,8 +164,10 @@ namespace Project.Scripts.Gameplay.Battle.Units
             CooldownProgress.Dispose();
             StunProgress.Dispose();
             HPFill.Dispose();
+            ShieldFill.Dispose();
             IsDefeated.Dispose();
             _healthBarUpdated.Dispose();
+            _shieldBarUpdated.Dispose();
             _hit.Dispose();
             _heal.Dispose();
             _subscriptions.Dispose();
@@ -238,6 +264,14 @@ namespace Project.Scripts.Gameplay.Battle.Units
             _isStunned = e.RemainingSeconds > 0f;
             StunProgress.Value = (e.RemainingSeconds, e.DurationSeconds);
             RefreshActivatable();
+        }
+
+        private void OnUnitShieldChanged(UnitShieldChangedEvent e)
+        {
+            if (e.Unit.Kind != UnitKind.Hero || e.Unit.Side != Side || e.Unit.SlotIndex != SlotIndex)
+                return;
+
+            UpdateShield(e.Current, e.Capacity);
         }
 
         private void RefreshAvailabilityVisualState()

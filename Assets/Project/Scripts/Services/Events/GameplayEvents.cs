@@ -211,6 +211,21 @@ namespace Project.Scripts.Services.Events
     {
     }
 
+    public readonly struct UnitShieldChangedEvent
+    {
+        public UnitDescriptor Unit { get; }
+        public int Current { get; }
+        public int Capacity { get; }
+
+
+        public UnitShieldChangedEvent(UnitDescriptor unit, int current, int capacity)
+        {
+            Unit = unit;
+            Current = current < 0 ? 0 : current;
+            Capacity = capacity < 0 ? 0 : capacity;
+        }
+    }
+
     public readonly struct UnitStunChangedEvent
     {
         public UnitDescriptor Unit { get; }
