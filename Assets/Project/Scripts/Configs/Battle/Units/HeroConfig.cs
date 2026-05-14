@@ -2,6 +2,7 @@ using Project.Scripts.Shared.Abilities;
 using UnityEngine;
 using Project.Scripts.Configs.Battle.Abilities;
 using Project.Scripts.Shared.Units;
+using Project.Scripts.Utils.Attributes;
 
 namespace Project.Scripts.Configs.Battle.Units
 {
@@ -15,6 +16,7 @@ namespace Project.Scripts.Configs.Battle.Units
         [SerializeField] private string _displayName;
 
         [Tooltip("Спрайт портрета в слоте героя (null = пустая рамка)")]
+        [SpritePreview]
         [SerializeField] private Sprite _portrait;
 
         [Tooltip("Активная способность героя")]

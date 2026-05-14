@@ -1,5 +1,6 @@
 using Project.Scripts.Tiles.Behaviours;
 using Project.Scripts.Shared.Tiles;
+using Project.Scripts.Utils.Attributes;
 using UnityEngine;
 
 namespace Project.Scripts.Configs.Board
@@ -11,6 +12,7 @@ namespace Project.Scripts.Configs.Board
         [SerializeField] private TileKind _kind;
 
         [Tooltip("Визуальный спрайт тайла")]
+        [SpritePreview]
         [SerializeField] private Sprite _sprite;
 
         [Tooltip("Специальное поведение при уничтожении этого тайла")]
