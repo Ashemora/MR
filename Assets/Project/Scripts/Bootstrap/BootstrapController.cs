@@ -1,10 +1,9 @@
 using System;
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Constants;
+using Project.Scripts.Services.AppFlow;
 using Project.Scripts.UI;
-using R3;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using VContainer;
 
 namespace Project.Scripts.Bootstrap
 {
@@ -19,9 +18,16 @@ namespace Project.Scripts.Bootstrap
         [Tooltip("Задержка в секундах после полной загрузки сцены перед её активацией")]
         [SerializeField] private float _finalLoadingDelaySeconds = 0.3f;
 
+        
+        private IAppStateMachine _appStateMachine;
 
-        private readonly Subject<float> _progressSubject = new();
 
+        [Inject]
+        public void Construct(IAppStateMachine appStateMachine)
+        {
+            _appStateMachine = appStateMachine;
+        }
+        
 
         private async void Start()
         {
@@ -35,43 +41,13 @@ namespace Project.Scripts.Bootstrap
             }
         }
 
-        private void OnDestroy()
-        {
-            _progressSubject?.Dispose();
-        }
-
         private async UniTask StartAsync()
         {
             _loadingScreen.Show();
 
             await UniTask.Delay((int)(_initialDelaySeconds * 1000));
 
-            _loadingScreen.ShowProgressBar();
-            _loadingScreen.SubscribeToProgress(_progressSubject);
-
-            _progressSubject.OnNext(0f);
-
-            var asyncOp = SceneManager.LoadSceneAsync(SceneNames.GamePlay, LoadSceneMode.Single);
-            if (asyncOp == null)
-            {
-                Debug.LogError($"Failed to load scene: {SceneNames.GamePlay}. Make sure it is added to Build Settings.");
-                return;
-            }
-
-            asyncOp.allowSceneActivation = false;
-
-            while (asyncOp.progress < 0.9f)
-            {
-                _progressSubject.OnNext(asyncOp.progress / 0.9f);
-                await UniTask.Yield();
-            }
-
-            _progressSubject.OnNext(1f);
-            await UniTask.Delay((int)(_finalLoadingDelaySeconds * 1000));
-
-            _loadingScreen.Hide();
-
-            asyncOp.allowSceneActivation = true;
+            await _appStateMachine.EnterLobbyAsync(_loadingScreen, (int)(_finalLoadingDelaySeconds * 1000));
         }
     }
 }

@@ -1,11 +1,13 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
+using Project.Scripts.Services.SceneLoading;
 using R3;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Project.Scripts.UI
 {
-    public class LoadingScreen : MonoBehaviour
+    public class LoadingScreen : MonoBehaviour, ILoadingPresenter
     {
         [Tooltip("Корневой GameObject панели, отображаемый во время загрузки")]
         [SerializeField] private GameObject _loadingPanel;
@@ -45,6 +47,26 @@ namespace Project.Scripts.UI
         public void Hide()
         {
             _loadingPanel.SetActive(false);
+        }
+
+        public UniTask ShowAsync()
+        {
+            Show();
+            ShowProgressBar();
+            
+            return UniTask.CompletedTask;
+        }
+
+        public UniTask HideAsync()
+        {
+            Hide();
+            
+            return UniTask.CompletedTask;
+        }
+
+        public void SetProgress(float progress)
+        {
+            _progressBar.value = Mathf.Clamp01(progress);
         }
     }
 }

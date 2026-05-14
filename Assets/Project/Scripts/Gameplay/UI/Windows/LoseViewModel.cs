@@ -1,7 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Project.Scripts.Services.Combat.Moves;
-using Project.Scripts.Services.Progression;
+using Project.Scripts.Services.AppFlow;
 using Project.Scripts.Services.UISystem;
 
 namespace Project.Scripts.Gameplay.UI.Windows
@@ -14,15 +14,15 @@ namespace Project.Scripts.Gameplay.UI.Windows
 
 
         private readonly IMoveCounterService _moveCounter;
-        private readonly ILevelProgressionService _progression;
+        private readonly IAppStateMachine _appStateMachine;
         private readonly Action _onClose;
 
 
-        public LoseViewModel(IMoveCounterService moveCounter, ILevelProgressionService progression,
+        public LoseViewModel(IMoveCounterService moveCounter, IAppStateMachine appStateMachine,
             int levelId, string opponentName, Action onClose)
         {
             _moveCounter = moveCounter;
-            _progression = progression;
+            _appStateMachine = appStateMachine;
             LevelId = levelId;
             OpponentName = opponentName;
             _onClose = onClose;
@@ -32,7 +32,7 @@ namespace Project.Scripts.Gameplay.UI.Windows
         public void Retry()
         {
             _onClose?.Invoke();
-            _progression.Retry();
+            _appStateMachine.ReturnToLobbyAsync().Forget();
         }
 
 

@@ -17,10 +17,14 @@ namespace Project.Scripts.Configs.UI
         [Tooltip("Префаб компонента TopBarView - имя врага и второстепенный ярлык, остаётся в Canvas")]
         [SerializeField] private GameObject _topBarViewPrefab;
 
+        [Tooltip("Префаб экрана загрузки перед переходом из лобби в бой")]
+        [SerializeField] private GameObject _gameplayLoadingViewPrefab;
+
 
         public GameObject WinViewPrefab => _winViewPrefab;
         public GameObject LoseViewPrefab => _loseViewPrefab;
         public GameObject MoveBarViewPrefab => _moveBarViewPrefab;
         public GameObject TopBarViewPrefab => _topBarViewPrefab;
+        public GameObject GameplayLoadingViewPrefab => _gameplayLoadingViewPrefab;
     }
 }

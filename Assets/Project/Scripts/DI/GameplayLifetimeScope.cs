@@ -13,6 +13,7 @@ using Project.Scripts.Services.Bot;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Layout;
 using Project.Scripts.Services.Progression;
+using Project.Scripts.Services.AppFlow;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Services.Combat.Passives;
@@ -36,7 +37,9 @@ namespace Project.Scripts.DI
             
 
             var levelDatabase = Parent.Container.Resolve<LevelDatabase>();
-            var levelConfig = levelDatabase.GetById(LevelProgressionService.CurrentLevelId);
+            var session = Parent.Container.Resolve<IBattleSessionProvider>().Current;
+            var levelId = session?.LevelId ?? Parent.Container.Resolve<ILevelProgressionService>().CurrentLevelId;
+            var levelConfig = levelDatabase.GetById(levelId);
             builder.RegisterInstance(levelConfig);
             var slotLayoutConfig = Parent.Container.Resolve<SlotLayoutConfig>();
             var playerBattleConfig = Parent.Container.Resolve<PlayerBattleConfig>();
@@ -53,7 +56,6 @@ namespace Project.Scripts.DI
             builder.Register<IAvatarGroupDefenseService, AvatarGroupDefenseService>(Lifetime.Singleton);
             builder.Register<IAvatarService, AvatarService>(Lifetime.Singleton);
             builder.Register<IUnitStateService, UnitStateService>(Lifetime.Singleton);
-            builder.Register<ILevelProgressionService, LevelProgressionService>(Lifetime.Singleton);
             builder.Register<IMoveBarService, MoveBarService>(Lifetime.Singleton);
             builder.Register<IHeroService, HeroService>(Lifetime.Singleton);
             builder.Register<BuffService>(Lifetime.Singleton)
