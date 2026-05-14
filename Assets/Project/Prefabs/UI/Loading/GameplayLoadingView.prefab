@@ -8,10 +8,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-- component: {fileID: 7099913805656000002}
-- component: {fileID: 7099913805656000003}
-- component: {fileID: 7099913805656000004}
-- component: {fileID: 7099913805656000005}
+  - component: {fileID: 7099913805656000002}
+  - component: {fileID: 7099913805656000003}
+  - component: {fileID: 7099913805656000004}
+  - component: {fileID: 7099913805656000005}
   m_Layer: 5
   m_Name: GameplayLoadingView
   m_TagString: Untagged
@@ -99,9 +99,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-- component: {fileID: 7099913805656000102}
-- component: {fileID: 7099913805656000103}
-- component: {fileID: 7099913805656000104}
+  - component: {fileID: 7099913805656000102}
+  - component: {fileID: 7099913805656000103}
+  - component: {fileID: 7099913805656000104}
   m_Layer: 5
   m_Name: ProgressBar
   m_TagString: Untagged
@@ -175,9 +175,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-- component: {fileID: 7099913805656000202}
-- component: {fileID: 7099913805656000203}
-- component: {fileID: 7099913805656000204}
+  - component: {fileID: 7099913805656000202}
+  - component: {fileID: 7099913805656000203}
+  - component: {fileID: 7099913805656000204}
   m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged

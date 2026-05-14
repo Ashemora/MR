@@ -35,17 +35,26 @@ namespace Project.Scripts.UI
 
         public void Show()
         {
+            if (null == _loadingPanel || null == _progressBar)
+                return;
+
             _loadingPanel.SetActive(true);
             _progressBar.value = 0;
         }
 
         public void ShowProgressBar()
         {
+            if (null == _progressBar)
+                return;
+
             _progressBar.gameObject.SetActive(true);
         }
 
         public void Hide()
         {
+            if (null == _loadingPanel)
+                return;
+
             _loadingPanel.SetActive(false);
         }
 
@@ -66,6 +75,9 @@ namespace Project.Scripts.UI
 
         public void SetProgress(float progress)
         {
+            if (null == _progressBar)
+                return;
+
             _progressBar.value = Mathf.Clamp01(progress);
         }
     }

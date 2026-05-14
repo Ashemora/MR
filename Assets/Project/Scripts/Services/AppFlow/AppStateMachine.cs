@@ -63,7 +63,13 @@ namespace Project.Scripts.Services.AppFlow
             Current = AppState.Lobby;
             _battleSessionProvider.Clear();
             _uiService.CloseAll();
-            await _sceneLoadingService.LoadSceneAsync(SceneNames.Lobby);
+
+            _uiService.RegisterView<GameplayLoadingView>(_uiConfig.GameplayLoadingViewPrefab, UILayer.System);
+            var loadingView = await _uiService.Show<GameplayLoadingView, GameplayLoadingViewModel>(
+                new GameplayLoadingViewModel());
+
+            await _sceneLoadingService.LoadSceneAsync(SceneNames.Lobby, loadingView);
+            _uiService.Close<GameplayLoadingView>();
         }
     }
 }
