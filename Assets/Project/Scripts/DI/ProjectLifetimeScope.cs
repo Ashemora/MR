@@ -1,5 +1,6 @@
 using Project.Scripts.Configs;
 using Project.Scripts.Services.Audio.AudioSystem;
+using Project.Scripts.Services.Audio.Settings;
 using Project.Scripts.Services.AppFlow;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Progression;
@@ -48,6 +49,7 @@ namespace Project.Scripts.DI
 
             builder.Register<EventBus>(Lifetime.Singleton);
             builder.Register<AudioService>(Lifetime.Singleton);
+            builder.Register<AudioSettingsService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
             builder.Register<ILevelProgressionService, LevelProgressionService>(Lifetime.Singleton);
             builder.Register<ISceneLoadingService, SceneLoadingService>(Lifetime.Singleton);
             builder.Register<IBattleSessionProvider, BattleSessionProvider>(Lifetime.Singleton);

@@ -20,11 +20,15 @@ namespace Project.Scripts.Configs.UI
         [Tooltip("Префаб экрана загрузки перед переходом из лобби в бой")]
         [SerializeField] private GameObject _gameplayLoadingViewPrefab;
 
+        [Tooltip("Префаб окна опций - открывается из лобби, содержит настройки звука")]
+        [SerializeField] private GameObject _optionsViewPrefab;
+
 
         public GameObject WinViewPrefab => _winViewPrefab;
         public GameObject LoseViewPrefab => _loseViewPrefab;
         public GameObject MoveBarViewPrefab => _moveBarViewPrefab;
         public GameObject TopBarViewPrefab => _topBarViewPrefab;
         public GameObject GameplayLoadingViewPrefab => _gameplayLoadingViewPrefab;
+        public GameObject OptionsViewPrefab => _optionsViewPrefab;
     }
 }
