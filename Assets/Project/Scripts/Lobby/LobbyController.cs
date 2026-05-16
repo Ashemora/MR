@@ -31,10 +31,7 @@ namespace Project.Scripts.Lobby
 
 
         [Inject]
-        public void Construct(
-            IAppStateMachine appStateMachine,
-            UIService uiService,
-            UIConfig uiConfig,
+        public void Construct(IAppStateMachine appStateMachine, UIService uiService, UIConfig uiConfig,
             IAudioSettingsService audioSettings)
         {
             _appStateMachine = appStateMachine;
@@ -62,6 +59,7 @@ namespace Project.Scripts.Lobby
         {
             if (_isOptionsOpen)
                 return;
+            
             if (!_uiConfig.OptionsViewPrefab)
             {
                 Debug.LogError("OptionsViewPrefab is not assigned in UIConfig");

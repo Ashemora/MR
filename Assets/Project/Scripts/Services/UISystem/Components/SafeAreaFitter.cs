@@ -4,6 +4,7 @@ using R3;
 using UnityEngine;
 using VContainer;
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
@@ -30,6 +31,12 @@ namespace Project.Scripts.Services.UISystem.Components
         private ISafeAreaService _safeArea;
         private IDisposable _subscription;
         private bool _didWarnAboutLayout;
+#if UNITY_EDITOR
+        private Rect _lastEditorSafeArea;
+        private Vector2Int _lastEditorScreenSize;
+        private ScreenOrientation _lastEditorOrientation;
+        private bool _editorPollSubscribed;
+#endif
 
 
         [Inject]
@@ -56,12 +63,14 @@ namespace Project.Scripts.Services.UISystem.Components
             EnsureRectTransform();
             ResubscribeIfActive();
             ApplyCurrentOrScreenSafeArea();
+            SubscribeEditorPoll();
         }
 
         private void OnDisable()
         {
             _subscription?.Dispose();
             _subscription = null;
+            UnsubscribeEditorPoll();
         }
 
         private void OnValidate()
@@ -110,18 +119,22 @@ namespace Project.Scripts.Services.UISystem.Components
                 return;
             }
 
+#if UNITY_EDITOR
+            ApplyScreenSafeArea();
+#else
             ApplyFullScreen();
+#endif
         }
 
         private void ApplyScreenSafeArea()
         {
-            var screenSize = new Vector2(Screen.width, Screen.height);
-            Apply(new SafeAreaInfo(Screen.safeArea, screenSize, Screen.orientation));
+            var screenSize = new Vector2(UnityEngine.Device.Screen.width, UnityEngine.Device.Screen.height);
+            Apply(new SafeAreaInfo(UnityEngine.Device.Screen.safeArea, screenSize, UnityEngine.Device.Screen.orientation));
         }
 
         private void ApplyFullScreen()
         {
-            Apply(new SafeAreaInfo(new Rect(0f, 0f, 1f, 1f), Vector2.one, Screen.orientation));
+            Apply(new SafeAreaInfo(new Rect(0f, 0f, 1f, 1f), Vector2.one, UnityEngine.Device.Screen.orientation));
         }
 
         private void Apply(SafeAreaInfo info)
@@ -135,10 +148,26 @@ namespace Project.Scripts.Services.UISystem.Components
                 _applyRight ? info.AnchorMax.x : 1f,
                 _applyTop ? info.AnchorMax.y : 1f);
 
+            var changed = _rectTransform.anchorMin != min
+                          || _rectTransform.anchorMax != max
+                          || _rectTransform.offsetMin != Vector2.zero
+                          || _rectTransform.offsetMax != Vector2.zero;
+            if (false == changed)
+                return;
+
             _rectTransform.anchorMin = min;
             _rectTransform.anchorMax = max;
             _rectTransform.offsetMin = Vector2.zero;
             _rectTransform.offsetMax = Vector2.zero;
+
+#if UNITY_EDITOR
+            if (false == Application.isPlaying)
+            {
+                EditorUtility.SetDirty(_rectTransform);
+                if (gameObject.scene.IsValid())
+                    EditorSceneManager.MarkSceneDirty(gameObject.scene);
+            }
+#endif
         }
 
         private void EnsureRectTransform()
@@ -164,5 +193,57 @@ namespace Project.Scripts.Services.UISystem.Components
                 $"{nameof(SafeAreaFitter)} expects a stretched RectTransform with zero offsets.",
                 this);
         }
+
+        private void SubscribeEditorPoll()
+        {
+#if UNITY_EDITOR
+            if (_editorPollSubscribed || Application.isPlaying)
+                return;
+
+            _lastEditorSafeArea = Screen.safeArea;
+            _lastEditorScreenSize = new Vector2Int(Screen.width, Screen.height);
+            _lastEditorOrientation = Screen.orientation;
+            EditorApplication.update += OnEditorUpdate;
+            _editorPollSubscribed = true;
+#endif
+        }
+
+        private void UnsubscribeEditorPoll()
+        {
+#if UNITY_EDITOR
+            if (false == _editorPollSubscribed)
+                return;
+
+            EditorApplication.update -= OnEditorUpdate;
+            _editorPollSubscribed = false;
+#endif
+        }
+
+#if UNITY_EDITOR
+        private void OnEditorUpdate()
+        {
+            if (Application.isPlaying)
+                return;
+            if (false == this || false == gameObject)
+                return;
+            if (false == isActiveAndEnabled)
+                return;
+
+            var safeArea = UnityEngine.Device.Screen.safeArea;
+            var screenSize = new Vector2Int(UnityEngine.Device.Screen.width, UnityEngine.Device.Screen.height);
+            var orientation = UnityEngine.Device.Screen.orientation;
+
+            if (safeArea == _lastEditorSafeArea
+                && screenSize == _lastEditorScreenSize
+                && orientation == _lastEditorOrientation)
+                return;
+
+            _lastEditorSafeArea = safeArea;
+            _lastEditorScreenSize = screenSize;
+            _lastEditorOrientation = orientation;
+
+            ApplyEditorPreviewSafeArea();
+        }
+#endif
     }
 }
