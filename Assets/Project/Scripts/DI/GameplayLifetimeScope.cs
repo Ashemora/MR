@@ -26,6 +26,9 @@ using Project.Scripts.Services.Timer;
 using Project.Scripts.Services.Clock;
 using VContainer;
 using VContainer.Unity;
+#if DEV
+using Project.Scripts.Dev;
+#endif
 
 namespace Project.Scripts.DI
 {
@@ -100,6 +103,10 @@ namespace Project.Scripts.DI
             builder.Register<GameResultPresenter>(Lifetime.Singleton);
             builder.Register<GameResultSequenceController>(Lifetime.Singleton);
             builder.Register<IReadyPulseCoordinator, ReadyPulseCoordinator>(Lifetime.Singleton);
+#if DEV
+            builder.Register<DevMatchPhaseSkipService>(Lifetime.Singleton);
+            builder.Register<DevMatchPhaseSkipButtonSpawner>(Lifetime.Singleton);
+#endif
 
             builder.Register<IBoardRuntimeService, BoardRuntimeService>(Lifetime.Singleton);
             builder.Register<IBoardBoundsProvider, BoardBoundsProvider>(Lifetime.Singleton);

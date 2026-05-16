@@ -26,6 +26,9 @@ using Project.Scripts.Services.Timer;
 using Project.Scripts.Services.UISystem;
 using UnityEngine;
 using VContainer;
+#if DEV
+using Project.Scripts.Dev;
+#endif
 #if UNITY_EDITOR
 using Project.Scripts.Services.BoardEdit;
 #endif
@@ -71,6 +74,9 @@ namespace Project.Scripts.Gameplay
         private BattleFieldPhaseLayoutController _phaseLayout;
         private GameplayWorldLayoutController _worldLayout;
         private TopBarLayoutDriver _topBarLayout;
+#if DEV
+        private DevMatchPhaseSkipButtonSpawner _devMatchPhaseSkipButtonSpawner;
+#endif
 
 
         private void Start()
@@ -159,7 +165,11 @@ namespace Project.Scripts.Gameplay
             IUnitActivationCooldownService unitActivationCooldownService,
             TileKindPaletteConfig palette,
             IBuffService buffService,
-            IBoardAnnouncementService boardAnnouncementService)
+            IBoardAnnouncementService boardAnnouncementService
+#if DEV
+            , DevMatchPhaseSkipButtonSpawner devMatchPhaseSkipButtonSpawner
+#endif
+            )
         {
             _eventBus = eventBus;
             _boardConfig = boardConfig;
@@ -188,6 +198,9 @@ namespace Project.Scripts.Gameplay
             _palette = palette;
             _buffService = buffService;
             _boardAnnouncementService = boardAnnouncementService;
+#if DEV
+            _devMatchPhaseSkipButtonSpawner = devMatchPhaseSkipButtonSpawner;
+#endif
         }
 
         private async UniTaskVoid InitAsync()
@@ -256,6 +269,9 @@ namespace Project.Scripts.Gameplay
             await _boardSystems.SwapHandler.InitAsync();
             await _boardSystems.Orchestrator.InitAsync();
             await _boardSystems.Orchestrator.StartGame();
+#if DEV
+            _devMatchPhaseSkipButtonSpawner.Spawn(_uiConfig.DevMatchPhaseSkipButtonPrefab);
+#endif
         }
     }
 }

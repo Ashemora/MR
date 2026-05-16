@@ -18,4 +18,5 @@ MonoBehaviour:
   _topBarViewPrefab: {fileID: 4057129598969399877, guid: 4a938b04cee44a047876c9d12b631e8e, type: 3}
   _gameplayLoadingViewPrefab: {fileID: 7099913805656000001, guid: 5f37a2fd4d8d4b84b40e6ae893ffb0f3, type: 3}
   _optionsViewPrefab: {fileID: 1000, guid: 7f8e9d0c1b2a39403abcdef010203045, type: 3}
+  _devMatchPhaseSkipButtonPrefab: {fileID: 100000, guid: b6c99c4f8b134b708b74a0654df893a1, type: 3}
   _flawlessVictoryViewPrefab: {fileID: 264388365034592773, guid: 6763c80f2731bb241b6a8333aeab469a, type: 3}

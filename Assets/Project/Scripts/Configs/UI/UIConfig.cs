@@ -23,6 +23,11 @@ namespace Project.Scripts.Configs.UI
         [Tooltip("Префаб окна опций - открывается из лобби, содержит настройки звука")]
         [SerializeField] private GameObject _optionsViewPrefab;
 
+#if DEV
+        [Tooltip("DEV-only кнопка пропуска match phase")]
+        [SerializeField] private GameObject _devMatchPhaseSkipButtonPrefab;
+#endif
+
 
         public GameObject WinViewPrefab => _winViewPrefab;
         public GameObject LoseViewPrefab => _loseViewPrefab;
@@ -30,5 +35,8 @@ namespace Project.Scripts.Configs.UI
         public GameObject TopBarViewPrefab => _topBarViewPrefab;
         public GameObject GameplayLoadingViewPrefab => _gameplayLoadingViewPrefab;
         public GameObject OptionsViewPrefab => _optionsViewPrefab;
+#if DEV
+        public GameObject DevMatchPhaseSkipButtonPrefab => _devMatchPhaseSkipButtonPrefab;
+#endif
     }
 }
