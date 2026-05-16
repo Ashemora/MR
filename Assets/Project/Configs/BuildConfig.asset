@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f142271f009858d43acfcaa2b3774f3f, type: 3}
+  m_Name: BuildConfig
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::Project.Scripts.Utils.Editor.BuildConfig
+  _version: 0.2.1
+  _buildNumber: 12
+  _getVersionsButton: 0
+  _setVersionsButton: 0
+  _devDefine: DEV
+  _productionDefine: PRODUCTION
+  _devOutputDir: Builds/Dev
+  _prodOutputDir: Builds/Prod
+  _devUseDevelopmentFlag: 1
+  _confirmProduction: 1
+  _revealOutputAfterBuild: 1
+  _buildDevButton: 0
+  _buildProductionButton: 0
+  _lastBuildResult: Failed
+  _lastBuildKind: Dev
+  _lastBuildTarget: Android
+  _lastBuildTime: 2026-05-15 22:32:05
+  _lastBuildDuration: 31.877s
+  _lastBuildSize: 0 B
+  _lastBuildPath: Builds/Dev\Matchrift_0.2.1_dev.12.apk
+  _openLastBuildFolderButton: 0
