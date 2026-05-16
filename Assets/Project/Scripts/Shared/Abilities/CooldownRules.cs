@@ -1,7 +1,14 @@
+using Project.Scripts.Shared.BattleFlow;
+
 namespace Project.Scripts.Shared.Abilities
 {
     public static class CooldownRules
     {
+        public static bool ShouldClearActivationCooldownsOnPhaseEntered(BattlePhaseKind phase)
+        {
+            return phase == BattlePhaseKind.Match;
+        }
+
         public static float ApplyMinimumUnitActivationCooldown(float duration, float minDuration)
         {
             var minimum = minDuration < 0f ? 0f : minDuration;

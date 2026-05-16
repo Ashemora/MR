@@ -4,6 +4,7 @@ using Project.Scripts.Services.Events;
 using Project.Scripts.Shared.BattleSetup;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Shared.Abilities;
+using Project.Scripts.Shared.BattleFlow;
 using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Combat.Units
@@ -38,6 +39,7 @@ namespace Project.Scripts.Services.Combat.Units
         private IDisposable _playerDefeatedSubscription;
         private IDisposable _enemyDefeatedSubscription;
         private IDisposable _burndownStartedSubscription;
+        private IDisposable _battleFlowPhaseChangedSubscription;
 
 
         public UnitActivationCooldownService(EventBus eventBus, BattleSetup battleSetup, BattleFlowConfig battleFlowConfig,
@@ -56,6 +58,8 @@ namespace Project.Scripts.Services.Combat.Units
             _playerDefeatedSubscription = _eventBus.Subscribe<PlayerDefeatedEvent>(_ => ResetAvatarCooldown(BattleSide.Player));
             _enemyDefeatedSubscription = _eventBus.Subscribe<EnemyDefeatedEvent>(_ => ResetAvatarCooldown(BattleSide.Enemy));
             _burndownStartedSubscription = _eventBus.Subscribe<BurndownStartedEvent>(_ => ResetAllCooldowns());
+            _battleFlowPhaseChangedSubscription =
+                _eventBus.Subscribe<BattleFlowPhaseChangedEvent>(OnBattleFlowPhaseChanged);
         }
 
 
@@ -158,8 +162,16 @@ namespace Project.Scripts.Services.Combat.Units
             _enemyDefeatedSubscription = null;
             _burndownStartedSubscription?.Dispose();
             _burndownStartedSubscription = null;
+            _battleFlowPhaseChangedSubscription?.Dispose();
+            _battleFlowPhaseChangedSubscription = null;
         }
 
+
+        private void OnBattleFlowPhaseChanged(BattleFlowPhaseChangedEvent e)
+        {
+            if (CooldownRules.ShouldClearActivationCooldownsOnPhaseEntered(e.Phase))
+                ResetAllCooldowns();
+        }
 
         private void TickHeroSide(BattleSide side, float[] remaining, float[] durations, float[] lastPublished, float deltaTime)
         {
