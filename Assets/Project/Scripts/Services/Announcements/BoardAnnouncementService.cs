@@ -118,7 +118,7 @@ namespace Project.Scripts.Services.Announcements
 
         private BoardAnnouncementView CreateInstance()
         {
-            var parent = _uiService.GetLayerRoot(UILayer.Popup);
+            var parent = _uiService.GetLayerRoot(UILayer.Popup, SafeAreaMode.ForceIgnore);
             var go = UnityEngine.Object.Instantiate(_config.ViewPrefab, parent);
             var view = go.GetComponent<BoardAnnouncementView>();
             go.SetActive(false);

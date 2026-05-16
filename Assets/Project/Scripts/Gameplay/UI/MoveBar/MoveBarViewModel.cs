@@ -6,7 +6,7 @@ using Project.Scripts.Services.Events;
 using Project.Scripts.Services.UISystem;
 using R3;
 
-namespace Project.Scripts.Gameplay.UI
+namespace Project.Scripts.Gameplay.UI.MoveBar
 {
     public class MoveBarViewModel : BaseViewModel
     {

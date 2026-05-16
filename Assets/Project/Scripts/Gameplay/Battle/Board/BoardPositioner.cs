@@ -4,7 +4,9 @@ using Project.Scripts.Configs.Gameplay;
 using Project.Scripts.Configs.Grid;
 using Project.Scripts.Gameplay.Battle.Layout;
 using Project.Scripts.Gameplay.Layout;
+using Project.Scripts.Services.SafeArea;
 using UnityEngine;
+using VContainer;
 
 namespace Project.Scripts.Gameplay.Battle.Board
 {
@@ -18,6 +20,16 @@ namespace Project.Scripts.Gameplay.Battle.Board
         [SerializeField] private BattleWorldLayoutConfig _battleWorldLayoutConfig;
         [SerializeField] private GridConfig _gridConfig;
         [SerializeField] private GameplayScreenLayoutConfig _screenLayoutConfig;
+
+
+        private ISafeAreaService _safeAreaService;
+
+
+        [Inject]
+        public void Construct(ISafeAreaService safeAreaService)
+        {
+            _safeAreaService = safeAreaService;
+        }
 
 
         private void Update()
@@ -72,6 +84,7 @@ namespace Project.Scripts.Gameplay.Battle.Board
             var worldRect = ToScreenLayoutRect(ToWorldRect(cam, gameplayScreenLayout.WorldRect));
             var fixedHeight = GetBattleWorldFixedHeight(layout);
             var gapCellUnits = GetBattleWorldGapCellUnits();
+            
             return GameplayWorldLayoutCalculator.Calculate(
                 worldRect,
                 _boardConfig.MaxAspectRatio,
@@ -88,10 +101,10 @@ namespace Project.Scripts.Gameplay.Battle.Board
 
         private GameplayScreenLayout CalculateScreenLayout()
         {
-            var screenRect = GetScreenRect();
-            var safeArea = Screen.safeArea;
-            var safeAreaRect = safeArea.width > 0f && safeArea.height > 0f
-                ? new ScreenLayoutRect(safeArea.x, safeArea.y, safeArea.width, safeArea.height)
+            var safeArea = GetSafeAreaInfo();
+            var screenRect = new ScreenLayoutRect(0f, 0f, safeArea.ScreenSize.x, safeArea.ScreenSize.y);
+            var safeAreaRect = safeArea.Raw.width > 0f && safeArea.Raw.height > 0f
+                ? new ScreenLayoutRect(safeArea.Raw.x, safeArea.Raw.y, safeArea.Raw.width, safeArea.Raw.height)
                 : screenRect;
 
             return GameplayScreenLayoutCalculator.Calculate(
@@ -110,12 +123,16 @@ namespace Project.Scripts.Gameplay.Battle.Board
                 _screenLayoutConfig.WorldSidePadding);
         }
 
-        private ScreenLayoutRect GetScreenRect()
+        private SafeAreaInfo GetSafeAreaInfo()
         {
+            if (Application.isPlaying && null != _safeAreaService && null != _safeAreaService.Current)
+                return _safeAreaService.Current.CurrentValue;
+
             var width = Screen.width > 0 ? Screen.width : UnityEngine.Device.Screen.width;
             var height = Screen.height > 0 ? Screen.height : UnityEngine.Device.Screen.height;
+            var screenSize = new Vector2(width, height);
             
-            return new ScreenLayoutRect(0f, 0f, width, height);
+            return new SafeAreaInfo(Screen.safeArea, screenSize, Screen.orientation);
         }
 
         private Rect ToWorldRect(Camera cam, ScreenLayoutRect rect)

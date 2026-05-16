@@ -6,6 +6,7 @@ using Project.Scripts.Gameplay.Battle.HUD;
 using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.Results;
 using Project.Scripts.Gameplay.UI;
+using Project.Scripts.Gameplay.UI.MoveBar;
 using Project.Scripts.Services.Announcements;
 using Project.Scripts.Services.Board;
 using Project.Scripts.Services.BattleFlow;

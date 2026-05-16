@@ -8,6 +8,7 @@ using Project.Scripts.Gameplay.Battle.HUD;
 using Project.Scripts.Services.Board;
 using Project.Scripts.Services.Grid;
 using Project.Scripts.Services.Layout;
+using Project.Scripts.Services.SafeArea;
 using Project.Scripts.Gameplay.Layout;
 using UnityEngine;
 
@@ -37,6 +38,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
         private readonly BattleWorldLayoutConfig _battleWorldLayoutConfig;
         private readonly GameplayScreenLayoutConfig _gameplayScreenLayoutConfig;
         private readonly IGameplayScreenLayoutService _gameplayScreenLayoutService;
+        private readonly ISafeAreaService _safeAreaService;
         private readonly IBoardBoundsProvider _boardBoundsProvider;
         private readonly BattleFieldView _battleFieldView;
         private GridManager _gridManager;
@@ -58,6 +60,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             BattleWorldLayoutConfig battleWorldLayoutConfig,
             GameplayScreenLayoutConfig gameplayScreenLayoutConfig,
             IGameplayScreenLayoutService gameplayScreenLayoutService,
+            ISafeAreaService safeAreaService,
             IBoardBoundsProvider boardBoundsProvider,
             BattleFieldView battleFieldView)
         {
@@ -67,6 +70,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             _battleWorldLayoutConfig = battleWorldLayoutConfig;
             _gameplayScreenLayoutConfig = gameplayScreenLayoutConfig;
             _gameplayScreenLayoutService = gameplayScreenLayoutService;
+            _safeAreaService = safeAreaService;
             _boardBoundsProvider = boardBoundsProvider;
             _battleFieldView = battleFieldView;
         }
@@ -114,7 +118,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
 #if UNITY_EDITOR
             _lastWidth = Screen.width;
             _lastHeight = Screen.height;
-            _lastSafeArea = Screen.safeArea;
+            _lastSafeArea = GetCurrentSafeAreaRect();
             if (false == _editorEventsSubscribed)
             {
                 BoardConfig.LayoutChanged += OnLayoutChanged;
@@ -133,7 +137,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             if (null == _gridManager)
                 return;
 
-            var safeArea = Screen.safeArea;
+            var safeArea = GetCurrentSafeAreaRect();
             if (Screen.width == _lastWidth && Screen.height == _lastHeight && safeArea == _lastSafeArea)
                 return;
 
@@ -180,6 +184,11 @@ namespace Project.Scripts.Gameplay.Battle.Layout
                 gapCellUnits,
                 _gameplayScreenLayoutConfig.WorldStackMinGapScale,
                 MinLayoutCellSize);
+        }
+
+        private Rect GetCurrentSafeAreaRect()
+        {
+            return _safeAreaService?.Current?.CurrentValue.Raw ?? Screen.safeArea;
         }
 
         private void ApplyBattleWorldFitScale(float fitScale)

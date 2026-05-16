@@ -1,5 +1,6 @@
 using Project.Scripts.Configs.Gameplay;
 using Project.Scripts.Gameplay.Layout;
+using Project.Scripts.Services.SafeArea;
 using UnityEngine;
 
 namespace Project.Scripts.Services.Layout
@@ -7,19 +8,22 @@ namespace Project.Scripts.Services.Layout
     public class GameplayScreenLayoutService : IGameplayScreenLayoutService
     {
         private readonly GameplayScreenLayoutConfig _config;
+        private readonly ISafeAreaService _safeAreaService;
 
 
-        public GameplayScreenLayoutService(GameplayScreenLayoutConfig config)
+        public GameplayScreenLayoutService(GameplayScreenLayoutConfig config, ISafeAreaService safeAreaService)
         {
             _config = config;
+            _safeAreaService = safeAreaService;
         }
 
 
         public GameplayScreenLayout Calculate()
         {
-            var screenRect = new ScreenLayoutRect(0f, 0f, Screen.width, Screen.height);
-            var safeArea = Screen.safeArea;
-            var safeAreaRect = new ScreenLayoutRect(safeArea.x, safeArea.y, safeArea.width, safeArea.height);
+            var safeArea = _safeAreaService.Current.CurrentValue;
+            var screenRect = new ScreenLayoutRect(0f, 0f, safeArea.ScreenSize.x, safeArea.ScreenSize.y);
+            var safeAreaRect = new ScreenLayoutRect(safeArea.Raw.x, safeArea.Raw.y, safeArea.Raw.width,
+                safeArea.Raw.height);
 
             return GameplayScreenLayoutCalculator.Calculate(
                 screenRect,

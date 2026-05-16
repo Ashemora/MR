@@ -19,6 +19,9 @@ namespace Project.Scripts.Gameplay.UI.Windows
         [SerializeField] private TMP_Text _text;
 
 
+        public override SafeAreaMode SafeAreaMode => SafeAreaMode.ForceIgnore;
+        
+        
         private Sequence _sequence;
         private RectTransform _canvasRect;
         private Camera _cam;

@@ -19,12 +19,11 @@ namespace Project.Scripts.Gameplay.UI
         [SerializeField] private TMP_Text _roundTMP;
 
 
-        public bool ApplyLayout(
-            Rect gameplayScreenRect,
-            float bottomScreenY,
-            float sidePadding,
-            float bottomPadding,
-            float height)
+        public override SafeAreaMode SafeAreaMode => SafeAreaMode.ForceIgnore;
+
+
+        public bool ApplyLayout(Rect gameplayScreenRect, float bottomScreenY, float sidePadding,
+            float bottomPadding, float height)
         {
             if (transform is not RectTransform rectTransform)
                 return false;

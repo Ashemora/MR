@@ -6,7 +6,7 @@ using R3;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Project.Scripts.Gameplay.UI
+namespace Project.Scripts.Gameplay.UI.MoveBar
 {
     public class MoveBarView : BaseView<MoveBarViewModel>
     {
@@ -33,6 +33,9 @@ namespace Project.Scripts.Gameplay.UI
 #if UNITY_EDITOR
         private bool _rebuildPending;
 #endif
+
+
+        public override SafeAreaMode SafeAreaMode => SafeAreaMode.ForceIgnore;
 
 
         protected override async UniTask OnBindViewModel()

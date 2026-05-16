@@ -21,6 +21,8 @@ namespace Project.Scripts.Gameplay.UI.Windows
         [SerializeField] private Button _nextLevelButton;
 
 
+        public override SafeAreaMode SafeAreaMode => SafeAreaMode.ForceIgnore;
+
         protected override bool EnablePumpAnimation => true;
 
 

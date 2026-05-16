@@ -10,6 +10,7 @@ using Project.Scripts.Gameplay.Battle.HUD;
 using Project.Scripts.Gameplay.Battle.Layout;
 using Project.Scripts.Gameplay.Results;
 using Project.Scripts.Gameplay.UI;
+using Project.Scripts.Gameplay.UI.MoveBar;
 using Project.Scripts.Services.Announcements;
 using Project.Scripts.Services.Board;
 using Project.Scripts.Services.BattleFlow;
@@ -20,6 +21,7 @@ using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Input;
 using Project.Scripts.Services.Layout;
+using Project.Scripts.Services.SafeArea;
 using Project.Scripts.Services.Timer;
 using Project.Scripts.Services.UISystem;
 using UnityEngine;
@@ -55,6 +57,7 @@ namespace Project.Scripts.Gameplay
         private BattleFieldViewModel _battleFieldViewModel;
         private IBoardBoundsProvider _boardBoundsProvider;
         private IGameplayScreenLayoutService _gameplayScreenLayoutService;
+        private ISafeAreaService _safeAreaService;
         private BattleFieldView _battleFieldView;
         private InputService _inputService;
         private BoardSystemsFactory _boardSystemsFactory;
@@ -149,6 +152,7 @@ namespace Project.Scripts.Gameplay
             BattleFieldViewModel battleHUDViewModel,
             IBoardBoundsProvider boardBoundsProvider,
             IGameplayScreenLayoutService gameplayScreenLayoutService,
+            ISafeAreaService safeAreaService,
             BoardSystemsFactory boardSystemsFactory,
             IBattleFlowService battleFlowService,
             IBurndownService burndownService,
@@ -176,6 +180,7 @@ namespace Project.Scripts.Gameplay
             _battleFieldViewModel = battleHUDViewModel;
             _boardBoundsProvider = boardBoundsProvider;
             _gameplayScreenLayoutService = gameplayScreenLayoutService;
+            _safeAreaService = safeAreaService;
             _boardSystemsFactory = boardSystemsFactory;
             _battleFlowService = battleFlowService;
             _burndownService = burndownService;
@@ -220,7 +225,7 @@ namespace Project.Scripts.Gameplay
 
             _worldLayout = new GameplayWorldLayoutController(_battleWorldLayout, _boardConfig,
                 _gridConfig, _battleWorldLayoutConfig, _gameplayScreenLayoutConfig,
-                _gameplayScreenLayoutService, _boardBoundsProvider, _battleFieldView);
+                _gameplayScreenLayoutService, _safeAreaService, _boardBoundsProvider, _battleFieldView);
 
             _topBarLayout.Subscribe(_worldLayout, _phaseLayout);
 

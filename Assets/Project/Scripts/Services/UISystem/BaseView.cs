@@ -17,6 +17,8 @@ namespace Project.Scripts.Services.UISystem
         public bool IsVisible { get; private set; }
 
 
+        public virtual SafeAreaMode SafeAreaMode => SafeAreaMode.Inherit;
+
         protected virtual bool EnablePumpAnimation => false;
 
         protected CompositeDisposable Disposables { get; } = new();

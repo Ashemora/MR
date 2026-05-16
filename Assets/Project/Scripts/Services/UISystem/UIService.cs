@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs;
 using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 using ZLinq;
 
 namespace Project.Scripts.Services.UISystem
@@ -25,11 +26,21 @@ namespace Project.Scripts.Services.UISystem
         [Tooltip("System layer canvas (Sort Order 300). For system UI: loading screens, alerts.")]
         [SerializeField] private Canvas _systemCanvas;
 
+        [Tooltip("Safe area root under Main canvas. Views on Main spawn here by default when assigned.")]
+        [SerializeField] private RectTransform _mainSafeRoot;
+
+        [Tooltip("Safe area root under MainDynamic canvas. Views on MainDynamic spawn here by default when assigned.")]
+        [SerializeField] private RectTransform _mainDynamicSafeRoot;
+
+        [Tooltip("Safe area root under Popup canvas. Views on Popup spawn here by default when assigned.")]
+        [SerializeField] private RectTransform _popupSafeRoot;
+
         
         private readonly Dictionary<Type, GameObject> _registeredViews = new();
         private readonly Dictionary<Type, IView> _activeViews = new();
         private readonly Dictionary<Type, UILayer> _viewLayers = new();
         private DebugConfig _debugConfig;
+        private IObjectResolver _resolver;
 
 
         private void Awake()
@@ -39,9 +50,10 @@ namespace Project.Scripts.Services.UISystem
 
 
         [Inject]
-        public void Construct(DebugConfig debugConfig)
+        public void Construct(DebugConfig debugConfig, IObjectResolver resolver)
         {
             _debugConfig = debugConfig;
+            _resolver = resolver;
         }
 
 
@@ -75,20 +87,9 @@ namespace Project.Scripts.Services.UISystem
                 }
             }
 
-            if (false == _registeredViews.TryGetValue(viewType, out var prefab))
-            {
-                Debug.LogError($"View {viewType.Name} not registered!");
-                return null;
-            }
-
-            var viewObject = Instantiate(prefab, GetParentForLayer(_viewLayers[viewType]));
-            var view = viewObject.GetComponent<TView>();
+            var view = CreateView<TView, TViewModel>();
             if (!view)
-            {
-                Debug.LogError($"Prefab doesn't have {viewType.Name} component!");
-                Destroy(viewObject);
                 return null;
-            }
 
             await view.InitializeAsync(viewModel);
             await view.ShowAsync();
@@ -121,20 +122,9 @@ namespace Project.Scripts.Services.UISystem
                 }
             }
 
-            if (false == _registeredViews.TryGetValue(viewType, out var prefab))
-            {
-                Debug.LogError($"View {viewType.Name} not registered!");
-                return null;
-            }
-
-            var viewObject = Instantiate(prefab, GetParentForLayer(_viewLayers[viewType]));
-            var view = viewObject.GetComponent<TView>();
+            var view = CreateView<TView, TViewModel>();
             if (!view)
-            {
-                Debug.LogError($"Prefab doesn't have {viewType.Name} component!");
-                Destroy(viewObject);
                 return null;
-            }
 
             var viewModel = new TViewModel();
             await view.InitializeAsync(viewModel);
@@ -144,6 +134,7 @@ namespace Project.Scripts.Services.UISystem
 
             if (_debugConfig.LogUIEvents)
                 Debug.Log($"View {viewType.Name} shown");
+            
             return view;
         }
 
@@ -154,7 +145,8 @@ namespace Project.Scripts.Services.UISystem
             if (false == _activeViews.TryGetValue(viewType, out var view))
             {
                 if (_debugConfig.LogUIEvents)
-                Debug.LogWarning($"View {viewType.Name} is not active");
+                    Debug.LogWarning($"View {viewType.Name} is not active");
+                
                 return;
             }
 
@@ -217,14 +209,78 @@ namespace Project.Scripts.Services.UISystem
             canvas.sortingOrder = (int)layer;
         }
 
-        private Transform GetParentForLayer(UILayer layer)
+        private TView CreateView<TView, TViewModel>()
+            where TView : BaseView<TViewModel>
+            where TViewModel : BaseViewModel
         {
-            return GetCanvasForLayer(layer).transform;
+            var viewType = typeof(TView);
+
+            if (false == _registeredViews.TryGetValue(viewType, out var prefab))
+            {
+                Debug.LogError($"View {viewType.Name} not registered!");
+                return null;
+            }
+
+            if (false == _viewLayers.TryGetValue(viewType, out var layer))
+            {
+                Debug.LogError($"View {viewType.Name} has no registered UI layer!");
+                return null;
+            }
+
+            var prefabView = prefab.GetComponent<TView>();
+            if (!prefabView)
+            {
+                Debug.LogError($"Prefab doesn't have {viewType.Name} component!");
+                return null;
+            }
+
+            var viewObject = Instantiate(prefab, GetParentForLayer(layer, prefabView.SafeAreaMode));
+            _resolver?.InjectGameObject(viewObject);
+
+            return viewObject.GetComponent<TView>();
+        }
+
+        private Transform GetParentForLayer(UILayer layer, SafeAreaMode mode)
+        {
+            var canvas = GetCanvasForLayer(layer);
+            if (mode == SafeAreaMode.ForceIgnore)
+                return canvas.transform;
+
+            var safeRoot = GetSafeRootForLayer(layer);
+            if (mode == SafeAreaMode.ForceApply)
+                return safeRoot ? safeRoot : canvas.transform;
+
+            return LayerHasSafeAreaByDefault(layer) && safeRoot
+                ? safeRoot
+                : canvas.transform;
         }
 
         public Transform GetLayerRoot(UILayer layer)
         {
             return GetCanvasForLayer(layer).transform;
+        }
+
+        public Transform GetLayerRoot(UILayer layer, SafeAreaMode mode)
+        {
+            return GetParentForLayer(layer, mode);
+        }
+
+        private RectTransform GetSafeRootForLayer(UILayer layer)
+        {
+            return layer switch
+            {
+                UILayer.Main => _mainSafeRoot,
+                UILayer.MainDynamic => _mainDynamicSafeRoot,
+                UILayer.Popup => _popupSafeRoot,
+                _ => null
+            };
+        }
+
+        private static bool LayerHasSafeAreaByDefault(UILayer layer)
+        {
+            return layer == UILayer.Main
+                   || layer == UILayer.MainDynamic
+                   || layer == UILayer.Popup;
         }
 
         private Canvas GetCanvasForLayer(UILayer layer)

@@ -4,8 +4,10 @@ using Project.Scripts.Services.Audio.Settings;
 using Project.Scripts.Services.AppFlow;
 using Project.Scripts.Services.Events;
 using Project.Scripts.Services.Progression;
+using Project.Scripts.Services.SafeArea;
 using Project.Scripts.Services.SceneLoading;
 using Project.Scripts.Services.UISystem;
+using Project.Scripts.Services.UISystem.Components;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -56,7 +58,14 @@ namespace Project.Scripts.DI
             builder.Register<IAppStateMachine, AppStateMachine>(Lifetime.Singleton);
 
             builder.RegisterComponentInHierarchy<AudioManager>();
+            builder.RegisterComponentInHierarchy<SafeAreaService>().AsImplementedInterfaces().AsSelf();
             builder.RegisterComponentInHierarchy<UIService>();
+            builder.RegisterBuildCallback(container =>
+            {
+                var fitters = Object.FindObjectsByType<SafeAreaFitter>(FindObjectsSortMode.None);
+                for (var i = 0; i < fitters.Length; i++)
+                    container.Inject(fitters[i]);
+            });
         }
     }
 }

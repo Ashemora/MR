@@ -42,6 +42,7 @@ namespace Project.Scripts.Lobby.Options
 
 
         protected override bool EnablePumpAnimation => false;
+        public override SafeAreaMode SafeAreaMode => SafeAreaMode.ForceIgnore;
 
 
         private Sequence _openSequence;
@@ -55,22 +56,38 @@ namespace Project.Scripts.Lobby.Options
             _sfxSlider.minValue = 0f;
             _sfxSlider.maxValue = 1f;
 
-            _musicSlider.SetValueWithoutNotify(ViewModel.MusicVolume.CurrentValue);
-            _sfxSlider.SetValueWithoutNotify(ViewModel.SfxVolume.CurrentValue);
             _musicToggle.SetIsOnWithoutNotify(false == ViewModel.MusicMuted.CurrentValue);
             _sfxToggle.SetIsOnWithoutNotify(false == ViewModel.SfxMuted.CurrentValue);
+            ApplyMusicSliderMutedState(ViewModel.MusicMuted.CurrentValue);
+            ApplySfxSliderMutedState(ViewModel.SfxMuted.CurrentValue);
 
             ViewModel.MusicVolume
-                .Subscribe(value => _musicSlider.SetValueWithoutNotify(value))
+                .Subscribe(value =>
+                {
+                    if (false == ViewModel.MusicMuted.CurrentValue)
+                        _musicSlider.SetValueWithoutNotify(value);
+                })
                 .AddTo(Disposables);
             ViewModel.SfxVolume
-                .Subscribe(value => _sfxSlider.SetValueWithoutNotify(value))
+                .Subscribe(value =>
+                {
+                    if (false == ViewModel.SfxMuted.CurrentValue)
+                        _sfxSlider.SetValueWithoutNotify(value);
+                })
                 .AddTo(Disposables);
             ViewModel.MusicMuted
-                .Subscribe(muted => _musicToggle.SetIsOnWithoutNotify(false == muted))
+                .Subscribe(muted =>
+                {
+                    _musicToggle.SetIsOnWithoutNotify(false == muted);
+                    ApplyMusicSliderMutedState(muted);
+                })
                 .AddTo(Disposables);
             ViewModel.SfxMuted
-                .Subscribe(muted => _sfxToggle.SetIsOnWithoutNotify(false == muted))
+                .Subscribe(muted =>
+                {
+                    _sfxToggle.SetIsOnWithoutNotify(false == muted);
+                    ApplySfxSliderMutedState(muted);
+                })
                 .AddTo(Disposables);
 
             _musicSlider.onValueChanged.AddListener(ViewModel.SetMusicVolume);
@@ -140,6 +157,18 @@ namespace Project.Scripts.Lobby.Options
             _openSequence = null;
             _closeSequence?.Kill();
             _closeSequence = null;
+        }
+
+        private void ApplyMusicSliderMutedState(bool muted)
+        {
+            _musicSlider.interactable = false == muted;
+            _musicSlider.SetValueWithoutNotify(muted ? 0f : ViewModel.MusicVolume.CurrentValue);
+        }
+
+        private void ApplySfxSliderMutedState(bool muted)
+        {
+            _sfxSlider.interactable = false == muted;
+            _sfxSlider.SetValueWithoutNotify(muted ? 0f : ViewModel.SfxVolume.CurrentValue);
         }
     }
 }
