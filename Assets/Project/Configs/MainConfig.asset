@@ -31,6 +31,7 @@ MonoBehaviour:
   _battleFieldLayoutConfig: {fileID: 11400000, guid: 7d5d1fa7c2c94d83880b72d36d79a7cf, type: 2}
   _gameplayScreenLayoutConfig: {fileID: 11400000, guid: 9cc56ddf724448ee90f369e1bb8f4308, type: 2}
   _tileKindPaletteConfig: {fileID: 11400000, guid: d100b8948d0a59f4cbe9d90dd813cb63, type: 2}
+  _tileSetConfig: {fileID: 11400000, guid: 5d8a3c2f1e9b4d6c8f7a2e5d3c9b1a4f, type: 2}
   _slotLayoutConfig: {fileID: 11400000, guid: 930f2ff79998a144c9415e78b34f4409, type: 2}
   _battleFlowConfig: {fileID: 11400000, guid: b42c2996aa482aa4abac2782938ef0c9, type: 2}
   _burndownConfig: {fileID: 11400000, guid: 0b3adf65b88a46068d76abf94b1bc623, type: 2}

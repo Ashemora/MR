@@ -5,7 +5,6 @@ using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Configs.Battle.Energy;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Grid;
-using Project.Scripts.Configs.Levels;
 using Project.Scripts.Gameplay.Battle.Layout;
 using Project.Scripts.Services.Audio;
 using Project.Scripts.Services.Audio.AudioSystem;
@@ -66,7 +65,7 @@ namespace Project.Scripts.Gameplay
         private readonly AudioService _audioService;
         private readonly BoardConfig _boardConfig;
         private readonly GridConfig _gridConfig;
-        private readonly LevelConfig _levelConfig;
+        private readonly TileSetConfig _tileSetConfig;
         private readonly BoardAnimationConfig _animConfig;
         private readonly InputConfig _inputConfig;
         private readonly CascadeEnergyConfig _cascadeEnergyConfig;
@@ -88,7 +87,7 @@ namespace Project.Scripts.Gameplay
             AudioService audioService,
             BoardConfig boardConfig,
             GridConfig gridConfig,
-            LevelConfig levelConfig,
+            TileSetConfig tileSetConfig,
             BoardAnimationConfig animConfig,
             InputConfig inputConfig,
             CascadeEnergyConfig cascadeEnergyConfig,
@@ -108,7 +107,7 @@ namespace Project.Scripts.Gameplay
             _audioService = audioService;
             _boardConfig = boardConfig;
             _gridConfig = gridConfig;
-            _levelConfig = levelConfig;
+            _tileSetConfig = tileSetConfig;
             _animConfig = animConfig;
             _inputConfig = inputConfig;
             _cascadeEnergyConfig = cascadeEnergyConfig;
@@ -131,7 +130,7 @@ namespace Project.Scripts.Gameplay
             var pool = new TilePool(_boardConfig.TilePrefab, battleWorldLayout.TileContainer, _animConfig,
                 initialLayout.TileCellSize, _boardConfig.TileFillPercent);
             var matchFinder = new MatchFinder(MatchRules.MinMatchLength);
-            var gridManager = new GridManager(_levelConfig, _gridConfig, _animConfig, pool,
+            var gridManager = new GridManager(_tileSetConfig, _gridConfig, _animConfig, pool,
                 initialLayout.TileCellSize, _boardRuntimeService, _eventBus, _bombRadiusModifierService,
                 _lineRuneModifierService);
             gridManager.SetOrigin(initialLayout.GridOrigin);
@@ -141,7 +140,7 @@ namespace Project.Scripts.Gameplay
             var swapHandler = new SwapInputHandler(inputService, gridManager.State, gridManager,
                 _inputConfig.WorldDragThreshold, _inputConfig.ReanchorOnUnlock);
             var moveChecker = new MoveChecker(gridManager.State, gridManager, matchFinder, _gridConfig);
-            var specialTileResolver = new SpecialTileResolver(_specialTileConfig, _levelConfig);
+            var specialTileResolver = new SpecialTileResolver(_specialTileConfig, _tileSetConfig);
             var swapComboResolver = new SwapComboResolver();
 
             var orchestrator = new BoardOrchestrator(

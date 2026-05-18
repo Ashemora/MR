@@ -77,6 +77,9 @@ namespace Project.Scripts.Configs
         [Tooltip("Палитра цветов тайлов: цветовые значения для каждого типа тайла")]
         [SerializeField] private TileKindPaletteConfig _tileKindPaletteConfig;
 
+        [Tooltip("Единый набор тайлов боя: обычные и специальные тайлы, доступные в любом матче")]
+        [SerializeField] private TileSetConfig _tileSetConfig;
+
         [Tooltip("Раскладка слотов: порядок цветов ячеек героев и аватара на поле")]
         [SerializeField] private SlotLayoutConfig _slotLayoutConfig;
 
@@ -126,6 +129,7 @@ namespace Project.Scripts.Configs
         public BattleFieldLayoutConfig BattleFieldLayoutConfig => _battleFieldLayoutConfig;
         public GameplayScreenLayoutConfig GameplayScreenLayoutConfig => _gameplayScreenLayoutConfig;
         public TileKindPaletteConfig TileKindPaletteConfig => _tileKindPaletteConfig;
+        public TileSetConfig TileSetConfig => _tileSetConfig;
         public SlotLayoutConfig SlotLayoutConfig => _slotLayoutConfig;
         public BattleFlowConfig BattleFlowConfig => _battleFlowConfig;
         public BurndownConfig BurndownConfig => _burndownConfig;

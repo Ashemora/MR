@@ -38,4 +38,3 @@ MonoBehaviour:
   - _displayName: Medium
     _config: {fileID: 11400000, guid: e08640440e2033e4489542e45deb29d0, type: 2}
   _fillBotStrengthsFromFolderButton: 0
-  _randomModeLevelOverride: {fileID: 0}

@@ -46,20 +46,16 @@ namespace Project.Scripts.DI
             var levelDatabase = Parent.Container.Resolve<LevelDatabase>();
             var session = Parent.Container.Resolve<IBattleSessionProvider>().Current;
             var levelId = session?.LevelId ?? Parent.Container.Resolve<ILevelProgressionService>().CurrentLevelId;
-            var requestedLevelConfig = levelDatabase.GetById(levelId);
-            var effectiveLevelConfig = requestedLevelConfig;
+            var levelConfig = levelDatabase.GetById(levelId);
+            builder.RegisterInstance(levelConfig);
 #if DEV
             var devOverride = Parent.Container.Resolve<IDevOpponentOverrideService>();
-            var devCatalog = Parent.Container.Resolve<DevUnitCatalogConfig>();
-            if (devOverride.Mode == DevOpponentMode.Random && devCatalog && devCatalog.RandomModeLevelOverride)
-                effectiveLevelConfig = devCatalog.RandomModeLevelOverride;
 #endif
-            builder.RegisterInstance(effectiveLevelConfig);
             var slotLayoutConfig = Parent.Container.Resolve<SlotLayoutConfig>();
             var playerBattleConfig = Parent.Container.Resolve<PlayerBattleConfig>();
 
             BattleSetup battleSetup;
-            BotConfig effectiveBotConfig = effectiveLevelConfig.BotConfig;
+            BotConfig effectiveBotConfig = levelConfig.BotConfig;
 #if DEV
             if (session != null && devOverride.TryBuildOpponent(session.Seed, out var devSelection))
             {
@@ -85,7 +81,7 @@ namespace Project.Scripts.DI
                                                  $"{devOverride.GetBuildBlockReason()}");
 #endif
                 battleSetup = BattleSetupFactory.Create(playerBattleConfig.DefaultUnitDeck,
-                    effectiveLevelConfig.OpponentUnitDeck, slotLayoutConfig);
+                    levelConfig.OpponentUnitDeck, slotLayoutConfig);
             }
 
             builder.RegisterInstance(battleSetup);

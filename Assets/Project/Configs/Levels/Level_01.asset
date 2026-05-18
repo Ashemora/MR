@@ -13,16 +13,5 @@ MonoBehaviour:
   m_Name: Level_01
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.LevelConfig
   _levelId: 1
-  _regularTiles:
-  - {fileID: 11400000, guid: 45e3651fed728ad4487420bf9819b91a, type: 2}
-  - {fileID: 11400000, guid: 1119a0ba92910f542a294d24513a6914, type: 2}
-  - {fileID: 11400000, guid: f1df2e337202dea42beb01e26b3f281e, type: 2}
-  - {fileID: 11400000, guid: 265140baee7e0e3468ec33079fa3629b, type: 2}
-  - {fileID: 11400000, guid: fe31f31b8f5dc4940b95a40dcc97562a, type: 2}
-  _specialTiles:
-  - {fileID: 11400000, guid: c8b241e3a4bb0734c8b241f9874f53e2, type: 2}
-  - {fileID: 11400000, guid: 46853c594e257054baaee71fc76fa00b, type: 2}
-  - {fileID: 11400000, guid: 438f2a2ac5c21944a9de839fc3622991, type: 2}
-  - {fileID: 11400000, guid: dc1cae93b0911fd4facc660a6f3387b9, type: 2}
   _opponentUnitDeck: {fileID: 11400000, guid: 0f9ecba23faa47cfb7a91fe352c3feea, type: 2}
   _botConfig: {fileID: 11400000, guid: c0108a7c7775cb549845da7170047795, type: 2}

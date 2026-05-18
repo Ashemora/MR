@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Reflection;
-using Project.Scripts.Configs.Levels;
+using Project.Scripts.Configs.Board;
 using Project.Scripts.Constants;
 using Project.Scripts.Services.BoardEdit;
 using Project.Scripts.Shared.Tiles;
@@ -13,7 +13,7 @@ namespace Project.Scripts.Utils.Editor
 {
     public class GDToolsWindow : EditorWindow
     {
-        private LevelDatabase _levelDatabase;
+        private TileSetConfig _tileSetConfig;
 
 
         [MenuItem("Tools/GD Tools")]
@@ -91,28 +91,29 @@ namespace Project.Scripts.Utils.Editor
 
         private Sprite GetSpriteForKind(TileKind kind)
         {
-            if (!_levelDatabase)
+            if (!_tileSetConfig)
             {
-                var guids = AssetDatabase.FindAssets("t:LevelDatabase");
+                var guids = AssetDatabase.FindAssets("t:TileSetConfig");
                 if (guids.Length == 0)
                     return null;
 
-                _levelDatabase = AssetDatabase.LoadAssetAtPath<LevelDatabase>(AssetDatabase.GUIDToAssetPath(guids[0]));
+                _tileSetConfig = AssetDatabase.LoadAssetAtPath<TileSetConfig>(AssetDatabase.GUIDToAssetPath(guids[0]));
             }
 
-            if (!_levelDatabase || _levelDatabase.Levels == null || _levelDatabase.Levels.Length == 0)
+            if (!_tileSetConfig)
                 return null;
 
-            var levelConfig = _levelDatabase.Levels[0];
+            var regularTiles = _tileSetConfig.RegularTiles;
+            if (regularTiles != null)
+                for (var i = 0; i < regularTiles.Length; i++)
+                    if (regularTiles[i].Kind == kind)
+                        return regularTiles[i].Sprite;
 
-            for (var i = 0; i < levelConfig.RegularTiles.Length; i++)
-                if (levelConfig.RegularTiles[i].Kind == kind)
-                    return levelConfig.RegularTiles[i].Sprite;
-
-            if (levelConfig.SpecialTiles != null)
-                for (var i = 0; i < levelConfig.SpecialTiles.Length; i++)
-                    if (levelConfig.SpecialTiles[i].Kind == kind)
-                        return levelConfig.SpecialTiles[i].Sprite;
+            var specialTiles = _tileSetConfig.SpecialTiles;
+            if (specialTiles != null)
+                for (var i = 0; i < specialTiles.Length; i++)
+                    if (specialTiles[i].Kind == kind)
+                        return specialTiles[i].Sprite;
 
             return null;
         }

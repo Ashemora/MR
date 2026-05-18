@@ -43,6 +43,7 @@ namespace Project.Scripts.DI
             builder.RegisterInstance(_mainConfig.BattleFieldLayoutConfig);
             builder.RegisterInstance(_mainConfig.GameplayScreenLayoutConfig);
             builder.RegisterInstance(_mainConfig.TileKindPaletteConfig);
+            builder.RegisterInstance(_mainConfig.TileSetConfig);
             builder.RegisterInstance(_mainConfig.SlotLayoutConfig);
             builder.RegisterInstance(_mainConfig.BattleFlowConfig);
             builder.RegisterInstance(_mainConfig.BurndownConfig);

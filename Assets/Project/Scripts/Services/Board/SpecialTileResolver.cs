@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Project.Scripts.Configs.Board;
-using Project.Scripts.Configs.Levels;
 using Project.Scripts.Shared.Grid;
 using Project.Scripts.Shared.Tiles;
 using Project.Scripts.Tiles;
@@ -10,13 +9,13 @@ namespace Project.Scripts.Services.Board
     public class SpecialTileResolver
     {
         private readonly SpecialTileConfig _config;
-        private readonly LevelConfig _levelConfig;
+        private readonly TileSetConfig _tileSetConfig;
 
 
-        public SpecialTileResolver(SpecialTileConfig config, LevelConfig levelConfig)
+        public SpecialTileResolver(SpecialTileConfig config, TileSetConfig tileSetConfig)
         {
             _config = config;
-            _levelConfig = levelConfig;
+            _tileSetConfig = tileSetConfig;
         }
 
 
@@ -57,12 +56,12 @@ namespace Project.Scripts.Services.Board
 
         private TileConfig FindTileConfig(TileKind kind)
         {
-            if (null == _levelConfig.SpecialTiles)
+            if (null == _tileSetConfig.SpecialTiles)
                 return null;
 
-            for (var i = 0; i < _levelConfig.SpecialTiles.Length; i++)
-                if (_levelConfig.SpecialTiles[i].Kind == kind)
-                    return _levelConfig.SpecialTiles[i];
+            for (var i = 0; i < _tileSetConfig.SpecialTiles.Length; i++)
+                if (_tileSetConfig.SpecialTiles[i].Kind == kind)
+                    return _tileSetConfig.SpecialTiles[i];
 
             return null;
         }

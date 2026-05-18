@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Grid;
-using Project.Scripts.Configs.Levels;
 using Project.Scripts.Services.Board;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Events;
@@ -20,7 +19,7 @@ namespace Project.Scripts.Services.Grid
         public IGridState State => _state;
         
         
-        private readonly LevelConfig _levelConfig;
+        private readonly TileSetConfig _tileSetConfig;
         private readonly GridConfig _gridConfig;
         private readonly BoardAnimationConfig _animConfig;
         private readonly TilePool _pool;
@@ -34,11 +33,11 @@ namespace Project.Scripts.Services.Grid
         private Vector3 _origin;
        
 
-        public GridManager(LevelConfig levelConfig, GridConfig gridConfig, BoardAnimationConfig animConfig,
+        public GridManager(TileSetConfig tileSetConfig, GridConfig gridConfig, BoardAnimationConfig animConfig,
             TilePool pool, float cellSize, IBoardRuntimeService boardRuntimeService, EventBus eventBus,
             IBombRadiusModifierService bombRadiusModifierService, ILineRuneModifierService lineRuneModifierService)
         {
-            _levelConfig = levelConfig;
+            _tileSetConfig = tileSetConfig;
             _gridConfig = gridConfig;
             _animConfig = animConfig;
             _pool = pool;
@@ -86,7 +85,7 @@ namespace Project.Scripts.Services.Grid
         }
 
         public TileConfig ResolveRegularTile() =>
-            _levelConfig.RegularTiles[UnityEngine.Random.Range(0, _levelConfig.RegularTiles.Length)];
+            _tileSetConfig.RegularTiles[UnityEngine.Random.Range(0, _tileSetConfig.RegularTiles.Length)];
 
 #if UNITY_EDITOR
         public void RepositionAllTiles()
@@ -116,14 +115,14 @@ namespace Project.Scripts.Services.Grid
 
         private TileConfig FindConfigForKind(TileKind kind)
         {
-            for (var i = 0; i < _levelConfig.RegularTiles.Length; i++)
-                if (_levelConfig.RegularTiles[i].Kind == kind)
-                    return _levelConfig.RegularTiles[i];
+            for (var i = 0; i < _tileSetConfig.RegularTiles.Length; i++)
+                if (_tileSetConfig.RegularTiles[i].Kind == kind)
+                    return _tileSetConfig.RegularTiles[i];
 
-            if (_levelConfig.SpecialTiles != null)
-                for (var i = 0; i < _levelConfig.SpecialTiles.Length; i++)
-                    if (_levelConfig.SpecialTiles[i].Kind == kind)
-                        return _levelConfig.SpecialTiles[i];
+            if (_tileSetConfig.SpecialTiles != null)
+                for (var i = 0; i < _tileSetConfig.SpecialTiles.Length; i++)
+                    if (_tileSetConfig.SpecialTiles[i].Kind == kind)
+                        return _tileSetConfig.SpecialTiles[i];
 
             return null;
         }
@@ -344,11 +343,11 @@ namespace Project.Scripts.Services.Grid
 
         public void ForceInjectMove()
         {
-            if (_levelConfig.RegularTiles.Length < 2 || _gridConfig.Width < 4)
+            if (_tileSetConfig.RegularTiles.Length < 2 || _gridConfig.Width < 4)
                 return;
 
-            var configT = _levelConfig.RegularTiles[0];
-            var configX = _levelConfig.RegularTiles[1];
+            var configT = _tileSetConfig.RegularTiles[0];
+            var configX = _tileSetConfig.RegularTiles[1];
 
             ReInitTileAt(0, 0, configT);
             ReInitTileAt(1, 0, configX);
@@ -589,12 +588,12 @@ namespace Project.Scripts.Services.Grid
         {
             for (var attempt = 0; attempt < 10; attempt++)
             {
-                var config = _levelConfig.RegularTiles[UnityEngine.Random.Range(0, _levelConfig.RegularTiles.Length)];
+                var config = _tileSetConfig.RegularTiles[UnityEngine.Random.Range(0, _tileSetConfig.RegularTiles.Length)];
                 if (false == WouldCreateRepairMatch(x, y, config.Kind, kinds))
                     return config;
             }
 
-            return _levelConfig.RegularTiles[0];
+            return _tileSetConfig.RegularTiles[0];
         }
 
         private bool WouldCreateRepairMatch(int x, int y, TileKind kind, TileKind[,] kinds)
@@ -642,12 +641,12 @@ namespace Project.Scripts.Services.Grid
 
             for (var attempt = 0; attempt < 10; attempt++)
             {
-                var config = _levelConfig.RegularTiles[UnityEngine.Random.Range(0, _levelConfig.RegularTiles.Length)];
+                var config = _tileSetConfig.RegularTiles[UnityEngine.Random.Range(0, _tileSetConfig.RegularTiles.Length)];
                 if (false == forbidden.Contains(config.Kind))
                     return config;
             }
 
-            return _levelConfig.RegularTiles[0];
+            return _tileSetConfig.RegularTiles[0];
         }
     }
 }

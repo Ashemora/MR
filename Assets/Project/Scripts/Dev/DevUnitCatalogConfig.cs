@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Project.Scripts.Configs.Battle.Bot;
 using Project.Scripts.Configs.Battle.Units;
-using Project.Scripts.Configs.Levels;
 using Project.Scripts.Utils.Buttons;
 using UnityEngine;
 
@@ -34,14 +33,10 @@ namespace Project.Scripts.Dev
         [Button(nameof(FillBotStrengthsFromFolder), drawField: false)]
         [SerializeField] private bool _fillBotStrengthsFromFolderButton;
 
-        [Header("Tile set override for Random mode")]
-        [SerializeField] private LevelConfig _randomModeLevelOverride;
-
 
         public AvatarConfig[] Avatars => _avatars;
         public HeroConfig[] Heroes => _heroes;
         public BotStrengthEntry[] BotStrengths => _botStrengths;
-        public LevelConfig RandomModeLevelOverride => _randomModeLevelOverride;
 
 
         private void FillAvatarsFromFolder()
