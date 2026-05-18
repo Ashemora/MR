@@ -2,14 +2,14 @@ namespace Project.Scripts.Shared.Match
 {
     public sealed class BattleSession
     {
-        public BattleSession(int levelId, int seed)
+        public BattleSession(int playerSeed, int opponentSeed)
         {
-            LevelId = levelId;
-            Seed = seed;
+            PlayerSeed = playerSeed;
+            OpponentSeed = opponentSeed;
         }
 
 
-        public int LevelId { get; }
-        public int Seed { get; }
+        public int PlayerSeed { get; }
+        public int OpponentSeed { get; }
     }
 }

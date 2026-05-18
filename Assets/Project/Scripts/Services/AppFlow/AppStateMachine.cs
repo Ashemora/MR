@@ -2,7 +2,6 @@ using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Constants;
 using Project.Scripts.Gameplay.UI.Loading;
-using Project.Scripts.Services.Progression;
 using Project.Scripts.Services.SceneLoading;
 using Project.Scripts.Services.UISystem;
 using Project.Scripts.Shared.Match;
@@ -16,32 +15,30 @@ namespace Project.Scripts.Services.AppFlow
     public class AppStateMachine : IAppStateMachine
     {
         public AppState Current { get; private set; } = AppState.Boot;
-        
-        
+
+
         private readonly ISceneLoadingService _sceneLoadingService;
-        private readonly ILevelProgressionService _levelProgressionService;
         private readonly IBattleSessionProvider _battleSessionProvider;
         private readonly UIService _uiService;
         private readonly UIConfig _uiConfig;
 #if DEV
-        private readonly IDevOpponentOverrideService _devOpponentOverride;
+        private readonly IDevMatchOverrideService _devMatchOverride;
 #endif
 
 
-        public AppStateMachine(ISceneLoadingService sceneLoadingService, ILevelProgressionService levelProgressionService,
+        public AppStateMachine(ISceneLoadingService sceneLoadingService,
             IBattleSessionProvider battleSessionProvider, UIService uiService, UIConfig uiConfig
 #if DEV
-            , IDevOpponentOverrideService devOpponentOverride
+            , IDevMatchOverrideService devMatchOverride
 #endif
         )
         {
             _sceneLoadingService = sceneLoadingService;
-            _levelProgressionService = levelProgressionService;
             _battleSessionProvider = battleSessionProvider;
             _uiService = uiService;
             _uiConfig = uiConfig;
 #if DEV
-            _devOpponentOverride = devOpponentOverride;
+            _devMatchOverride = devMatchOverride;
 #endif
         }
 
@@ -58,19 +55,19 @@ namespace Project.Scripts.Services.AppFlow
             Current = AppState.LoadingGameplay;
             _uiService.CloseAll();
 
+            var playerSeed = Random.Range(int.MinValue, int.MaxValue);
             var opponentSeed = Random.Range(int.MinValue, int.MaxValue);
 #if DEV
-            if (_devOpponentOverride.OpponentSeedOverride.HasValue)
-                opponentSeed = _devOpponentOverride.OpponentSeedOverride.Value;
+            if (_devMatchOverride.PlayerSeedOverride.HasValue)
+                playerSeed = _devMatchOverride.PlayerSeedOverride.Value;
+            if (_devMatchOverride.OpponentSeedOverride.HasValue)
+                opponentSeed = _devMatchOverride.OpponentSeedOverride.Value;
 
-            var strength = _devOpponentOverride.Mode == DevOpponentMode.Random
-                ? _devOpponentOverride.GetStrengthDisplayName(_devOpponentOverride.StrengthIndex)
-                : "-";
-            Debug.Log($"[Battle] opponentSeed={opponentSeed} mode={_devOpponentOverride.Mode} strength={strength}");
+            Debug.Log($"[Battle] player(mode={_devMatchOverride.PlayerMode} seed={playerSeed}) " +
+                      $"opponent(mode={_devMatchOverride.OpponentMode} seed={opponentSeed}) " +
+                      $"strength={_devMatchOverride.GetStrengthDisplayName(_devMatchOverride.StrengthIndex)}");
 #endif
-            _battleSessionProvider.SetCurrent(new BattleSession(
-                _levelProgressionService.CurrentLevelId,
-                opponentSeed));
+            _battleSessionProvider.SetCurrent(new BattleSession(playerSeed, opponentSeed));
 
             _uiService.RegisterView<GameplayLoadingView>(_uiConfig.GameplayLoadingViewPrefab, UILayer.System);
             var loadingView = await _uiService.Show<GameplayLoadingView, GameplayLoadingViewModel>(

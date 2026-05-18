@@ -3,7 +3,6 @@ using Project.Scripts.Services.Audio.AudioSystem;
 using Project.Scripts.Services.Audio.Settings;
 using Project.Scripts.Services.AppFlow;
 using Project.Scripts.Services.Events;
-using Project.Scripts.Services.Progression;
 using Project.Scripts.Services.SafeArea;
 using Project.Scripts.Services.SceneLoading;
 using Project.Scripts.Services.UISystem;
@@ -34,7 +33,6 @@ namespace Project.Scripts.DI
             builder.RegisterInstance(_mainConfig.AudioMusicConfig);
             builder.RegisterInstance(_mainConfig.AudioSFXConfig);
             builder.RegisterInstance(_mainConfig.SpecialTileConfig);
-            builder.RegisterInstance(_mainConfig.LevelDatabase);
             builder.RegisterInstance(_mainConfig.PlayerBattleConfig);
             builder.RegisterInstance(_mainConfig.UIConfig);
             builder.RegisterInstance(_mainConfig.BoardAnnouncementConfig);
@@ -56,13 +54,12 @@ namespace Project.Scripts.DI
             builder.Register<EventBus>(Lifetime.Singleton);
             builder.Register<AudioService>(Lifetime.Singleton);
             builder.Register<AudioSettingsService>(Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
-            builder.Register<ILevelProgressionService, LevelProgressionService>(Lifetime.Singleton);
             builder.Register<ISceneLoadingService, SceneLoadingService>(Lifetime.Singleton);
             builder.Register<IBattleSessionProvider, BattleSessionProvider>(Lifetime.Singleton);
             builder.Register<IAppStateMachine, AppStateMachine>(Lifetime.Singleton);
 #if DEV
             builder.RegisterInstance(_mainConfig.DevUnitCatalogConfig);
-            builder.Register<IDevOpponentOverrideService, DevOpponentOverrideService>(Lifetime.Singleton);
+            builder.Register<IDevMatchOverrideService, DevMatchOverrideService>(Lifetime.Singleton);
             builder.Register<DevLobbyBattleOptionsButtonSpawner>(Lifetime.Singleton);
 #endif
 

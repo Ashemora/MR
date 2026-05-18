@@ -14,7 +14,7 @@ namespace Project.Scripts.Dev
     {
         private readonly UIService _uiService;
         private readonly UIConfig _uiConfig;
-        private readonly IDevOpponentOverrideService _devOpponentOverride;
+        private readonly IDevMatchOverrideService _devMatchOverride;
         private GameObject _buttonObject;
         private Button _button;
         private IDisposable _closeSubscription;
@@ -22,11 +22,11 @@ namespace Project.Scripts.Dev
 
 
         public DevLobbyBattleOptionsButtonSpawner(UIService uiService, UIConfig uiConfig,
-            IDevOpponentOverrideService devOpponentOverride)
+            IDevMatchOverrideService devMatchOverride)
         {
             _uiService = uiService;
             _uiConfig = uiConfig;
-            _devOpponentOverride = devOpponentOverride;
+            _devMatchOverride = devMatchOverride;
         }
 
         public void Spawn()
@@ -92,7 +92,7 @@ namespace Project.Scripts.Dev
         {
             _uiService.RegisterView<DevBattleOptionsView>(_uiConfig.DevBattleOptionsViewPrefab, UILayer.Popup);
 
-            var viewModel = new DevBattleOptionsViewModel(_devOpponentOverride);
+            var viewModel = new DevBattleOptionsViewModel(_devMatchOverride);
             _closeSubscription = viewModel.CloseRequested
                 .Take(1)
                 .Subscribe(_ => CloseOptionsAsync().Forget());

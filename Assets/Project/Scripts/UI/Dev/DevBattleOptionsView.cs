@@ -21,15 +21,34 @@ namespace Project.Scripts.UI.Dev
         [SerializeField] private RectTransform _panel;
         [SerializeField] private CanvasGroup _blockerCanvasGroup;
 
-        [Header("Controls")]
-        [SerializeField] private Button _modeButton;
-        [SerializeField] private TMP_Text _modeButtonText;
-        [SerializeField] private GameObject _strengthRoot;
+        [Header("Player section")]
+        [SerializeField] private Button _playerModeButton;
+        [SerializeField] private TMP_Text _playerModeButtonText;
+        [SerializeField] private GameObject _playerDeckRoot;
+        [SerializeField] private TMP_Text _playerDeckSelectedText;
+        [SerializeField] private RectTransform _playerDeckListContent;
+        [SerializeField] private GameObject _playerSeedRoot;
+        [SerializeField] private TMP_InputField _playerSeedInput;
+
+        [Header("Opponent section")]
+        [SerializeField] private Button _opponentModeButton;
+        [SerializeField] private TMP_Text _opponentModeButtonText;
+        [SerializeField] private GameObject _opponentDeckRoot;
+        [SerializeField] private TMP_Text _opponentDeckSelectedText;
+        [SerializeField] private RectTransform _opponentDeckListContent;
+        [SerializeField] private GameObject _opponentSeedRoot;
+        [SerializeField] private TMP_InputField _opponentSeedInput;
+
+        [Header("Bot strength")]
         [SerializeField] private Button _strengthButton;
         [SerializeField] private TMP_Text _strengthButtonText;
-        [SerializeField] private TMP_InputField _opponentSeedInput;
+
+        [Header("Closing")]
         [SerializeField] private Button _closeButton;
         [SerializeField] private Button _blockerButton;
+
+        [Header("Deck list item prefab")]
+        [SerializeField] private DevDeckListItemView _deckListItemPrefab;
 
 
         public override SafeAreaMode SafeAreaMode => SafeAreaMode.ForceIgnore;
@@ -37,26 +56,42 @@ namespace Project.Scripts.UI.Dev
 
         private Sequence _openSequence;
         private Sequence _closeSequence;
+        private DevDeckListItemView[] _playerDeckItems;
+        private DevDeckListItemView[] _opponentDeckItems;
 
 
         protected override UniTask OnBindViewModel()
         {
             DisableLegacyDropdowns();
-            BindModeButton();
+            BuildDeckLists();
+            BindModeButtons();
             BindStrengthButton();
-            BindOpponentSeedInput();
+            BindSeedInputs();
 
             if (_closeButton)
                 _closeButton.onClick.AddListener(ViewModel.RequestClose);
             if (_blockerButton)
                 _blockerButton.onClick.AddListener(ViewModel.RequestClose);
 
-            ViewModel.ModeIndex
+            ViewModel.PlayerModeIndex
                 .Subscribe(modeIndex =>
                 {
-                    UpdateModeVisibility(modeIndex);
-                    UpdateModeLabel();
+                    UpdateSideVisibility(modeIndex, _playerDeckRoot, _playerSeedRoot);
+                    UpdateModeLabel(_playerModeButtonText, modeIndex);
                 })
+                .AddTo(Disposables);
+            ViewModel.OpponentModeIndex
+                .Subscribe(modeIndex =>
+                {
+                    UpdateSideVisibility(modeIndex, _opponentDeckRoot, _opponentSeedRoot);
+                    UpdateModeLabel(_opponentModeButtonText, modeIndex);
+                })
+                .AddTo(Disposables);
+            ViewModel.PlayerDeckIndex
+                .Subscribe(index => RefreshDeckSelection(_playerDeckItems, _playerDeckSelectedText, index))
+                .AddTo(Disposables);
+            ViewModel.OpponentDeckIndex
+                .Subscribe(index => RefreshDeckSelection(_opponentDeckItems, _opponentDeckSelectedText, index))
                 .AddTo(Disposables);
             ViewModel.StrengthIndex
                 .Subscribe(_ => UpdateStrengthLabel())
@@ -100,10 +135,14 @@ namespace Project.Scripts.UI.Dev
         {
             KillTweens();
 
-            if (_modeButton)
-                _modeButton.onClick.RemoveListener(CycleMode);
+            if (_playerModeButton)
+                _playerModeButton.onClick.RemoveListener(CyclePlayerMode);
+            if (_opponentModeButton)
+                _opponentModeButton.onClick.RemoveListener(CycleOpponentMode);
             if (_strengthButton)
                 _strengthButton.onClick.RemoveListener(CycleStrength);
+            if (_playerSeedInput)
+                _playerSeedInput.onValueChanged.RemoveListener(ViewModel.SetPlayerSeedText);
             if (_opponentSeedInput)
                 _opponentSeedInput.onValueChanged.RemoveListener(ViewModel.SetOpponentSeedText);
             if (_closeButton)
@@ -113,13 +152,18 @@ namespace Project.Scripts.UI.Dev
         }
 
 
-        private void BindModeButton()
+        private void BindModeButtons()
         {
-            if (!_modeButton)
-                return;
-
-            _modeButton.onClick.AddListener(CycleMode);
-            UpdateModeLabel();
+            if (_playerModeButton)
+            {
+                _playerModeButton.onClick.AddListener(CyclePlayerMode);
+                UpdateModeLabel(_playerModeButtonText, ViewModel.PlayerModeIndex.CurrentValue);
+            }
+            if (_opponentModeButton)
+            {
+                _opponentModeButton.onClick.AddListener(CycleOpponentMode);
+                UpdateModeLabel(_opponentModeButtonText, ViewModel.OpponentModeIndex.CurrentValue);
+            }
         }
 
         private void BindStrengthButton()
@@ -132,29 +176,75 @@ namespace Project.Scripts.UI.Dev
             UpdateStrengthLabel();
         }
 
-        private void BindOpponentSeedInput()
+        private void BindSeedInputs()
         {
-            if (!_opponentSeedInput)
-                return;
-
-            _opponentSeedInput.contentType = TMP_InputField.ContentType.IntegerNumber;
-            _opponentSeedInput.SetTextWithoutNotify(ViewModel.OpponentSeedText.CurrentValue);
-            _opponentSeedInput.onValueChanged.AddListener(ViewModel.SetOpponentSeedText);
+            if (_playerSeedInput)
+            {
+                _playerSeedInput.contentType = TMP_InputField.ContentType.IntegerNumber;
+                _playerSeedInput.SetTextWithoutNotify(ViewModel.PlayerSeedText.CurrentValue);
+                _playerSeedInput.onValueChanged.AddListener(ViewModel.SetPlayerSeedText);
+            }
+            if (_opponentSeedInput)
+            {
+                _opponentSeedInput.contentType = TMP_InputField.ContentType.IntegerNumber;
+                _opponentSeedInput.SetTextWithoutNotify(ViewModel.OpponentSeedText.CurrentValue);
+                _opponentSeedInput.onValueChanged.AddListener(ViewModel.SetOpponentSeedText);
+            }
         }
 
-        private void UpdateModeVisibility(int modeIndex)
+        private void BuildDeckLists()
+        {
+            _playerDeckItems = SpawnDeckList(_playerDeckListContent, ViewModel.SetPlayerDeckIndex);
+            _opponentDeckItems = SpawnDeckList(_opponentDeckListContent, ViewModel.SetOpponentDeckIndex);
+            RefreshDeckSelection(_playerDeckItems, _playerDeckSelectedText, ViewModel.PlayerDeckIndex.CurrentValue);
+            RefreshDeckSelection(_opponentDeckItems, _opponentDeckSelectedText, ViewModel.OpponentDeckIndex.CurrentValue);
+        }
+
+        private DevDeckListItemView[] SpawnDeckList(RectTransform content, System.Action<int> onSelect)
+        {
+            if (!content || !_deckListItemPrefab)
+                return System.Array.Empty<DevDeckListItemView>();
+
+            var count = ViewModel.DeckCount;
+            var items = new DevDeckListItemView[count];
+            for (var i = 0; i < count; i++)
+            {
+                var item = Instantiate(_deckListItemPrefab, content);
+                item.Bind(i, ViewModel.GetDeckDisplayName(i), onSelect);
+                items[i] = item;
+            }
+
+            return items;
+        }
+
+        private void RefreshDeckSelection(DevDeckListItemView[] items, TMP_Text selectedLabel, int selectedIndex)
+        {
+            if (null != items)
+                for (var i = 0; i < items.Length; i++)
+                    if (items[i])
+                        items[i].SetSelected(i == selectedIndex);
+
+            if (selectedLabel)
+                selectedLabel.text = ViewModel.DeckCount > 0 ? ViewModel.GetDeckDisplayName(selectedIndex) : "-";
+        }
+
+        private static void UpdateSideVisibility(int modeIndex, GameObject deckRoot, GameObject seedRoot)
         {
             var isRandom = modeIndex == 1;
-
-            if (_strengthRoot)
-                _strengthRoot.SetActive(isRandom);
-            if (_opponentSeedInput)
-                _opponentSeedInput.gameObject.SetActive(isRandom);
+            if (deckRoot)
+                deckRoot.SetActive(false == isRandom);
+            if (seedRoot)
+                seedRoot.SetActive(isRandom);
         }
 
-        private void CycleMode()
+        private void CyclePlayerMode()
         {
-            ViewModel.SetModeIndex(ViewModel.ModeIndex.CurrentValue == 0 ? 1 : 0);
+            ViewModel.SetPlayerModeIndex(ViewModel.PlayerModeIndex.CurrentValue == 0 ? 1 : 0);
+        }
+
+        private void CycleOpponentMode()
+        {
+            ViewModel.SetOpponentModeIndex(ViewModel.OpponentModeIndex.CurrentValue == 0 ? 1 : 0);
         }
 
         private void CycleStrength()
@@ -165,10 +255,12 @@ namespace Project.Scripts.UI.Dev
             ViewModel.SetStrengthIndex((ViewModel.StrengthIndex.CurrentValue + 1) % ViewModel.StrengthCount);
         }
 
-        private void UpdateModeLabel()
+        private static void UpdateModeLabel(TMP_Text label, int modeIndex)
         {
-            if (_modeButtonText)
-                _modeButtonText.text = ViewModel.ModeIndex.CurrentValue == 0 ? "Config" : "Random";
+            if (!label)
+                return;
+
+            label.text = modeIndex == 0 ? "PickDeck" : "Random";
         }
 
         private void UpdateStrengthLabel()
@@ -177,8 +269,7 @@ namespace Project.Scripts.UI.Dev
                 return;
 
             var index = ViewModel.StrengthIndex.CurrentValue;
-            var label = ViewModel.StrengthCount > 0 ? ViewModel.GetStrengthDisplayName(index) : "-";
-            _strengthButtonText.text = label;
+            _strengthButtonText.text = ViewModel.StrengthCount > 0 ? ViewModel.GetStrengthDisplayName(index) : "-";
         }
 
         private void DisableLegacyDropdowns()

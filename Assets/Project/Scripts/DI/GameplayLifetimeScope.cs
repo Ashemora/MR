@@ -1,6 +1,7 @@
 using Project.Scripts.Configs.Battle;
 using Project.Scripts.Configs.Battle.Bot;
 using Project.Scripts.Configs.Battle.Layout;
+using Project.Scripts.Configs.Battle.Units;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Gameplay.Battle;
 using Project.Scripts.Gameplay;
@@ -15,7 +16,6 @@ using Project.Scripts.Services.BattleFlow;
 using Project.Scripts.Services.Bot;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Layout;
-using Project.Scripts.Services.Progression;
 using Project.Scripts.Services.AppFlow;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Buffs;
@@ -41,50 +41,49 @@ namespace Project.Scripts.DI
         {
             const bool EnableEscalationModule = false;
             const bool EnableBurndownModule = true;
-            
 
-            var levelDatabase = Parent.Container.Resolve<LevelDatabase>();
-            var session = Parent.Container.Resolve<IBattleSessionProvider>().Current;
-            var levelId = session?.LevelId ?? Parent.Container.Resolve<ILevelProgressionService>().CurrentLevelId;
-            var levelConfig = levelDatabase.GetById(levelId);
-            builder.RegisterInstance(levelConfig);
-#if DEV
-            var devOverride = Parent.Container.Resolve<IDevOpponentOverrideService>();
-#endif
+
             var slotLayoutConfig = Parent.Container.Resolve<SlotLayoutConfig>();
             var playerBattleConfig = Parent.Container.Resolve<PlayerBattleConfig>();
+            var session = Parent.Container.Resolve<IBattleSessionProvider>().Current;
 
             BattleSetup battleSetup;
-            BotConfig effectiveBotConfig = levelConfig.BotConfig;
+            BotConfig effectiveBotConfig;
+            MatchVisualsProvider matchVisuals;
 #if DEV
-            if (session != null && devOverride.TryBuildOpponent(session.Seed, out var devSelection))
-            {
-                var playerDeck = playerBattleConfig.DefaultUnitDeck;
-                battleSetup = BattleSetupFactory.Create(
-                    playerDeck ? playerDeck.AvatarConfig : null,
-                    playerDeck ? playerDeck.Heroes : null,
-                    devSelection.Avatar,
-                    devSelection.Heroes,
-                    slotLayoutConfig);
-                effectiveBotConfig = devSelection.BotConfig;
-                if (Parent.Container.Resolve<Project.Scripts.Configs.DebugConfig>().LogDevOpponentOptions)
-                    UnityEngine.Debug.Log($"[DevOpponent] Random opponent applied seed={session.Seed} " +
-                                          $"strength={devOverride.GetStrengthDisplayName(devOverride.StrengthIndex)}");
-            }
-            else
+            var devOverride = Parent.Container.Resolve<IDevMatchOverrideService>();
+            var devCatalog = Parent.Container.Resolve<DevUnitCatalogConfig>();
+            var debugConfig = Parent.Container.Resolve<Project.Scripts.Configs.DebugConfig>();
+
+            var playerSeed = session?.PlayerSeed ?? 0;
+            var opponentSeed = session?.OpponentSeed ?? 0;
+
+            var playerAvatar = ResolveSideAvatar(devOverride, devOverride.PlayerMode,
+                devOverride.PlayerDeckIndex, playerSeed, playerBattleConfig.DefaultUnitDeck, out var playerHeroes);
+            var opponentAvatar = ResolveSideAvatar(devOverride, devOverride.OpponentMode,
+                devOverride.OpponentDeckIndex, opponentSeed, null, out var opponentHeroes);
+
+            battleSetup = BattleSetupFactory.Create(playerAvatar, playerHeroes,
+                opponentAvatar, opponentHeroes, slotLayoutConfig);
+            matchVisuals = new MatchVisualsProvider(playerAvatar, playerHeroes, opponentAvatar, opponentHeroes);
+
+            effectiveBotConfig = devCatalog && devCatalog.BotStrengths != null
+                                 && devOverride.StrengthIndex >= 0
+                                 && devOverride.StrengthIndex < devCatalog.BotStrengths.Length
+                ? devCatalog.BotStrengths[devOverride.StrengthIndex].Config
+                : null;
+
+            if (debugConfig.LogDevOpponentOptions)
+                UnityEngine.Debug.Log($"[DevMatch] Battle built player({devOverride.PlayerMode}) " +
+                                      $"opponent({devOverride.OpponentMode}) seed=({playerSeed},{opponentSeed}) " +
+                                      $"strength={devOverride.GetStrengthDisplayName(devOverride.StrengthIndex)}");
+#else
+            throw new System.NotSupportedException(
+                "Non-DEV match assembly is not implemented yet - the server-driven path will fill this in.");
 #endif
-            {
-#if DEV
-                if (devOverride.Mode == DevOpponentMode.Random
-                    && Parent.Container.Resolve<Project.Scripts.Configs.DebugConfig>().LogDevOpponentOptions)
-                    UnityEngine.Debug.LogWarning($"[DevOpponent] Random opponent fallback to LevelConfig: " +
-                                                 $"{devOverride.GetBuildBlockReason()}");
-#endif
-                battleSetup = BattleSetupFactory.Create(playerBattleConfig.DefaultUnitDeck,
-                    levelConfig.OpponentUnitDeck, slotLayoutConfig);
-            }
 
             builder.RegisterInstance(battleSetup);
+            builder.RegisterInstance(matchVisuals);
             builder.RegisterInstance(new EffectiveBotConfigProvider(effectiveBotConfig));
 
             builder.RegisterComponentInHierarchy<GameplayEntryPoint>();
@@ -185,5 +184,26 @@ namespace Project.Scripts.DI
                 builder.RegisterEntryPoint<BotOpponentService>().As<IBotOpponentService>();
             }
         }
+
+#if DEV
+        private static AvatarConfig ResolveSideAvatar(IDevMatchOverrideService devOverride, DevSideMode mode,
+            int deckIndex, int seed, UnitDeckConfig fallbackDeck, out HeroConfig[] heroes)
+        {
+            if (mode == DevSideMode.PickDeck && devOverride.TryGetPickedDeck(deckIndex, out var pickedDeck) && pickedDeck)
+            {
+                heroes = pickedDeck.Heroes;
+                return pickedDeck.AvatarConfig;
+            }
+
+            if (mode == DevSideMode.Random && devOverride.TryBuildRandomDeck(seed, out var randomSelection))
+            {
+                heroes = randomSelection.Heroes;
+                return randomSelection.Avatar;
+            }
+
+            heroes = fallbackDeck ? fallbackDeck.Heroes : null;
+            return fallbackDeck ? fallbackDeck.AvatarConfig : null;
+        }
+#endif
     }
 }

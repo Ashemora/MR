@@ -11,25 +11,22 @@ namespace Project.Scripts.Gameplay.UI.Windows
         [Tooltip("Текст с количеством использованных ходов для победы")]
         [SerializeField] private TMP_Text _movesText;
 
-        [Tooltip("Текст с ID текущего уровня")]
-        [SerializeField] private TMP_Text _levelIdText;
-
         [Tooltip("Текст с именем побеждённого противника")]
         [SerializeField] private TMP_Text _opponentNameText;
 
-        [Tooltip("Кнопка перехода на следующий уровень")]
+        [Tooltip("Кнопка возврата в лобби после победы")]
         [SerializeField] private Button _nextLevelButton;
 
 
         public override SafeAreaMode SafeAreaMode => SafeAreaMode.ForceIgnore;
 
+        
         protected override bool EnablePumpAnimation => true;
 
 
         protected override UniTask OnBindViewModel()
         {
             _movesText.text = ViewModel.MovesUsed.ToString();
-            _levelIdText.text = ViewModel.LevelId.ToString();
             _opponentNameText.text = ViewModel.OpponentName;
             _nextLevelButton.onClick.AddListener(ViewModel.NextLevel);
             return UniTask.CompletedTask;

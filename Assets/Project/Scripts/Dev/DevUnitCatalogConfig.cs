@@ -14,6 +14,7 @@ namespace Project.Scripts.Dev
         private const string AvatarsFolderPath = "Assets/Project/Configs/Battle/Avatars";
         private const string HeroesFolderPath = "Assets/Project/Configs/Battle/Heroes";
         private const string BotStrengthsFolderPath = "Assets/Project/Configs/Battle/Bots";
+        private const string DecksFolderPath = "Assets/Project/Configs/Battle/Decks";
 #endif
 
         [Header("Pools for random opponent generation")]
@@ -33,10 +34,17 @@ namespace Project.Scripts.Dev
         [Button(nameof(FillBotStrengthsFromFolder), drawField: false)]
         [SerializeField] private bool _fillBotStrengthsFromFolderButton;
 
+        [Header("Picked-deck catalog")]
+        [SerializeField] private UnitDeckConfig[] _decks;
+
+        [Button(nameof(FillDecksFromFolder), drawField: false)]
+        [SerializeField] private bool _fillDecksFromFolderButton;
+
 
         public AvatarConfig[] Avatars => _avatars;
         public HeroConfig[] Heroes => _heroes;
         public BotStrengthEntry[] BotStrengths => _botStrengths;
+        public UnitDeckConfig[] Decks => _decks;
 
 
         private void FillAvatarsFromFolder()
@@ -71,6 +79,16 @@ namespace Project.Scripts.Dev
             SaveEditorChanges();
 #else
             Debug.LogWarning("FillBotStrengthsFromFolder is only available in the Unity Editor.", this);
+#endif
+        }
+
+        private void FillDecksFromFolder()
+        {
+#if UNITY_EDITOR
+            _decks = LoadAssetsFromFolder<UnitDeckConfig>(DecksFolderPath);
+            SaveEditorChanges();
+#else
+            Debug.LogWarning("FillDecksFromFolder is only available in the Unity Editor.", this);
 #endif
         }
 

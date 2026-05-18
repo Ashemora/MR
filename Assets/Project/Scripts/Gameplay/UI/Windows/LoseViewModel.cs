@@ -9,7 +9,6 @@ namespace Project.Scripts.Gameplay.UI.Windows
     public class LoseViewModel : BaseViewModel
     {
         public int MovesUsed { get; private set; }
-        public int LevelId { get; }
         public string OpponentName { get; }
 
 
@@ -19,15 +18,13 @@ namespace Project.Scripts.Gameplay.UI.Windows
 
 
         public LoseViewModel(IMoveCounterService moveCounter, IAppStateMachine appStateMachine,
-            int levelId, string opponentName, Action onClose)
+            string opponentName, Action onClose)
         {
             _moveCounter = moveCounter;
             _appStateMachine = appStateMachine;
-            LevelId = levelId;
             OpponentName = opponentName;
             _onClose = onClose;
         }
-
 
         public void Retry()
         {

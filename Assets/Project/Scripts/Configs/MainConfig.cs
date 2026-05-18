@@ -7,7 +7,6 @@ using Project.Scripts.Configs.Battle.Visuals;
 using Project.Scripts.Configs.Board;
 using Project.Scripts.Configs.Gameplay;
 using Project.Scripts.Configs.Grid;
-using Project.Scripts.Configs.Levels;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Services.Audio.AudioSystem.Configs;
 using UnityEngine;
@@ -49,9 +48,6 @@ namespace Project.Scripts.Configs
 
         [Tooltip("Специальные тайлы: пороги активации и параметры бомб, линий и шторма")]
         [SerializeField] private SpecialTileConfig _specialTileConfig;
-
-        [Tooltip("База уровней: список всех уровней с их конфигами")]
-        [SerializeField] private LevelDatabase _levelDatabase;
 
         [Tooltip("Боевые настройки игрока: базовая дека до появления выбора в лобби")]
         [SerializeField] private PlayerBattleConfig _playerBattleConfig;
@@ -120,7 +116,6 @@ namespace Project.Scripts.Configs
         public GameResultSequenceConfig GameResultSequenceConfig => _gameResultSequenceConfig;
         public CascadeEnergyConfig CascadeEnergyConfig => _cascadeEnergyConfig;
         public SpecialTileConfig SpecialTileConfig => _specialTileConfig;
-        public LevelDatabase LevelDatabase => _levelDatabase;
         public PlayerBattleConfig PlayerBattleConfig => _playerBattleConfig;
         public UIConfig UIConfig => _uiConfig;
         public BoardAnnouncementConfig BoardAnnouncementConfig => _boardAnnouncementConfig;

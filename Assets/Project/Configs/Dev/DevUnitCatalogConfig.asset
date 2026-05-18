@@ -38,3 +38,11 @@ MonoBehaviour:
   - _displayName: Medium
     _config: {fileID: 11400000, guid: e08640440e2033e4489542e45deb29d0, type: 2}
   _fillBotStrengthsFromFolderButton: 0
+  _decks:
+  - {fileID: 11400000, guid: 036f51637aca4c9d92f73e543b236c81, type: 2}
+  - {fileID: 11400000, guid: 0f9ecba23faa47cfb7a91fe352c3feea, type: 2}
+  - {fileID: 11400000, guid: 0318f9c540904247ab926d52760b0405, type: 2}
+  - {fileID: 11400000, guid: 914529448e64448cb3144ba57a303919, type: 2}
+  - {fileID: 11400000, guid: 34067f208a804553ad19e8fe1ea0843a, type: 2}
+  - {fileID: 11400000, guid: 63abcd18ce8e47d788d1a8de7b283063, type: 2}
+  _fillDecksFromFolderButton: 0
