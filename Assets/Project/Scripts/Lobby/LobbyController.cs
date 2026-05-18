@@ -23,7 +23,7 @@ namespace Project.Scripts.Lobby
         private UIConfig _uiConfig;
         private IAudioSettingsService _audioSettings;
 #if DEV
-        private DevLobbyBattleOptionsButtonSpawner _devBattleOptionsButtonSpawner;
+        private DevBattleOptionsPopupController _devBattleOptionsPopupController;
 #endif
 
         private readonly CompositeDisposable _optionsDisposables = new();
@@ -34,7 +34,7 @@ namespace Project.Scripts.Lobby
         {
             _optionsDisposables.Dispose();
 #if DEV
-            _devBattleOptionsButtonSpawner?.Despawn();
+            _devBattleOptionsPopupController?.Unbind();
 #endif
         }
 
@@ -43,7 +43,7 @@ namespace Project.Scripts.Lobby
         public void Construct(IAppStateMachine appStateMachine, UIService uiService, UIConfig uiConfig,
             IAudioSettingsService audioSettings
 #if DEV
-            , DevLobbyBattleOptionsButtonSpawner devBattleOptionsButtonSpawner
+            , DevBattleOptionsPopupController devBattleOptionsPopupController
 #endif
         )
         {
@@ -52,7 +52,7 @@ namespace Project.Scripts.Lobby
             _uiConfig = uiConfig;
             _audioSettings = audioSettings;
 #if DEV
-            _devBattleOptionsButtonSpawner = devBattleOptionsButtonSpawner;
+            _devBattleOptionsPopupController = devBattleOptionsPopupController;
 #endif
         }
 
@@ -64,7 +64,7 @@ namespace Project.Scripts.Lobby
 
             _view.Bind(StartBattle, OpenOptions);
 #if DEV
-            _devBattleOptionsButtonSpawner.Spawn();
+            _devBattleOptionsPopupController.Bind(_view.DevBattleOptionsButton);
 #endif
         }
 

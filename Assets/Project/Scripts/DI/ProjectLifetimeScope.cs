@@ -60,7 +60,7 @@ namespace Project.Scripts.DI
 #if DEV
             builder.RegisterInstance(_mainConfig.DevUnitCatalogConfig);
             builder.Register<IDevMatchOverrideService, DevMatchOverrideService>(Lifetime.Singleton);
-            builder.Register<DevLobbyBattleOptionsButtonSpawner>(Lifetime.Singleton);
+            builder.Register<DevBattleOptionsPopupController>(Lifetime.Singleton);
 #endif
 
             builder.RegisterComponentInHierarchy<AudioManager>();

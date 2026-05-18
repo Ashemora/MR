@@ -14,6 +14,7 @@ namespace Project.Scripts.Dev
         int StrengthIndex { get; }
         int StrengthCount { get; }
         int DeckCount { get; }
+        bool SkipFillsBotEnergy { get; }
 
         string GetStrengthDisplayName(int index);
         string GetDeckDisplayName(int index);
@@ -24,6 +25,7 @@ namespace Project.Scripts.Dev
         void SetOpponentDeckIndex(int index);
         void SetOpponentSeedOverride(int? seed);
         void SetStrengthIndex(int index);
+        void SetSkipFillsBotEnergy(bool value);
         void Save();
         string GetRandomBuildBlockReason();
         bool TryBuildRandomDeck(int seed, out DevDeckSelection selection);

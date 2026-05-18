@@ -10,18 +10,17 @@ using UnityEngine.UI;
 
 namespace Project.Scripts.Dev
 {
-    public class DevLobbyBattleOptionsButtonSpawner
+    public class DevBattleOptionsPopupController
     {
         private readonly UIService _uiService;
         private readonly UIConfig _uiConfig;
         private readonly IDevMatchOverrideService _devMatchOverride;
-        private GameObject _buttonObject;
         private Button _button;
         private IDisposable _closeSubscription;
         private bool _isOptionsOpen;
 
 
-        public DevLobbyBattleOptionsButtonSpawner(UIService uiService, UIConfig uiConfig,
+        public DevBattleOptionsPopupController(UIService uiService, UIConfig uiConfig,
             IDevMatchOverrideService devMatchOverride)
         {
             _uiService = uiService;
@@ -29,46 +28,33 @@ namespace Project.Scripts.Dev
             _devMatchOverride = devMatchOverride;
         }
 
-        public void Spawn()
+        public void Bind(GameObject buttonObject)
         {
-            if (_buttonObject)
-                return;
-
-            var prefab = _uiConfig.DevBattleOptionsButtonPrefab;
-            if (!prefab)
+            if (!buttonObject)
             {
-                Debug.LogError("[DevBattleOptions] Button prefab is not assigned.");
+                Debug.LogError("[DevBattleOptions] Button GameObject is not assigned.");
                 return;
             }
 
-            var parent = _uiService.GetLayerRoot(UILayer.Popup, SafeAreaMode.ForceApply);
-            _buttonObject = UnityEngine.Object.Instantiate(prefab, parent);
-            _buttonObject.name = "DevBattleOptionsButton";
-
-            _button = _buttonObject.GetComponent<Button>();
+            _button = buttonObject.GetComponent<Button>();
             if (!_button)
             {
-                Debug.LogError("[DevBattleOptions] Button prefab has no Button component.");
-                UnityEngine.Object.Destroy(_buttonObject);
-                _buttonObject = null;
+                Debug.LogError("[DevBattleOptions] Button GameObject has no Button component.");
                 return;
             }
 
             _button.onClick.AddListener(OpenOptions);
         }
 
-        public void Despawn()
+        public void Unbind()
         {
             _closeSubscription?.Dispose();
             _closeSubscription = null;
 
             if (_button)
                 _button.onClick.RemoveListener(OpenOptions);
-            if (_buttonObject)
-                UnityEngine.Object.Destroy(_buttonObject);
 
             _button = null;
-            _buttonObject = null;
             _isOptionsOpen = false;
         }
 

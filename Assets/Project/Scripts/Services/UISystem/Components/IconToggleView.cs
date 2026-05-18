@@ -20,17 +20,11 @@ namespace Project.Scripts.Services.UISystem.Components
         [SerializeField] private Sprite _offSprite;
 
 
-        private readonly Subject<bool> _valueChanged = new();
-
         public Observable<bool> ValueChanged => _valueChanged;
-
-        public bool IsOn
-        {
-            get
-            {
-                return _toggle && _toggle.isOn;
-            }
-        }
+        public bool IsOn => _toggle && _toggle.isOn;
+        
+        
+        private readonly Subject<bool> _valueChanged = new();
 
 
         private void Reset()

@@ -12,10 +12,24 @@ namespace Project.Scripts.Lobby
         [Tooltip("Button that opens the options window")]
         [SerializeField] private Button _optionsButton;
 
+        [Tooltip("DEV-only button that opens the dev battle options window. Disabled by default; activated under #if DEV.")]
+        [SerializeField] private GameObject _devBattleOptionsButton;
+
 
         private Action _startAction;
         private Action _optionsAction;
 
+
+        public GameObject DevBattleOptionsButton => _devBattleOptionsButton;
+
+
+        private void Awake()
+        {
+#if DEV
+            if (_devBattleOptionsButton)
+                _devBattleOptionsButton.SetActive(true);
+#endif
+        }
 
         private void OnDestroy()
         {

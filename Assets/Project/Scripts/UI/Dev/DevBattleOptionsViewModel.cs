@@ -14,6 +14,7 @@ namespace Project.Scripts.UI.Dev
         public ReactiveProperty<int> OpponentDeckIndex { get; } = new();
         public ReactiveProperty<string> OpponentSeedText { get; } = new(string.Empty);
         public ReactiveProperty<int> StrengthIndex { get; } = new();
+        public ReactiveProperty<bool> SkipFillsBotEnergy { get; } = new();
         public Observable<Unit> CloseRequested => _closeRequested;
         public int StrengthCount => _override.StrengthCount;
         public int DeckCount => _override.DeckCount;
@@ -33,6 +34,7 @@ namespace Project.Scripts.UI.Dev
             OpponentDeckIndex.Value = _override.OpponentDeckIndex;
             OpponentSeedText.Value = SeedToText(_override.OpponentSeedOverride);
             StrengthIndex.Value = _override.StrengthIndex;
+            SkipFillsBotEnergy.Value = _override.SkipFillsBotEnergy;
 
             PlayerModeIndex.AddTo(Disposables);
             PlayerDeckIndex.AddTo(Disposables);
@@ -41,6 +43,7 @@ namespace Project.Scripts.UI.Dev
             OpponentDeckIndex.AddTo(Disposables);
             OpponentSeedText.AddTo(Disposables);
             StrengthIndex.AddTo(Disposables);
+            SkipFillsBotEnergy.AddTo(Disposables);
         }
 
 
@@ -89,6 +92,11 @@ namespace Project.Scripts.UI.Dev
             StrengthIndex.Value = index;
         }
 
+        public void SetSkipFillsBotEnergy(bool value)
+        {
+            SkipFillsBotEnergy.Value = value;
+        }
+
         public void RequestClose()
         {
             var playerMode = (DevSideMode)PlayerModeIndex.CurrentValue;
@@ -105,6 +113,7 @@ namespace Project.Scripts.UI.Dev
                 ? ParseSeed(OpponentSeedText.CurrentValue)
                 : null);
             _override.SetStrengthIndex(StrengthIndex.CurrentValue);
+            _override.SetSkipFillsBotEnergy(SkipFillsBotEnergy.CurrentValue);
             _override.Save();
             _closeRequested.OnNext(Unit.Default);
         }

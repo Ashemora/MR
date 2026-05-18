@@ -2,6 +2,7 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Project.Scripts.Services.UISystem;
+using Project.Scripts.Services.UISystem.Components;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -25,7 +26,6 @@ namespace Project.Scripts.UI.Dev
         [SerializeField] private Button _playerModeButton;
         [SerializeField] private TMP_Text _playerModeButtonText;
         [SerializeField] private GameObject _playerDeckRoot;
-        [SerializeField] private TMP_Text _playerDeckSelectedText;
         [SerializeField] private RectTransform _playerDeckListContent;
         [SerializeField] private GameObject _playerSeedRoot;
         [SerializeField] private TMP_InputField _playerSeedInput;
@@ -34,7 +34,6 @@ namespace Project.Scripts.UI.Dev
         [SerializeField] private Button _opponentModeButton;
         [SerializeField] private TMP_Text _opponentModeButtonText;
         [SerializeField] private GameObject _opponentDeckRoot;
-        [SerializeField] private TMP_Text _opponentDeckSelectedText;
         [SerializeField] private RectTransform _opponentDeckListContent;
         [SerializeField] private GameObject _opponentSeedRoot;
         [SerializeField] private TMP_InputField _opponentSeedInput;
@@ -42,6 +41,9 @@ namespace Project.Scripts.UI.Dev
         [Header("Bot strength")]
         [SerializeField] private Button _strengthButton;
         [SerializeField] private TMP_Text _strengthButtonText;
+
+        [Header("Skip phase")]
+        [SerializeField] private IconToggleView _skipEnergyToggle;
 
         [Header("Closing")]
         [SerializeField] private Button _closeButton;
@@ -67,6 +69,7 @@ namespace Project.Scripts.UI.Dev
             BindModeButtons();
             BindStrengthButton();
             BindSeedInputs();
+            BindSkipEnergyToggle();
 
             if (_closeButton)
                 _closeButton.onClick.AddListener(ViewModel.RequestClose);
@@ -87,14 +90,14 @@ namespace Project.Scripts.UI.Dev
                     UpdateModeLabel(_opponentModeButtonText, modeIndex);
                 })
                 .AddTo(Disposables);
-            ViewModel.PlayerDeckIndex
-                .Subscribe(index => RefreshDeckSelection(_playerDeckItems, _playerDeckSelectedText, index))
-                .AddTo(Disposables);
-            ViewModel.OpponentDeckIndex
-                .Subscribe(index => RefreshDeckSelection(_opponentDeckItems, _opponentDeckSelectedText, index))
-                .AddTo(Disposables);
             ViewModel.StrengthIndex
                 .Subscribe(_ => UpdateStrengthLabel())
+                .AddTo(Disposables);
+            ViewModel.PlayerDeckIndex
+                .Subscribe(index => RefreshDeckSelection(_playerDeckItems, index))
+                .AddTo(Disposables);
+            ViewModel.OpponentDeckIndex
+                .Subscribe(index => RefreshDeckSelection(_opponentDeckItems, index))
                 .AddTo(Disposables);
 
             return UniTask.CompletedTask;
@@ -192,12 +195,23 @@ namespace Project.Scripts.UI.Dev
             }
         }
 
+        private void BindSkipEnergyToggle()
+        {
+            if (!_skipEnergyToggle)
+                return;
+
+            _skipEnergyToggle.SetIsOnWithoutNotify(ViewModel.SkipFillsBotEnergy.CurrentValue);
+            _skipEnergyToggle.ValueChanged
+                .Subscribe(ViewModel.SetSkipFillsBotEnergy)
+                .AddTo(Disposables);
+        }
+
         private void BuildDeckLists()
         {
             _playerDeckItems = SpawnDeckList(_playerDeckListContent, ViewModel.SetPlayerDeckIndex);
             _opponentDeckItems = SpawnDeckList(_opponentDeckListContent, ViewModel.SetOpponentDeckIndex);
-            RefreshDeckSelection(_playerDeckItems, _playerDeckSelectedText, ViewModel.PlayerDeckIndex.CurrentValue);
-            RefreshDeckSelection(_opponentDeckItems, _opponentDeckSelectedText, ViewModel.OpponentDeckIndex.CurrentValue);
+            RefreshDeckSelection(_playerDeckItems, ViewModel.PlayerDeckIndex.CurrentValue);
+            RefreshDeckSelection(_opponentDeckItems, ViewModel.OpponentDeckIndex.CurrentValue);
         }
 
         private DevDeckListItemView[] SpawnDeckList(RectTransform content, System.Action<int> onSelect)
@@ -217,15 +231,12 @@ namespace Project.Scripts.UI.Dev
             return items;
         }
 
-        private void RefreshDeckSelection(DevDeckListItemView[] items, TMP_Text selectedLabel, int selectedIndex)
+        private void RefreshDeckSelection(DevDeckListItemView[] items, int selectedIndex)
         {
             if (null != items)
                 for (var i = 0; i < items.Length; i++)
                     if (items[i])
                         items[i].SetSelected(i == selectedIndex);
-
-            if (selectedLabel)
-                selectedLabel.text = ViewModel.DeckCount > 0 ? ViewModel.GetDeckDisplayName(selectedIndex) : "-";
         }
 
         private static void UpdateSideVisibility(int modeIndex, GameObject deckRoot, GameObject seedRoot)

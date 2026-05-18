@@ -17,15 +17,18 @@ namespace Project.Scripts.Dev
         private readonly IBattleSideEnergyService _battleSideEnergyService;
         private readonly IBoardRuntimeService _boardRuntimeService;
         private readonly IGameStateService _gameStateService;
+        private readonly IDevMatchOverrideService _devMatchOverride;
 
 
         public DevMatchPhaseSkipService(IBattleFlowService battleFlowService, IBattleSideEnergyService battleSideEnergyService,
-            IBoardRuntimeService boardRuntimeService, IGameStateService gameStateService)
+            IBoardRuntimeService boardRuntimeService, IGameStateService gameStateService,
+            IDevMatchOverrideService devMatchOverride)
         {
             _battleFlowService = battleFlowService;
             _battleSideEnergyService = battleSideEnergyService;
             _boardRuntimeService = boardRuntimeService;
             _gameStateService = gameStateService;
+            _devMatchOverride = devMatchOverride;
         }
 
         public bool CanSkip()
@@ -54,7 +57,9 @@ namespace Project.Scripts.Dev
             if (false == CanSkip())
                 return false;
 
-            FillPlayerEnergyToCap();
+            FillEnergyToCap(BattleSide.Player);
+            if (_devMatchOverride.SkipFillsBotEnergy)
+                FillEnergyToCap(BattleSide.Enemy);
 
             var snapshot = _battleFlowService.Snapshot;
             if (snapshot.Phase != BattlePhaseKind.Match)
@@ -69,13 +74,13 @@ namespace Project.Scripts.Dev
         }
 
         
-        private void FillPlayerEnergyToCap()
+        private void FillEnergyToCap(BattleSide side)
         {
             var cap = _battleSideEnergyService.EnergyCap;
-            var current = _battleSideEnergyService.GetDisplayEnergy(BattleSide.Player);
+            var current = _battleSideEnergyService.GetDisplayEnergy(side);
             var delta = cap - current;
             if (delta > 0)
-                _battleSideEnergyService.AddEnergy(BattleSide.Player, delta);
+                _battleSideEnergyService.AddEnergy(side, delta);
         }
     }
 }

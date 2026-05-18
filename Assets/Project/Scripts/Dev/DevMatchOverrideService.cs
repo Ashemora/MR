@@ -17,6 +17,7 @@ namespace Project.Scripts.Dev
         private const string PrefsKeyOpponentSeedHas = "Dev.Match.Opponent.Seed.Has";
         private const string PrefsKeyOpponentSeedValue = "Dev.Match.Opponent.Seed.Value";
         private const string PrefsKeyStrengthIndex = "Dev.Match.StrengthIndex";
+        private const string PrefsKeySkipFillsBotEnergy = "Dev.Match.SkipFillsBotEnergy";
 
 
         public DevSideMode PlayerMode { get; private set; }
@@ -28,6 +29,7 @@ namespace Project.Scripts.Dev
         public int StrengthIndex { get; private set; }
         public int StrengthCount => _catalog?.BotStrengths?.Length ?? 0;
         public int DeckCount => _catalog?.Decks?.Length ?? 0;
+        public bool SkipFillsBotEnergy { get; private set; }
 
 
         private readonly DevUnitCatalogConfig _catalog;
@@ -49,6 +51,7 @@ namespace Project.Scripts.Dev
                 ? PlayerPrefs.GetInt(PrefsKeyOpponentSeedValue, 0)
                 : null;
             StrengthIndex = ClampStrengthIndex(PlayerPrefs.GetInt(PrefsKeyStrengthIndex, 0));
+            SkipFillsBotEnergy = PlayerPrefs.GetInt(PrefsKeySkipFillsBotEnergy, 0) != 0;
         }
 
 
@@ -113,6 +116,11 @@ namespace Project.Scripts.Dev
             StrengthIndex = ClampStrengthIndex(index);
         }
 
+        public void SetSkipFillsBotEnergy(bool value)
+        {
+            SkipFillsBotEnergy = value;
+        }
+
         public void Save()
         {
             PlayerPrefs.SetInt(PrefsKeyPlayerMode, (int)PlayerMode);
@@ -124,6 +132,7 @@ namespace Project.Scripts.Dev
             PlayerPrefs.SetInt(PrefsKeyOpponentSeedHas, OpponentSeedOverride.HasValue ? 1 : 0);
             PlayerPrefs.SetInt(PrefsKeyOpponentSeedValue, OpponentSeedOverride.GetValueOrDefault());
             PlayerPrefs.SetInt(PrefsKeyStrengthIndex, StrengthIndex);
+            PlayerPrefs.SetInt(PrefsKeySkipFillsBotEnergy, SkipFillsBotEnergy ? 1 : 0);
             PlayerPrefs.Save();
             if (_debugConfig.LogDevOpponentOptions)
             {
