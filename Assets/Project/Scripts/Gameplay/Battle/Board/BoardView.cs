@@ -66,6 +66,23 @@ namespace Project.Scripts.Gameplay.Battle.Board
                 _phaseOverlay.enabled = active;
         }
 
+        public bool TryGetWorldFrameBounds(out float centerX, out float topWorldY, out float halfWidth)
+        {
+            centerX = 0f;
+            topWorldY = 0f;
+            halfWidth = 0f;
+
+            if (!_frame)
+                return false;
+
+            var bounds = _frame.bounds;
+            centerX = bounds.center.x;
+            topWorldY = bounds.max.y;
+            halfWidth = bounds.extents.x;
+
+            return halfWidth > 0f;
+        }
+
         public float GetWorldHeight()
         {
             if (_frame)

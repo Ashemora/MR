@@ -76,6 +76,7 @@ namespace Project.Scripts.Gameplay
         private TopBarLayoutDriver _topBarLayout;
 #if DEV
         private DevMatchPhaseSkipButtonSpawner _devMatchPhaseSkipButtonSpawner;
+        private DevReturnToLobbyButtonSpawner _devReturnToLobbyButtonSpawner;
 #endif
 
 
@@ -168,6 +169,7 @@ namespace Project.Scripts.Gameplay
             IBoardAnnouncementService boardAnnouncementService
 #if DEV
             , DevMatchPhaseSkipButtonSpawner devMatchPhaseSkipButtonSpawner
+            , DevReturnToLobbyButtonSpawner devReturnToLobbyButtonSpawner
 #endif
             )
         {
@@ -200,6 +202,7 @@ namespace Project.Scripts.Gameplay
             _boardAnnouncementService = boardAnnouncementService;
 #if DEV
             _devMatchPhaseSkipButtonSpawner = devMatchPhaseSkipButtonSpawner;
+            _devReturnToLobbyButtonSpawner = devReturnToLobbyButtonSpawner;
 #endif
         }
 
@@ -271,6 +274,7 @@ namespace Project.Scripts.Gameplay
             await _boardSystems.Orchestrator.StartGame();
 #if DEV
             _devMatchPhaseSkipButtonSpawner.Spawn(_uiConfig.DevMatchPhaseSkipButtonPrefab);
+            _devReturnToLobbyButtonSpawner.Spawn(_uiConfig.DevAbortBattleButtonPrefab);
 #endif
         }
     }

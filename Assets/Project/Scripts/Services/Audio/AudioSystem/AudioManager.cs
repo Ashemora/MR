@@ -24,7 +24,6 @@ namespace Project.Scripts.Services.Audio.AudioSystem
             _bgmSource.loop = false;
             _bgmSource.playOnAwake = false;
             _bgmSource.outputAudioMixerGroup = MusicMixerGroup;
-            Debug.Log("AudioManager initialized");
         }
 
         public AudioSource GetBGMSource()

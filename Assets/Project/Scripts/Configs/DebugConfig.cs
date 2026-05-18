@@ -24,11 +24,20 @@ namespace Project.Scripts.Configs
         [Tooltip("Логировать события жизненного цикла EventBus (например, Dispose).")]
         [SerializeField] private bool _logEventBus;
 
+#if DEV
+        [Header("DEV")]
+        [Tooltip("Логировать подробности DEV-настроек подбора противника.")]
+        [SerializeField] private bool _logDevOpponentOptions;
+#endif
+
 
         public bool LogEnergyAccumulation => _logEnergyAccumulation;
         public bool LogCascades => _logCascades;
         public bool LogCombatDamage => _logCombatDamage;
         public bool LogUIEvents => _logUIEvents;
         public bool LogEventBus => _logEventBus;
+#if DEV
+        public bool LogDevOpponentOptions => _logDevOpponentOptions;
+#endif
     }
 }

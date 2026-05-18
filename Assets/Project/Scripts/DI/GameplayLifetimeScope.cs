@@ -1,6 +1,8 @@
 using Project.Scripts.Configs.Battle;
+using Project.Scripts.Configs.Battle.Bot;
 using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Configs.Levels;
+using Project.Scripts.Gameplay.Battle;
 using Project.Scripts.Gameplay;
 using Project.Scripts.Gameplay.Battle.HUD;
 using Project.Scripts.Gameplay.Battle.Targeting;
@@ -24,6 +26,7 @@ using Project.Scripts.Services.Combat.Economy;
 using Project.Scripts.Services.Combat.Moves;
 using Project.Scripts.Services.Timer;
 using Project.Scripts.Services.Clock;
+using Project.Scripts.Shared.BattleSetup;
 using VContainer;
 using VContainer.Unity;
 #if DEV
@@ -43,12 +46,50 @@ namespace Project.Scripts.DI
             var levelDatabase = Parent.Container.Resolve<LevelDatabase>();
             var session = Parent.Container.Resolve<IBattleSessionProvider>().Current;
             var levelId = session?.LevelId ?? Parent.Container.Resolve<ILevelProgressionService>().CurrentLevelId;
-            var levelConfig = levelDatabase.GetById(levelId);
-            builder.RegisterInstance(levelConfig);
+            var requestedLevelConfig = levelDatabase.GetById(levelId);
+            var effectiveLevelConfig = requestedLevelConfig;
+#if DEV
+            var devOverride = Parent.Container.Resolve<IDevOpponentOverrideService>();
+            var devCatalog = Parent.Container.Resolve<DevUnitCatalogConfig>();
+            if (devOverride.Mode == DevOpponentMode.Random && devCatalog && devCatalog.RandomModeLevelOverride)
+                effectiveLevelConfig = devCatalog.RandomModeLevelOverride;
+#endif
+            builder.RegisterInstance(effectiveLevelConfig);
             var slotLayoutConfig = Parent.Container.Resolve<SlotLayoutConfig>();
             var playerBattleConfig = Parent.Container.Resolve<PlayerBattleConfig>();
-            builder.RegisterInstance(BattleSetupFactory.Create(playerBattleConfig.DefaultUnitDeck,
-                levelConfig.OpponentUnitDeck, slotLayoutConfig));
+
+            BattleSetup battleSetup;
+            BotConfig effectiveBotConfig = effectiveLevelConfig.BotConfig;
+#if DEV
+            if (session != null && devOverride.TryBuildOpponent(session.Seed, out var devSelection))
+            {
+                var playerDeck = playerBattleConfig.DefaultUnitDeck;
+                battleSetup = BattleSetupFactory.Create(
+                    playerDeck ? playerDeck.AvatarConfig : null,
+                    playerDeck ? playerDeck.Heroes : null,
+                    devSelection.Avatar,
+                    devSelection.Heroes,
+                    slotLayoutConfig);
+                effectiveBotConfig = devSelection.BotConfig;
+                if (Parent.Container.Resolve<Project.Scripts.Configs.DebugConfig>().LogDevOpponentOptions)
+                    UnityEngine.Debug.Log($"[DevOpponent] Random opponent applied seed={session.Seed} " +
+                                          $"strength={devOverride.GetStrengthDisplayName(devOverride.StrengthIndex)}");
+            }
+            else
+#endif
+            {
+#if DEV
+                if (devOverride.Mode == DevOpponentMode.Random
+                    && Parent.Container.Resolve<Project.Scripts.Configs.DebugConfig>().LogDevOpponentOptions)
+                    UnityEngine.Debug.LogWarning($"[DevOpponent] Random opponent fallback to LevelConfig: " +
+                                                 $"{devOverride.GetBuildBlockReason()}");
+#endif
+                battleSetup = BattleSetupFactory.Create(playerBattleConfig.DefaultUnitDeck,
+                    effectiveLevelConfig.OpponentUnitDeck, slotLayoutConfig);
+            }
+
+            builder.RegisterInstance(battleSetup);
+            builder.RegisterInstance(new EffectiveBotConfigProvider(effectiveBotConfig));
 
             builder.RegisterComponentInHierarchy<GameplayEntryPoint>();
             builder.Register<BoardSystemsFactory>(Lifetime.Singleton);
@@ -106,6 +147,8 @@ namespace Project.Scripts.DI
 #if DEV
             builder.Register<DevMatchPhaseSkipService>(Lifetime.Singleton);
             builder.Register<DevMatchPhaseSkipButtonSpawner>(Lifetime.Singleton);
+            builder.Register<DevAbortBattleService>(Lifetime.Singleton);
+            builder.Register<DevReturnToLobbyButtonSpawner>(Lifetime.Singleton);
 #endif
 
             builder.Register<IBoardRuntimeService, BoardRuntimeService>(Lifetime.Singleton);
@@ -140,9 +183,9 @@ namespace Project.Scripts.DI
                 builder.RegisterEntryPoint<BattleEscalationAnnouncementService>();
             }
 
-            if (levelConfig.BotConfig)
+            if (effectiveBotConfig)
             {
-                builder.RegisterInstance(levelConfig.BotConfig);
+                builder.RegisterInstance(effectiveBotConfig);
                 builder.RegisterEntryPoint<BotOpponentService>().As<IBotOpponentService>();
             }
         }

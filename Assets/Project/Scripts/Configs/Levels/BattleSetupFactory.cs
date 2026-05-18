@@ -21,6 +21,18 @@ namespace Project.Scripts.Configs.Levels
                 CreateHeroes(BattleSide.Enemy, opponentDeck ? opponentDeck.Heroes : null, slotLayoutConfig));
         }
 
+#if DEV
+        public static BattleSetup Create(AvatarConfig playerAvatar, HeroConfig[] playerHeroes,
+            AvatarConfig opponentAvatar, HeroConfig[] opponentHeroes, SlotLayoutConfig slotLayoutConfig)
+        {
+            return new BattleSetup(
+                CreateAvatar(BattleSide.Player, playerAvatar),
+                CreateAvatar(BattleSide.Enemy, opponentAvatar),
+                CreateHeroes(BattleSide.Player, playerHeroes, slotLayoutConfig),
+                CreateHeroes(BattleSide.Enemy, opponentHeroes, slotLayoutConfig));
+        }
+#endif
+
 
         private static BattleUnitSetup CreateAvatar(BattleSide side, AvatarConfig config)
         {

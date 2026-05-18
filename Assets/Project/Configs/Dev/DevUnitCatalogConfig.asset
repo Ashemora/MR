@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d68e1281fa71fa54a80297a55fa8e28a, type: 3}
+  m_Name: DevUnitCatalogConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Dev.DevUnitCatalogConfig
+  _avatars:
+  - {fileID: 11400000, guid: 10f28ac1346170149be5630d8e075bac, type: 2}
+  - {fileID: 11400000, guid: 9f04721e87cfe15489dccc37e2e0d8f3, type: 2}
+  _fillAvatarsFromFolderButton: 0
+  _heroes:
+  - {fileID: 11400000, guid: 9c7d04f1a5b8e3c6d9f2a4b7c8e1d3f4, type: 2}
+  - {fileID: 11400000, guid: 7a5f81d3b2c4e7f6a9b8c1d2e3f4a5b6, type: 2}
+  - {fileID: 11400000, guid: 8b6c92e4c3d5f8a7b0c9d2e3f4a5b6c7, type: 2}
+  - {fileID: 11400000, guid: 435c46d79a564f1788c073b5581e4275, type: 2}
+  - {fileID: 11400000, guid: d6d78ff54c191463caafec257a81561f, type: 2}
+  - {fileID: 11400000, guid: e3a85e5bd3c54e86b4a9cc5c3143d2a1, type: 2}
+  - {fileID: 11400000, guid: d58a5fe3509de434a98e96d78ae26093, type: 2}
+  - {fileID: 11400000, guid: c40684606f95ebb41b02fac1f62d500d, type: 2}
+  - {fileID: 11400000, guid: 201855d7b78214970acde475c79a1909, type: 2}
+  - {fileID: 11400000, guid: 68c2c2e2a34d4aa4b7fa72d29fcf1a37, type: 2}
+  - {fileID: 11400000, guid: 4ce1061ed4d64db1b7fd48da6455a1f6, type: 2}
+  - {fileID: 11400000, guid: 0ed4a7e37f21467d8b851f8fbb1db1bb, type: 2}
+  _fillHeroesFromFolderButton: 0
+  _botStrengths:
+  - _displayName: Easy
+    _config: {fileID: 11400000, guid: c0108a7c7775cb549845da7170047795, type: 2}
+  - _displayName: Hard
+    _config: {fileID: 11400000, guid: f0d9901f5fa0aeb4997e1c445357669f, type: 2}
+  - _displayName: Medium
+    _config: {fileID: 11400000, guid: e08640440e2033e4489542e45deb29d0, type: 2}
+  _fillBotStrengthsFromFolderButton: 0
+  _randomModeLevelOverride: {fileID: 0}

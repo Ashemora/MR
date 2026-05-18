@@ -7,6 +7,9 @@ using Project.Scripts.Services.UISystem;
 using R3;
 using UnityEngine;
 using VContainer;
+#if DEV
+using Project.Scripts.Dev;
+#endif
 
 namespace Project.Scripts.Lobby
 {
@@ -19,6 +22,9 @@ namespace Project.Scripts.Lobby
         private UIService _uiService;
         private UIConfig _uiConfig;
         private IAudioSettingsService _audioSettings;
+#if DEV
+        private DevLobbyBattleOptionsButtonSpawner _devBattleOptionsButtonSpawner;
+#endif
 
         private readonly CompositeDisposable _optionsDisposables = new();
         private bool _isOptionsOpen;
@@ -27,17 +33,27 @@ namespace Project.Scripts.Lobby
         private void OnDestroy()
         {
             _optionsDisposables.Dispose();
+#if DEV
+            _devBattleOptionsButtonSpawner?.Despawn();
+#endif
         }
 
 
         [Inject]
         public void Construct(IAppStateMachine appStateMachine, UIService uiService, UIConfig uiConfig,
-            IAudioSettingsService audioSettings)
+            IAudioSettingsService audioSettings
+#if DEV
+            , DevLobbyBattleOptionsButtonSpawner devBattleOptionsButtonSpawner
+#endif
+        )
         {
             _appStateMachine = appStateMachine;
             _uiService = uiService;
             _uiConfig = uiConfig;
             _audioSettings = audioSettings;
+#if DEV
+            _devBattleOptionsButtonSpawner = devBattleOptionsButtonSpawner;
+#endif
         }
 
 
@@ -47,6 +63,9 @@ namespace Project.Scripts.Lobby
                 _uiService.RegisterView<OptionsView>(_uiConfig.OptionsViewPrefab, UILayer.Popup);
 
             _view.Bind(StartBattle, OpenOptions);
+#if DEV
+            _devBattleOptionsButtonSpawner.Spawn();
+#endif
         }
 
 

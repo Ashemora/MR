@@ -5,12 +5,13 @@ using UnityEngine.UI;
 
 namespace Project.Scripts.Dev
 {
-    public class DevMatchPhaseSkipButtonView : MonoBehaviour
+    public class DevReturnToLobbyButtonView : MonoBehaviour
     {
         private const float BoardAnchorOffsetX = 0f;
         private const float BoardAnchorOffsetY = 30f;
 
-        
+
+        private DevAbortBattleService _abortService;
         private DevMatchPhaseSkipService _skipService;
         private IBoardBoundsProvider _boardBoundsProvider;
         private Button _button;
@@ -18,25 +19,29 @@ namespace Project.Scripts.Dev
         private RectTransform _parentRectTransform;
         private Canvas _canvas;
         private CanvasGroup _canvasGroup;
+        private bool _revealed;
 
 
         private void Update()
         {
-            if (null == _skipService)
+            if (null == _abortService || null == _skipService)
                 return;
 
-            var shouldShow = _skipService.ShouldShow();
-            var canSkip = _skipService.CanSkip();
+            if (_skipService.ShouldShow())
+                _revealed = true;
+
+            var shouldShow = _revealed && _skipService.IsVisibleDuringGameplay();
+            var canAbort = shouldShow && _abortService.CanAbort();
 
             if (_canvasGroup)
             {
                 _canvasGroup.alpha = shouldShow ? 1f : 0f;
                 _canvasGroup.blocksRaycasts = shouldShow;
-                _canvasGroup.interactable = canSkip;
+                _canvasGroup.interactable = canAbort;
             }
 
             if (_button)
-                _button.interactable = canSkip;
+                _button.interactable = canAbort;
 
             if (shouldShow)
                 ApplyPosition();
@@ -47,10 +52,12 @@ namespace Project.Scripts.Dev
             if (_button)
                 _button.onClick.RemoveListener(OnClick);
         }
-        
 
-        public void Init(DevMatchPhaseSkipService skipService, IBoardBoundsProvider boardBoundsProvider)
+
+        public void Init(DevAbortBattleService abortService, DevMatchPhaseSkipService skipService,
+            IBoardBoundsProvider boardBoundsProvider)
         {
+            _abortService = abortService;
             _skipService = skipService;
             _boardBoundsProvider = boardBoundsProvider;
             _button = GetComponent<Button>();
@@ -65,17 +72,21 @@ namespace Project.Scripts.Dev
             {
                 _rectTransform.anchorMin = Vector2.zero;
                 _rectTransform.anchorMax = Vector2.zero;
-                _rectTransform.pivot = Vector2.one;
+                _rectTransform.pivot = new Vector2(0f, 1f);
             }
+
+            _canvasGroup.alpha = 0f;
+            _canvasGroup.blocksRaycasts = false;
+            _canvasGroup.interactable = false;
 
             if (_button)
                 _button.onClick.AddListener(OnClick);
         }
-        
-        
+
+
         private void OnClick()
         {
-            _skipService?.TrySkip();
+            _abortService?.TryAbort();
         }
 
         private void ApplyPosition()
@@ -87,7 +98,7 @@ namespace Project.Scripts.Dev
             if (!camera)
                 return;
 
-            var worldPosition = new Vector3(_boardBoundsProvider.BoardCenterX + _boardBoundsProvider.BoardHalfWidth,
+            var worldPosition = new Vector3(_boardBoundsProvider.BoardCenterX - _boardBoundsProvider.BoardHalfWidth,
                 _boardBoundsProvider.BoardTopWorldY, 0f);
 
             var cameraForCanvas = _canvas.renderMode == RenderMode.ScreenSpaceOverlay

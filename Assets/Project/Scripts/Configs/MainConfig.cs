@@ -11,6 +11,9 @@ using Project.Scripts.Configs.Levels;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Services.Audio.AudioSystem.Configs;
 using UnityEngine;
+#if DEV
+using Project.Scripts.Dev;
+#endif
 
 namespace Project.Scripts.Configs
 {
@@ -98,6 +101,11 @@ namespace Project.Scripts.Configs
         [Tooltip("Отладка: флаги логирования для разработчиков (не влияет на геймплей)")]
         [SerializeField] private DebugConfig _debugConfig;
 
+#if DEV
+        [Tooltip("DEV-only каталог для random opponent режима в лобби")]
+        [SerializeField] private DevUnitCatalogConfig _devUnitCatalogConfig;
+#endif
+
 
         public AudioMusicConfig AudioMusicConfig => _audioMusicConfig;
         public AudioSFXConfig AudioSFXConfig => _audioSFXConfig;
@@ -126,5 +134,8 @@ namespace Project.Scripts.Configs
         public EscalationConfig EscalationConfig => _escalationConfig;
         public HintConfig HintConfig => _hintConfig;
         public DebugConfig DebugConfig => _debugConfig;
+#if DEV
+        public DevUnitCatalogConfig DevUnitCatalogConfig => _devUnitCatalogConfig;
+#endif
     }
 }

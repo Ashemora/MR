@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.BotConfig
   _enabled: 1
   _opponentName: Hard
-  _heroActivationCheckInterval: 0.4
-  _minHeroActivationDelay: 0.5
-  _maxHeroActivationDelay: 2.5
-  _matchEnergyTickInterval: 2
-  _baseMatchEnergyPerTick: 6
-  _cascadeVariation: 0.45
-  _goodCascadeChance: 0.12
-  _greatCascadeChance: 0.04
-  _goodCascadeMultiplier: 1.2
-  _greatCascadeMultiplier: 1.4
-  _minAvatarActivationDelay: 0.5
-  _maxAvatarActivationDelay: 2
+  _heroActivationCheckInterval: 0.33
+  _minHeroActivationDelay: 0.42
+  _maxHeroActivationDelay: 2.08
+  _matchEnergyTickInterval: 1.67
+  _baseMatchEnergyPerTick: 7
+  _cascadeVariation: 0.54
+  _goodCascadeChance: 0.144
+  _greatCascadeChance: 0.048
+  _goodCascadeMultiplier: 1.44
+  _greatCascadeMultiplier: 1.68
+  _minAvatarActivationDelay: 0.42
+  _maxAvatarActivationDelay: 1.67

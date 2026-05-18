@@ -26,6 +26,15 @@ namespace Project.Scripts.Configs.UI
 #if DEV
         [Tooltip("DEV-only кнопка пропуска match phase")]
         [SerializeField] private GameObject _devMatchPhaseSkipButtonPrefab;
+
+        [Tooltip("DEV-only кнопка прерывания боя и возврата в лобби")]
+        [SerializeField] private GameObject _devAbortBattleButtonPrefab;
+
+        [Tooltip("DEV-only кнопка открытия настроек боя в лобби")]
+        [SerializeField] private GameObject _devBattleOptionsButtonPrefab;
+
+        [Tooltip("DEV-only окно настроек боя в лобби")]
+        [SerializeField] private GameObject _devBattleOptionsViewPrefab;
 #endif
 
 
@@ -37,6 +46,9 @@ namespace Project.Scripts.Configs.UI
         public GameObject OptionsViewPrefab => _optionsViewPrefab;
 #if DEV
         public GameObject DevMatchPhaseSkipButtonPrefab => _devMatchPhaseSkipButtonPrefab;
+        public GameObject DevAbortBattleButtonPrefab => _devAbortBattleButtonPrefab;
+        public GameObject DevBattleOptionsButtonPrefab => _devBattleOptionsButtonPrefab;
+        public GameObject DevBattleOptionsViewPrefab => _devBattleOptionsViewPrefab;
 #endif
     }
 }

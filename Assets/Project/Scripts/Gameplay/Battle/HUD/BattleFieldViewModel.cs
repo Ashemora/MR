@@ -6,6 +6,7 @@ using Project.Scripts.Configs.Battle.Flow;
 using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Configs.Battle.Visuals;
 using Project.Scripts.Configs.Board;
+using Project.Scripts.Configs;
 using Project.Scripts.Configs.Levels;
 using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.Battle.Units;
@@ -22,6 +23,10 @@ using R3;
 using UnityEngine;
 using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Units;
+#if DEV
+using Project.Scripts.Dev;
+using Project.Scripts.Services.AppFlow;
+#endif
 
 namespace Project.Scripts.Gameplay.Battle.HUD
 {
@@ -38,7 +43,9 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         public IAbilityExecutionService AbilityExecution { get; }
         public IAvatarGroupDefenseService GroupDefense { get; }
         public TileKind[] PlayerHeroKinds => _slotLayoutConfig.HeroSlotKinds;
-        public string EnemyName => _levelConfig.BotConfig ? _levelConfig.BotConfig.OpponentName : string.Empty;
+        public string EnemyName => _effectiveBotConfigProvider.BotConfig
+            ? _effectiveBotConfigProvider.BotConfig.OpponentName
+            : string.Empty;
         public BattleAnimationConfig BattleAnimConfig => _battleAnimationConfig;
         public UnitDeathConfig DeathConfig { get; private set; }
         public ReadOnlyReactiveProperty<int> TimerSeconds => _timerSeconds;
@@ -65,6 +72,12 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         private readonly IBattleActionRuntimeService _battleActionRuntimeService;
         private readonly BattleFlowConfig _battleFlowConfig;
         private readonly UnitDeathConfig _unitDeathConfig;
+        private readonly EffectiveBotConfigProvider _effectiveBotConfigProvider;
+        private readonly DebugConfig _debugConfig;
+#if DEV
+        private readonly IDevOpponentOverrideService _devOpponentOverride;
+        private readonly IBattleSessionProvider _battleSessionProvider;
+#endif
         private HeroSlotViewModel[] _playerHeroSlots;
         private HeroSlotViewModel[] _enemyHeroSlots;
         private readonly ReactiveProperty<int> _timerSeconds;
@@ -94,7 +107,14 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             IAbilityExecutionService abilityExecution,
             IAvatarGroupDefenseService groupDefense,
             BattleFlowConfig battleFlowConfig,
-            UnitDeathConfig unitDeathConfig)
+            UnitDeathConfig unitDeathConfig,
+            EffectiveBotConfigProvider effectiveBotConfigProvider,
+            DebugConfig debugConfig
+#if DEV
+            , IDevOpponentOverrideService devOpponentOverride,
+            IBattleSessionProvider battleSessionProvider
+#endif
+        )
         {
             _eventBus = eventBus;
             _avatarService = avatarService;
@@ -115,6 +135,12 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             GroupDefense = groupDefense;
             _battleFlowConfig = battleFlowConfig;
             _unitDeathConfig = unitDeathConfig;
+            _effectiveBotConfigProvider = effectiveBotConfigProvider;
+            _debugConfig = debugConfig;
+#if DEV
+            _devOpponentOverride = devOpponentOverride;
+            _battleSessionProvider = battleSessionProvider;
+#endif
 
             _timerSeconds = new ReactiveProperty<int>((int)battleFlowConfig.MatchPhaseDuration);
             _currentRound = new ReactiveProperty<int>(battleFlowService.Snapshot.CurrentRound);
@@ -136,6 +162,17 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             var opponentDeck = _levelConfig.OpponentUnitDeck;
             var playerAvatarConfig = playerDeck.AvatarConfig;
             var enemyAvatarConfig = opponentDeck.AvatarConfig;
+            var enemyHeroConfigs = opponentDeck.Heroes;
+#if DEV
+            var session = _battleSessionProvider.Current;
+            if (session != null && _devOpponentOverride.TryBuildOpponent(session.Seed, out var devSelection))
+            {
+                enemyAvatarConfig = devSelection.Avatar;
+                enemyHeroConfigs = devSelection.Heroes;
+                if (_debugConfig.LogDevOpponentOptions)
+                    Debug.Log($"[DevOpponent] Random opponent visuals applied seed={session.Seed}");
+            }
+#endif
 
             PlayerAvatar = new AvatarSlotViewModel(
                 _eventBus,
@@ -173,7 +210,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
             _enemyHeroSlots = CreateHeroSlotViewModels(
                 BattleSide.Enemy,
                 _heroService.GetSlots(BattleSide.Enemy),
-                opponentDeck.Heroes);
+                enemyHeroConfigs);
 
             Disposables.Add(_eventBus.Subscribe<HeroHPChangedEvent>(OnHeroHPChanged));
             Disposables.Add(_eventBus.Subscribe<HeroDefeatedEvent>(OnHeroDefeated));

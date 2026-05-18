@@ -32,7 +32,6 @@ MonoBehaviour:
   _gameplayScreenLayoutConfig: {fileID: 11400000, guid: 9cc56ddf724448ee90f369e1bb8f4308, type: 2}
   _tileKindPaletteConfig: {fileID: 11400000, guid: d100b8948d0a59f4cbe9d90dd813cb63, type: 2}
   _slotLayoutConfig: {fileID: 11400000, guid: 930f2ff79998a144c9415e78b34f4409, type: 2}
-  _battleTimerConfig: {fileID: 11400000, guid: 1d2e42b857e256849860ef5101594dd4, type: 2}
   _battleFlowConfig: {fileID: 11400000, guid: b42c2996aa482aa4abac2782938ef0c9, type: 2}
   _burndownConfig: {fileID: 11400000, guid: 0b3adf65b88a46068d76abf94b1bc623, type: 2}
   _unitDeathConfig: {fileID: 11400000, guid: 3376c745fcd728c43bcb625f04131074, type: 2}
@@ -40,3 +39,4 @@ MonoBehaviour:
   _escalationConfig: {fileID: 11400000, guid: 94634fb3bbc965a4b9a9c81369bde7b5, type: 2}
   _hintConfig: {fileID: 11400000, guid: 0930a272e1ae9d643b75bd57782355ec, type: 2}
   _debugConfig: {fileID: 11400000, guid: f3fc12f52fe53304abf0245839075646, type: 2}
+  _devUnitCatalogConfig: {fileID: 11400000, guid: 8ac08324e72a7a947b0f74fca75652fc, type: 2}

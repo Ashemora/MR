@@ -219,6 +219,7 @@ namespace Project.Scripts.Gameplay.Battle.Layout
 
             var boardOffset = CalculateHeroPhaseBoardOffset() * blend;
             _battleWorldLayout?.SetBoardAndEnergyPreviewYOffset(boardOffset);
+            RefreshBoardBoundsFromView();
             _battleWorldLayout?.PublishAnnouncementAnchors(_boardBoundsProvider);
             LayoutBlendApplied?.Invoke();
         }
@@ -233,6 +234,15 @@ namespace Project.Scripts.Gameplay.Battle.Layout
             var extraOffset = _battleWorldLayout.GetBoardWorldHeight() * _battleFieldLayoutConfig.HeroPhaseBoardOffsetFrameHeight;
 
             return -(heightDelta * _battleFieldView.LayoutScale + extraOffset);
+        }
+
+        private void RefreshBoardBoundsFromView()
+        {
+            var boardView = _battleWorldLayout?.BoardView;
+            if (!boardView || false == boardView.TryGetWorldFrameBounds(out var centerX, out var topWorldY, out var halfWidth))
+                return;
+
+            _boardBoundsProvider.SetBounds(centerX, topWorldY, halfWidth, _boardBoundsProvider.CellSize);
         }
     }
 }

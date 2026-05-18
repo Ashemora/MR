@@ -12,6 +12,7 @@ namespace Project.Scripts.Dev
     {
         private const float MinimumSkipTickDelta = 0.001f;
 
+        
         private readonly IBattleFlowService _battleFlowService;
         private readonly IBattleSideEnergyService _battleSideEnergyService;
         private readonly IBoardRuntimeService _boardRuntimeService;
@@ -27,7 +28,6 @@ namespace Project.Scripts.Dev
             _gameStateService = gameStateService;
         }
 
-
         public bool CanSkip()
         {
             return ShouldShow() && false == _boardRuntimeService.IsResolving;
@@ -35,13 +35,18 @@ namespace Project.Scripts.Dev
 
         public bool ShouldShow()
         {
-            if (false == _battleFlowService.IsInitialized)
-                return false;
-
-            if (_gameStateService.State.CurrentValue != GameState.Playing)
+            if (false == IsVisibleDuringGameplay())
                 return false;
 
             return _battleFlowService.Snapshot.Phase == BattlePhaseKind.Match;
+        }
+
+        public bool IsVisibleDuringGameplay()
+        {
+            if (false == _battleFlowService.IsInitialized)
+                return false;
+
+            return _gameStateService.State.CurrentValue == GameState.Playing;
         }
 
         public bool TrySkip()
@@ -63,6 +68,7 @@ namespace Project.Scripts.Dev
             return true;
         }
 
+        
         private void FillPlayerEnergyToCap()
         {
             var cap = _battleSideEnergyService.EnergyCap;

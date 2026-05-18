@@ -11,6 +11,9 @@ using Project.Scripts.Services.UISystem.Components;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+#if DEV
+using Project.Scripts.Dev;
+#endif
 
 namespace Project.Scripts.DI
 {
@@ -56,6 +59,11 @@ namespace Project.Scripts.DI
             builder.Register<ISceneLoadingService, SceneLoadingService>(Lifetime.Singleton);
             builder.Register<IBattleSessionProvider, BattleSessionProvider>(Lifetime.Singleton);
             builder.Register<IAppStateMachine, AppStateMachine>(Lifetime.Singleton);
+#if DEV
+            builder.RegisterInstance(_mainConfig.DevUnitCatalogConfig);
+            builder.Register<IDevOpponentOverrideService, DevOpponentOverrideService>(Lifetime.Singleton);
+            builder.Register<DevLobbyBattleOptionsButtonSpawner>(Lifetime.Singleton);
+#endif
 
             builder.RegisterComponentInHierarchy<AudioManager>();
             builder.RegisterComponentInHierarchy<SafeAreaService>().AsImplementedInterfaces().AsSelf();

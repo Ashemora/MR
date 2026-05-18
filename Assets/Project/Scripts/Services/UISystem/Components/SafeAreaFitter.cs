@@ -106,7 +106,7 @@ namespace Project.Scripts.Services.UISystem.Components
         private void ApplyEditorPreviewSafeArea()
         {
 #if UNITY_EDITOR
-            if (PrefabStageUtility.GetCurrentPrefabStage() != null)
+            if (PrefabStageUtility.GetCurrentPrefabStage())
             {
                 ApplyFullScreen();
                 return;
