@@ -25,11 +25,11 @@ MonoBehaviour:
   _revealOutputAfterBuild: 1
   _buildDevButton: 0
   _buildProductionButton: 0
-  _lastBuildResult: Failed
+  _lastBuildResult: Succeeded
   _lastBuildKind: Dev
   _lastBuildTarget: Android
-  _lastBuildTime: 2026-05-15 22:32:05
-  _lastBuildDuration: 31.877s
-  _lastBuildSize: 0 B
-  _lastBuildPath: Builds/Dev\Matchrift_0.2.1_dev.12.apk
+  _lastBuildTime: 2026-05-19 21:46:35
+  _lastBuildDuration: 1m 53s
+  _lastBuildSize: 1,09 GB
+  _lastBuildPath: Builds/Dev/Matchrift_0.2.1_dev.12.apk
   _openLastBuildFolderButton: 0

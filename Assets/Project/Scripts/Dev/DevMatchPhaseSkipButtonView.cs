@@ -20,7 +20,7 @@ namespace Project.Scripts.Dev
         private CanvasGroup _canvasGroup;
 
 
-        private void Update()
+        private void LateUpdate()
         {
             if (null == _skipService)
                 return;
@@ -68,6 +68,10 @@ namespace Project.Scripts.Dev
                 _rectTransform.pivot = Vector2.one;
             }
 
+            _canvasGroup.alpha = 0f;
+            _canvasGroup.blocksRaycasts = false;
+            _canvasGroup.interactable = false;
+
             if (_button)
                 _button.onClick.AddListener(OnClick);
         }
@@ -83,8 +87,8 @@ namespace Project.Scripts.Dev
             if (null == _boardBoundsProvider || !_rectTransform || !_parentRectTransform || !_canvas)
                 return;
 
-            var camera = Camera.main;
-            if (!camera)
+            var worldCamera = _canvas.worldCamera ? _canvas.worldCamera : Camera.main;
+            if (!worldCamera)
                 return;
 
             var worldPosition = new Vector3(_boardBoundsProvider.BoardCenterX + _boardBoundsProvider.BoardHalfWidth,
@@ -92,13 +96,11 @@ namespace Project.Scripts.Dev
 
             var cameraForCanvas = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
                 ? null
-                : _canvas.worldCamera;
+                : worldCamera;
 
             if (false == RectTransformUtility.ScreenPointToLocalPointInRectangle(_parentRectTransform,
-                    camera.WorldToScreenPoint(worldPosition), cameraForCanvas, out var localPosition))
-            {
+                    worldCamera.WorldToScreenPoint(worldPosition), cameraForCanvas, out var localPosition))
                 return;
-            }
 
             var parentRect = _parentRectTransform.rect;
             _rectTransform.anchoredPosition = new Vector2(

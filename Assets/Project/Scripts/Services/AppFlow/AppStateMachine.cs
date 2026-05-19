@@ -47,6 +47,9 @@ namespace Project.Scripts.Services.AppFlow
             Current = AppState.Lobby;
             _battleSessionProvider.Clear();
             _uiService.CloseAll();
+#if DEV
+            _uiService.CleanupDevGameplayButtons();
+#endif
             await _sceneLoadingService.LoadSceneAsync(SceneNames.Lobby, loadingPresenter, activationDelayMilliseconds);
         }
 
@@ -54,6 +57,9 @@ namespace Project.Scripts.Services.AppFlow
         {
             Current = AppState.LoadingGameplay;
             _uiService.CloseAll();
+#if DEV
+            _uiService.CleanupDevGameplayButtons();
+#endif
 
             var playerSeed = Random.Range(int.MinValue, int.MaxValue);
             var opponentSeed = Random.Range(int.MinValue, int.MaxValue);
@@ -83,6 +89,9 @@ namespace Project.Scripts.Services.AppFlow
             Current = AppState.Lobby;
             _battleSessionProvider.Clear();
             _uiService.CloseAll();
+#if DEV
+            _uiService.CleanupDevGameplayButtons();
+#endif
 
             _uiService.RegisterView<GameplayLoadingView>(_uiConfig.GameplayLoadingViewPrefab, UILayer.System);
             var loadingView = await _uiService.Show<GameplayLoadingView, GameplayLoadingViewModel>(

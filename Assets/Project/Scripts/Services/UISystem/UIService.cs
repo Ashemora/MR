@@ -6,6 +6,9 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 using ZLinq;
+#if DEV
+using Project.Scripts.Dev;
+#endif
 
 namespace Project.Scripts.Services.UISystem
 {
@@ -55,7 +58,6 @@ namespace Project.Scripts.Services.UISystem
             _debugConfig = debugConfig;
             _resolver = resolver;
         }
-
 
         public void RegisterView<TView>(GameObject prefab, UILayer layer) where TView : MonoBehaviour, IView
         {
@@ -187,6 +189,18 @@ namespace Project.Scripts.Services.UISystem
 
             _activeViews.Clear();
         }
+
+#if DEV
+        public void CleanupDevGameplayButtons()
+        {
+            if (!_mainCanvas)
+                return;
+
+            var root = _mainCanvas.transform;
+            DevGameplayButtonCleanup.DestroyNamedButtons(root, "DevAbortBattleButton");
+            DevGameplayButtonCleanup.DestroyNamedButtons(root, "DevMatchPhaseSkipButton");
+        }
+#endif
 
 
         private void SetupCanvasLayers()
