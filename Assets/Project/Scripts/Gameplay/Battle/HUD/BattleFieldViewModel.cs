@@ -37,8 +37,8 @@ namespace Project.Scripts.Gameplay.Battle.HUD
         public IAbilityExecutionService AbilityExecution { get; }
         public IAvatarGroupDefenseService GroupDefense { get; }
         public TileKind[] PlayerHeroKinds => _slotLayoutConfig.HeroSlotKinds;
-        public string EnemyName => _effectiveBotConfigProvider.BotConfig
-            ? _effectiveBotConfigProvider.BotConfig.OpponentName
+        public string EnemyName => _effectiveBotConfigProvider.BotStrengthConfig
+            ? _effectiveBotConfigProvider.BotStrengthConfig.OpponentName
             : string.Empty;
         public BattleAnimationConfig BattleAnimConfig => _battleAnimationConfig;
         public UnitDeathConfig DeathConfig { get; private set; }

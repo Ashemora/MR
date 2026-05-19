@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 810ece28b9025cb45b548c7fdfc48fd5, type: 3}
+  m_Script: {fileID: 11500000, guid: b7c0e0d49e244f9bb9241d4e53f7cc6a, type: 3}
   m_Name: Bot_Easy
-  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.BotConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.Bot.BotStrengthConfig
   _enabled: 1
   _opponentName: Easy
   _heroActivationCheckInterval: 0.91
@@ -26,3 +26,8 @@ MonoBehaviour:
   _greatCascadeMultiplier: 1.54
   _minAvatarActivationDelay: 0.45
   _maxAvatarActivationDelay: 1.82
+  _decisionTopCandidateCount: 6
+  _decisionRandomNoise: 0.25
+  _decisionMistakeChance: 0.15
+  _decisionTemperature: 1.4
+  _decisionMinScoreToAct: 0.05

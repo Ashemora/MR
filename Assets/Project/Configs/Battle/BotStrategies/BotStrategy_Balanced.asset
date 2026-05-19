@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8d10c97ea254f82a1c68f3304e96d21, type: 3}
+  m_Name: BotStrategy_Balanced
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Configs.Battle.Bot.BotStrategyConfig
+  _displayName: Balanced
+  _damagePreference: 1
+  _healPreference: 1
+  _resurrectPreference: 1
+  _supportPreference: 1
+  _finishEnemyWeight: 1
+  _breakDefenseWeight: 1
+  _attackExposedAvatarWeight: 1
+  _protectOwnAvatarWeight: 1
+  _healLowHpAllyWeight: 1
+  _resurrectAllyWeight: 1
+  _avoidOverhealWeight: 1
+  _avoidOverkillWeight: 0.5

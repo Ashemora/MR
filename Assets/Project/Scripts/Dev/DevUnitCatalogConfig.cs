@@ -14,6 +14,7 @@ namespace Project.Scripts.Dev
         private const string AvatarsFolderPath = "Assets/Project/Configs/Battle/Avatars";
         private const string HeroesFolderPath = "Assets/Project/Configs/Battle/Heroes";
         private const string BotStrengthsFolderPath = "Assets/Project/Configs/Battle/Bots";
+        private const string BotStrategiesFolderPath = "Assets/Project/Configs/Battle/BotStrategies";
         private const string DecksFolderPath = "Assets/Project/Configs/Battle/Decks";
 #endif
 
@@ -34,6 +35,12 @@ namespace Project.Scripts.Dev
         [Button(nameof(FillBotStrengthsFromFolder), drawField: false)]
         [SerializeField] private bool _fillBotStrengthsFromFolderButton;
 
+        [Header("Bot strategy presets")]
+        [SerializeField] private BotStrategyEntry[] _botStrategies;
+
+        [Button(nameof(FillBotStrategiesFromFolder), drawField: false)]
+        [SerializeField] private bool _fillBotStrategiesFromFolderButton;
+
         [Header("Picked-deck catalog")]
         [SerializeField] private UnitDeckConfig[] _decks;
 
@@ -44,6 +51,7 @@ namespace Project.Scripts.Dev
         public AvatarConfig[] Avatars => _avatars;
         public HeroConfig[] Heroes => _heroes;
         public BotStrengthEntry[] BotStrengths => _botStrengths;
+        public BotStrategyEntry[] BotStrategies => _botStrategies;
         public UnitDeckConfig[] Decks => _decks;
 
 
@@ -70,10 +78,11 @@ namespace Project.Scripts.Dev
         private void FillBotStrengthsFromFolder()
         {
 #if UNITY_EDITOR
-            var botConfigs = LoadAssetsFromFolder<BotConfig>(BotStrengthsFolderPath);
-            var entries = new BotStrengthEntry[botConfigs.Length];
-            for (var i = 0; i < botConfigs.Length; i++)
-                entries[i] = new BotStrengthEntry(CreateBotStrengthDisplayName(botConfigs[i]), botConfigs[i]);
+            var botStrengthConfigs = LoadAssetsFromFolder<BotStrengthConfig>(BotStrengthsFolderPath);
+            var entries = new BotStrengthEntry[botStrengthConfigs.Length];
+            for (var i = 0; i < botStrengthConfigs.Length; i++)
+                entries[i] = new BotStrengthEntry(CreateBotStrengthDisplayName(botStrengthConfigs[i]),
+                    botStrengthConfigs[i]);
 
             _botStrengths = entries;
             SaveEditorChanges();
@@ -92,6 +101,23 @@ namespace Project.Scripts.Dev
 #endif
         }
 
+        private void FillBotStrategiesFromFolder()
+        {
+#if UNITY_EDITOR
+            var botStrategyConfigs = LoadAssetsFromFolder<BotStrategyConfig>(BotStrategiesFolderPath);
+            var entries = new BotStrategyEntry[botStrategyConfigs.Length];
+            for (var i = 0; i < botStrategyConfigs.Length; i++)
+                entries[i] = new BotStrategyEntry(CreateBotStrategyDisplayName(botStrategyConfigs[i]),
+                    botStrategyConfigs[i]);
+
+            System.Array.Sort(entries, CompareBotStrategyEntries);
+            _botStrategies = entries;
+            SaveEditorChanges();
+#else
+            Debug.LogWarning("FillBotStrategiesFromFolder is only available in the Unity Editor.", this);
+#endif
+        }
+
 #if UNITY_EDITOR
         private static T[] LoadAssetsFromFolder<T>(string folderPath) where T : Object
         {
@@ -106,10 +132,11 @@ namespace Project.Scripts.Dev
             }
 
             assets.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
+            
             return assets.ToArray();
         }
 
-        private static string CreateBotStrengthDisplayName(BotConfig config)
+        private static string CreateBotStrengthDisplayName(BotStrengthConfig config)
         {
             if (!config)
                 return string.Empty;
@@ -117,6 +144,43 @@ namespace Project.Scripts.Dev
             return config.name.StartsWith("Bot_")
                 ? config.name.Substring("Bot_".Length)
                 : config.name;
+        }
+
+        private static string CreateBotStrategyDisplayName(BotStrategyConfig config)
+        {
+            if (!config)
+                return string.Empty;
+
+            if (false == string.IsNullOrEmpty(config.DisplayName))
+                return config.DisplayName;
+
+            return config.name.StartsWith("BotStrategy_")
+                ? config.name.Substring("BotStrategy_".Length)
+                : config.name;
+        }
+
+        private static int CompareBotStrategyEntries(BotStrategyEntry a, BotStrategyEntry b)
+        {
+            var priorityComparison = GetBotStrategySortPriority(a.DisplayName)
+                .CompareTo(GetBotStrategySortPriority(b.DisplayName));
+            
+            return priorityComparison != 0
+                ? priorityComparison
+                : string.CompareOrdinal(a.DisplayName, b.DisplayName);
+        }
+
+        private static int GetBotStrategySortPriority(string displayName)
+        {
+            if (displayName == "Balanced")
+                return 0;
+            if (displayName == "Aggressive")
+                return 1;
+            if (displayName == "Defensive")
+                return 2;
+            if (displayName == "Finisher")
+                return 3;
+
+            return 100;
         }
 
         private void SaveEditorChanges()
@@ -131,10 +195,10 @@ namespace Project.Scripts.Dev
     public struct BotStrengthEntry
     {
         [SerializeField] private string _displayName;
-        [SerializeField] private BotConfig _config;
+        [SerializeField] private BotStrengthConfig _config;
 
 
-        public BotStrengthEntry(string displayName, BotConfig config)
+        public BotStrengthEntry(string displayName, BotStrengthConfig config)
         {
             _displayName = displayName;
             _config = config;
@@ -142,7 +206,25 @@ namespace Project.Scripts.Dev
 
 
         public string DisplayName => _displayName;
-        public BotConfig Config => _config;
+        public BotStrengthConfig Config => _config;
+    }
+
+    [System.Serializable]
+    public struct BotStrategyEntry
+    {
+        [SerializeField] private string _displayName;
+        [SerializeField] private BotStrategyConfig _config;
+
+
+        public BotStrategyEntry(string displayName, BotStrategyConfig config)
+        {
+            _displayName = displayName;
+            _config = config;
+        }
+
+
+        public string DisplayName => _displayName;
+        public BotStrategyConfig Config => _config;
     }
 }
 #endif

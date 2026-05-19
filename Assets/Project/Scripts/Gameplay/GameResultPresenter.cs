@@ -36,7 +36,7 @@ namespace Project.Scripts.Gameplay
 
         public async UniTask ShowWin(bool isFlawless)
         {
-            var bot = _effectiveBotConfigProvider.BotConfig;
+            var bot = _effectiveBotConfigProvider.BotStrengthConfig;
             var viewModel = new WinViewModel(_moveCounter, _appStateMachine,
                 bot ? bot.OpponentName : string.Empty, isFlawless,
                 () => _uiService.Close<WinView>());
@@ -45,7 +45,7 @@ namespace Project.Scripts.Gameplay
 
         public async UniTask ShowLose()
         {
-            var bot = _effectiveBotConfigProvider.BotConfig;
+            var bot = _effectiveBotConfigProvider.BotStrengthConfig;
             var viewModel = new LoseViewModel(_moveCounter, _appStateMachine,
                 bot ? bot.OpponentName : string.Empty,
                 () => _uiService.Close<LoseView>());

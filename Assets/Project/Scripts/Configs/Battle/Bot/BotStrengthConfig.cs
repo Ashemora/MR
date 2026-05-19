@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace Project.Scripts.Configs.Battle.Bot
 {
-    [CreateAssetMenu(fileName = "BotConfig", menuName = "Configs/Bot Config")]
-    public class BotConfig : ScriptableObject
+    [CreateAssetMenu(fileName = "BotStrengthConfig", menuName = "Configs/Bot Strength Config")]
+    public class BotStrengthConfig : ScriptableObject
     {
         [Header("Debug")]
         [Tooltip("Снимите флажок для отключения бота во время записи аналитики; не влияет на регистрацию")]
@@ -18,7 +18,6 @@ namespace Project.Scripts.Configs.Battle.Bot
         [Tooltip("Секунды между проверками готовности вражеских героев к активации")]
         [SerializeField] private float _heroActivationCheckInterval = 0.8f;
 
-        [Header("Hero Activation")]
         [Tooltip("Минимальное количество секунд, которое бот ждёт после зарядки героя перед активацией (симулирует реакцию человека)")]
         [SerializeField] private float _minHeroActivationDelay = 1.0f;
 
@@ -54,7 +53,24 @@ namespace Project.Scripts.Configs.Battle.Bot
         [Tooltip("Максимальное количество секунд ожидания бота перед активацией аватара после готовности")]
         [SerializeField] private float _maxAvatarActivationDelay = 2.0f;
 
-        
+        [Header("Decision Quality")]
+        [Tooltip("Сколько лучших вариантов рассматривает бот при выборе действия. Чем больше значение, тем менее стабилен выбор.")]
+        [SerializeField] private int _decisionTopCandidateCount = 3;
+
+        [Tooltip("Случайный шум, добавляемый к оценке вариантов Utility AI.")]
+        [SerializeField] private float _decisionRandomNoise = 0.1f;
+
+        [Tooltip("Шанс намеренно выбрать не лучший допустимый вариант, имитируя человеческую ошибку.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float _decisionMistakeChance = 0.05f;
+
+        [Tooltip("Температура weighted-random выбора: выше - больше разброс, ниже - ближе к лучшему варианту.")]
+        [SerializeField] private float _decisionTemperature = 1f;
+
+        [Tooltip("Минимальная utility-оценка для активации способности после внедрения общего decision pipeline.")]
+        [SerializeField] private float _decisionMinScoreToAct = 0.1f;
+
+
         public bool Enabled => _enabled;
         public string OpponentName => _opponentName;
         public float MinHeroActivationDelay => _minHeroActivationDelay;
@@ -67,11 +83,19 @@ namespace Project.Scripts.Configs.Battle.Bot
         public float GreatCascadeChance => _greatCascadeChance;
         public float GoodCascadeMultiplier => _goodCascadeMultiplier;
         public float GreatCascadeMultiplier => _greatCascadeMultiplier;
+        public float MinAvatarActivationDelay => _minAvatarActivationDelay;
+        public float MaxAvatarActivationDelay => _maxAvatarActivationDelay;
+        public int DecisionTopCandidateCount => _decisionTopCandidateCount;
+        public float DecisionRandomNoise => _decisionRandomNoise;
+        public float DecisionMistakeChance => _decisionMistakeChance;
+        public float DecisionTemperature => _decisionTemperature;
+        public float DecisionMinScoreToAct => _decisionMinScoreToAct;
 
-        
-        public BotSettings ToSettings()
+
+        public BotDecisionQualitySettings ToDecisionQualitySettings()
         {
-            return new BotSettings(_minAvatarActivationDelay, _maxAvatarActivationDelay);
+            return new BotDecisionQualitySettings(_decisionTopCandidateCount, _decisionRandomNoise,
+                _decisionMistakeChance, _decisionTemperature, _decisionMinScoreToAct);
         }
     }
 }

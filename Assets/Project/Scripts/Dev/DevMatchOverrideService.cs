@@ -1,6 +1,7 @@
 #if DEV
 using System;
 using Project.Scripts.Configs;
+using Project.Scripts.Configs.Battle.Bot;
 using Project.Scripts.Configs.Battle.Units;
 using UnityEngine;
 
@@ -16,7 +17,10 @@ namespace Project.Scripts.Dev
         private const string PrefsKeyOpponentDeckIndex = "Dev.Match.Opponent.DeckIndex";
         private const string PrefsKeyOpponentSeedHas = "Dev.Match.Opponent.Seed.Has";
         private const string PrefsKeyOpponentSeedValue = "Dev.Match.Opponent.Seed.Value";
+        private const string PrefsKeyStrengthMode = "Dev.Match.Strength.Mode";
         private const string PrefsKeyStrengthIndex = "Dev.Match.StrengthIndex";
+        private const string PrefsKeyStrategyMode = "Dev.Match.Strategy.Mode";
+        private const string PrefsKeyStrategyIndex = "Dev.Match.Strategy.Index";
         private const string PrefsKeySkipFillsBotEnergy = "Dev.Match.SkipFillsBotEnergy";
 
 
@@ -26,8 +30,12 @@ namespace Project.Scripts.Dev
         public DevSideMode OpponentMode { get; private set; }
         public int OpponentDeckIndex { get; private set; }
         public int? OpponentSeedOverride { get; private set; }
+        public DevBotSelectionMode StrengthMode { get; private set; }
         public int StrengthIndex { get; private set; }
         public int StrengthCount => _catalog?.BotStrengths?.Length ?? 0;
+        public DevBotSelectionMode StrategyMode { get; private set; }
+        public int StrategyIndex { get; private set; }
+        public int StrategyCount => _catalog?.BotStrategies?.Length ?? 0;
         public int DeckCount => _catalog?.Decks?.Length ?? 0;
         public bool SkipFillsBotEnergy { get; private set; }
 
@@ -50,7 +58,12 @@ namespace Project.Scripts.Dev
             OpponentSeedOverride = PlayerPrefs.GetInt(PrefsKeyOpponentSeedHas, 0) != 0
                 ? PlayerPrefs.GetInt(PrefsKeyOpponentSeedValue, 0)
                 : null;
+            StrengthMode = ClampSelectionMode(PlayerPrefs.GetInt(PrefsKeyStrengthMode,
+                (int)DevBotSelectionMode.Pick));
             StrengthIndex = ClampStrengthIndex(PlayerPrefs.GetInt(PrefsKeyStrengthIndex, 0));
+            StrategyMode = ClampSelectionMode(PlayerPrefs.GetInt(PrefsKeyStrategyMode,
+                (int)DevBotSelectionMode.Pick));
+            StrategyIndex = ClampStrategyIndex(PlayerPrefs.GetInt(PrefsKeyStrategyIndex, 0));
             SkipFillsBotEnergy = PlayerPrefs.GetInt(PrefsKeySkipFillsBotEnergy, 0) != 0;
         }
 
@@ -64,6 +77,17 @@ namespace Project.Scripts.Dev
                 return string.Empty;
 
             return _catalog.BotStrengths[index].DisplayName;
+        }
+
+        public string GetStrategyDisplayName(int index)
+        {
+            if (!_catalog || _catalog.BotStrategies == null)
+                return string.Empty;
+
+            if (index < 0 || index >= _catalog.BotStrategies.Length)
+                return string.Empty;
+
+            return _catalog.BotStrategies[index].DisplayName;
         }
 
         public string GetDeckDisplayName(int index)
@@ -111,9 +135,24 @@ namespace Project.Scripts.Dev
             OpponentSeedOverride = seed;
         }
 
+        public void SetStrengthMode(DevBotSelectionMode mode)
+        {
+            StrengthMode = ClampSelectionMode((int)mode);
+        }
+
         public void SetStrengthIndex(int index)
         {
             StrengthIndex = ClampStrengthIndex(index);
+        }
+
+        public void SetStrategyMode(DevBotSelectionMode mode)
+        {
+            StrategyMode = ClampSelectionMode((int)mode);
+        }
+
+        public void SetStrategyIndex(int index)
+        {
+            StrategyIndex = ClampStrategyIndex(index);
         }
 
         public void SetSkipFillsBotEnergy(bool value)
@@ -131,14 +170,18 @@ namespace Project.Scripts.Dev
             PlayerPrefs.SetInt(PrefsKeyOpponentDeckIndex, OpponentDeckIndex);
             PlayerPrefs.SetInt(PrefsKeyOpponentSeedHas, OpponentSeedOverride.HasValue ? 1 : 0);
             PlayerPrefs.SetInt(PrefsKeyOpponentSeedValue, OpponentSeedOverride.GetValueOrDefault());
+            PlayerPrefs.SetInt(PrefsKeyStrengthMode, (int)StrengthMode);
             PlayerPrefs.SetInt(PrefsKeyStrengthIndex, StrengthIndex);
+            PlayerPrefs.SetInt(PrefsKeyStrategyMode, (int)StrategyMode);
+            PlayerPrefs.SetInt(PrefsKeyStrategyIndex, StrategyIndex);
             PlayerPrefs.SetInt(PrefsKeySkipFillsBotEnergy, SkipFillsBotEnergy ? 1 : 0);
             PlayerPrefs.Save();
             if (_debugConfig.LogDevOpponentOptions)
             {
                 Debug.Log($"[DevMatch] Saved player={PlayerMode}/deck={GetDeckDisplayName(PlayerDeckIndex)}/" +
                           $"seed={SeedLabel(PlayerSeedOverride)} opponent={OpponentMode}/deck={GetDeckDisplayName(OpponentDeckIndex)}/" +
-                          $"seed={SeedLabel(OpponentSeedOverride)} strength={GetStrengthDisplayName(StrengthIndex)}");
+                          $"seed={SeedLabel(OpponentSeedOverride)} strength={StrengthMode}/{GetStrengthDisplayName(StrengthIndex)} " +
+                          $"strategy={StrategyMode}/{GetStrategyDisplayName(StrategyIndex)}");
             }
         }
 
@@ -187,15 +230,84 @@ namespace Project.Scripts.Dev
             return deck;
         }
 
+        public bool TryGetPickedStrength(int index, out BotStrengthConfig strength)
+        {
+            strength = null;
+            if (!_catalog || _catalog.BotStrengths == null || _catalog.BotStrengths.Length == 0)
+                return false;
+
+            if (index < 0 || index >= _catalog.BotStrengths.Length)
+                return false;
+
+            strength = _catalog.BotStrengths[index].Config;
+
+            return strength;
+        }
+
+        public bool TryPickRandomStrength(int seed, out BotStrengthConfig strength)
+        {
+            strength = null;
+            if (!_catalog || _catalog.BotStrengths == null || _catalog.BotStrengths.Length == 0)
+                return false;
+
+            var random = new System.Random(seed);
+            strength = _catalog.BotStrengths[random.Next(_catalog.BotStrengths.Length)].Config;
+
+            return strength;
+        }
+
+        public bool TryGetPickedStrategy(int index, out BotStrategyConfig strategy)
+        {
+            strategy = null;
+            if (!_catalog || _catalog.BotStrategies == null || _catalog.BotStrategies.Length == 0)
+                return false;
+
+            if (index < 0 || index >= _catalog.BotStrategies.Length)
+                return false;
+
+            strategy = _catalog.BotStrategies[index].Config;
+
+            return strategy;
+        }
+
+        public bool TryPickRandomStrategy(int seed, out BotStrategyConfig strategy)
+        {
+            strategy = null;
+            if (!_catalog || _catalog.BotStrategies == null || _catalog.BotStrategies.Length == 0)
+                return false;
+
+            var random = new System.Random(seed);
+            strategy = _catalog.BotStrategies[random.Next(_catalog.BotStrategies.Length)].Config;
+
+            return strategy;
+        }
+
 
         private static DevSideMode ClampMode(int raw)
         {
             return Enum.IsDefined(typeof(DevSideMode), raw) ? (DevSideMode)raw : DevSideMode.PickDeck;
         }
 
+        private static DevBotSelectionMode ClampSelectionMode(int raw)
+        {
+            return Enum.IsDefined(typeof(DevBotSelectionMode), raw)
+                ? (DevBotSelectionMode)raw
+                : DevBotSelectionMode.Pick;
+        }
+
         private int ClampStrengthIndex(int index)
         {
             var count = StrengthCount;
+            
+            return count > 0
+                ? Mathf.Clamp(index, 0, count - 1)
+                : 0;
+        }
+
+        private int ClampStrategyIndex(int index)
+        {
+            var count = StrategyCount;
+            
             return count > 0
                 ? Mathf.Clamp(index, 0, count - 1)
                 : 0;
@@ -204,6 +316,7 @@ namespace Project.Scripts.Dev
         private int ClampDeckIndex(int index)
         {
             var count = DeckCount;
+            
             return count > 0
                 ? Mathf.Clamp(index, 0, count - 1)
                 : 0;

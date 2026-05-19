@@ -38,6 +38,16 @@ MonoBehaviour:
   - _displayName: Medium
     _config: {fileID: 11400000, guid: e08640440e2033e4489542e45deb29d0, type: 2}
   _fillBotStrengthsFromFolderButton: 0
+  _botStrategies:
+  - _displayName: Balanced
+    _config: {fileID: 11400000, guid: 6ee62e5da9964f8799723bc9b45d0e40, type: 2}
+  - _displayName: Aggressive
+    _config: {fileID: 11400000, guid: c796b19bba2c4d3f9f520e441c5a8a12, type: 2}
+  - _displayName: Defensive
+    _config: {fileID: 11400000, guid: 49d98d3b68c54a27af23ff3ed0d0d444, type: 2}
+  - _displayName: Finisher
+    _config: {fileID: 11400000, guid: b8432f0efb324c5d9f41ad79233c1a90, type: 2}
+  _fillBotStrategiesFromFolderButton: 0
   _decks:
   - {fileID: 11400000, guid: 036f51637aca4c9d92f73e543b236c81, type: 2}
   - {fileID: 11400000, guid: 0f9ecba23faa47cfb7a91fe352c3feea, type: 2}

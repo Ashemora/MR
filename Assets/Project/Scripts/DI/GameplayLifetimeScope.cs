@@ -48,7 +48,8 @@ namespace Project.Scripts.DI
             var session = Parent.Container.Resolve<IBattleSessionProvider>().Current;
 
             BattleSetup battleSetup;
-            BotConfig effectiveBotConfig;
+            BotStrengthConfig effectiveBotStrengthConfig;
+            BotStrategyConfig effectiveBotStrategyConfig;
             MatchVisualsProvider matchVisuals;
 #if DEV
             var devOverride = Parent.Container.Resolve<IDevMatchOverrideService>();
@@ -67,16 +68,14 @@ namespace Project.Scripts.DI
                 opponentAvatar, opponentHeroes, slotLayoutConfig);
             matchVisuals = new MatchVisualsProvider(playerAvatar, playerHeroes, opponentAvatar, opponentHeroes);
 
-            effectiveBotConfig = devCatalog && devCatalog.BotStrengths != null
-                                 && devOverride.StrengthIndex >= 0
-                                 && devOverride.StrengthIndex < devCatalog.BotStrengths.Length
-                ? devCatalog.BotStrengths[devOverride.StrengthIndex].Config
-                : null;
+            effectiveBotStrengthConfig = ResolveBotStrength(devOverride, opponentSeed);
+            effectiveBotStrategyConfig = ResolveBotStrategy(devOverride, opponentSeed);
 
             if (debugConfig.LogDevOpponentOptions)
                 UnityEngine.Debug.Log($"[DevMatch] Battle built player({devOverride.PlayerMode}) " +
                                       $"opponent({devOverride.OpponentMode}) seed=({playerSeed},{opponentSeed}) " +
-                                      $"strength={devOverride.GetStrengthDisplayName(devOverride.StrengthIndex)}");
+                                      $"strength={devOverride.StrengthMode}/{GetConfigName(effectiveBotStrengthConfig)} " +
+                                      $"strategy={devOverride.StrategyMode}/{GetConfigName(effectiveBotStrategyConfig)}");
 #else
             throw new System.NotSupportedException(
                 "Non-DEV match assembly is not implemented yet - the server-driven path will fill this in.");
@@ -84,7 +83,8 @@ namespace Project.Scripts.DI
 
             builder.RegisterInstance(battleSetup);
             builder.RegisterInstance(matchVisuals);
-            builder.RegisterInstance(new EffectiveBotConfigProvider(effectiveBotConfig));
+            builder.RegisterInstance(new EffectiveBotConfigProvider(effectiveBotStrengthConfig,
+                effectiveBotStrategyConfig));
 
             builder.RegisterComponentInHierarchy<GameplayEntryPoint>();
             builder.Register<BoardSystemsFactory>(Lifetime.Singleton);
@@ -133,6 +133,7 @@ namespace Project.Scripts.DI
             builder.Register<IAbilityEffectApplicationService, AbilityEffectApplicationService>(Lifetime.Singleton);
             builder.Register<IUnitAbilityActivationService, UnitAbilityActivationService>(Lifetime.Singleton);
             builder.Register<IAbilityExecutionService, AbilityExecutionService>(Lifetime.Singleton);
+            builder.Register<IBotActionCandidateBuilder, BotActionCandidateBuilder>(Lifetime.Singleton);
 
             builder.Register<MoveBarViewModel>(Lifetime.Singleton);
             builder.Register<BattleFieldViewModel>(Lifetime.Singleton);
@@ -178,9 +179,9 @@ namespace Project.Scripts.DI
                 builder.RegisterEntryPoint<BattleEscalationAnnouncementService>();
             }
 
-            if (effectiveBotConfig)
+            if (effectiveBotStrengthConfig)
             {
-                builder.RegisterInstance(effectiveBotConfig);
+                builder.RegisterInstance(effectiveBotStrengthConfig);
                 builder.RegisterEntryPoint<BotOpponentService>().As<IBotOpponentService>();
             }
         }
@@ -203,6 +204,40 @@ namespace Project.Scripts.DI
 
             heroes = fallbackDeck ? fallbackDeck.Heroes : null;
             return fallbackDeck ? fallbackDeck.AvatarConfig : null;
+        }
+
+        private static BotStrengthConfig ResolveBotStrength(IDevMatchOverrideService devOverride, int opponentSeed)
+        {
+            if (devOverride.StrengthMode == DevBotSelectionMode.Random)
+                return devOverride.TryPickRandomStrength(DeriveSeed(opponentSeed, 0x51A7), out var randomStrength)
+                    ? randomStrength
+                    : null;
+
+            return devOverride.TryGetPickedStrength(devOverride.StrengthIndex, out var pickedStrength)
+                ? pickedStrength
+                : null;
+        }
+
+        private static BotStrategyConfig ResolveBotStrategy(IDevMatchOverrideService devOverride, int opponentSeed)
+        {
+            if (devOverride.StrategyMode == DevBotSelectionMode.Random)
+                return devOverride.TryPickRandomStrategy(DeriveSeed(opponentSeed, 0x7A39), out var randomStrategy)
+                    ? randomStrategy
+                    : null;
+
+            return devOverride.TryGetPickedStrategy(devOverride.StrategyIndex, out var pickedStrategy)
+                ? pickedStrategy
+                : null;
+        }
+
+        private static int DeriveSeed(int seed, int salt)
+        {
+            return unchecked(seed ^ salt);
+        }
+
+        private static string GetConfigName(UnityEngine.Object config)
+        {
+            return config ? config.name : "none";
         }
 #endif
     }

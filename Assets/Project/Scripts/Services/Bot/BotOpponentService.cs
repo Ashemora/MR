@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Project.Scripts.Configs.Battle.Layout;
 using Project.Scripts.Configs.Battle.Bot;
+using Project.Scripts.Gameplay.Battle;
 using Project.Scripts.Services.BattleFlow;
 using Project.Scripts.Services.Combat.Abilities;
 using Project.Scripts.Services.Combat.Units;
@@ -16,7 +16,6 @@ using Project.Scripts.Shared.Bot;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
-using Project.Scripts.Shared.Heroes;
 using Project.Scripts.Shared.Units;
 
 namespace Project.Scripts.Services.Bot
@@ -24,19 +23,19 @@ namespace Project.Scripts.Services.Bot
     public class BotOpponentService : IBotOpponentService, IStartable, IDisposable
     {
         private readonly EventBus _eventBus;
-        private readonly IHeroService _heroService;
         private readonly IGameStateService _gameStateService;
         private readonly IBattleFlowService _battleFlowService;
         private readonly IBattleSideEnergyService _battleSideEnergyService;
         private readonly IUnitAbilityActivationService _unitAbilityActivationService;
         private readonly IAbilityExecutionService _abilityExecutionService;
-        private readonly IAvatarService _avatarService;
-        private readonly IAvatarGroupDefenseService _groupDefense;
+        private readonly IBotActionCandidateBuilder _candidateBuilder;
         private readonly IBattleEconomyModifierService _battleEconomyModifier;
-        private readonly BotConfig _botConfig;
-        private readonly SlotLayoutConfig _slotLayoutConfig;
+        private readonly BotStrengthConfig _botStrengthConfig;
+        private readonly EffectiveBotConfigProvider _effectiveBotConfigProvider;
 
-        private BotDecisionEngine _engine;
+        private System.Random _delayRandom;
+        private BotUtilityDecisionEngine _utilityEngine;
+        private BotUtilityProfile _utilityProfile;
         private CancellationTokenSource _cts;
         private IDisposable _stateSub;
         private IDisposable _phaseSub;
@@ -46,39 +45,39 @@ namespace Project.Scripts.Services.Bot
 
         public BotOpponentService(
             EventBus eventBus,
-            IHeroService heroService,
             IGameStateService gameStateService,
             IBattleFlowService battleFlowService,
             IBattleSideEnergyService battleSideEnergyService,
             IUnitAbilityActivationService unitAbilityActivationService,
             IAbilityExecutionService abilityExecutionService,
-            IAvatarService avatarService,
-            IAvatarGroupDefenseService groupDefense,
+            IBotActionCandidateBuilder candidateBuilder,
             IBattleEconomyModifierService battleEconomyModifier,
-            BotConfig botConfig,
-            SlotLayoutConfig slotLayoutConfig)
+            BotStrengthConfig botStrengthConfig,
+            EffectiveBotConfigProvider effectiveBotConfigProvider)
         {
             _eventBus = eventBus;
-            _heroService = heroService;
             _gameStateService = gameStateService;
             _battleFlowService = battleFlowService;
             _battleSideEnergyService = battleSideEnergyService;
             _unitAbilityActivationService = unitAbilityActivationService;
             _abilityExecutionService = abilityExecutionService;
-            _avatarService = avatarService;
-            _groupDefense = groupDefense;
+            _candidateBuilder = candidateBuilder;
             _battleEconomyModifier = battleEconomyModifier;
-            _botConfig = botConfig;
-            _slotLayoutConfig = slotLayoutConfig;
+            _botStrengthConfig = botStrengthConfig;
+            _effectiveBotConfigProvider = effectiveBotConfigProvider;
         }
 
 
         public void Start()
         {
-            if (false == _botConfig.Enabled)
+            if (false == _botStrengthConfig.Enabled)
                 return;
 
-            _engine = new BotDecisionEngine(_botConfig.ToSettings(), UnityEngine.Random.Range(0, int.MaxValue));
+            var seed = UnityEngine.Random.Range(0, int.MaxValue);
+            _delayRandom = new System.Random(seed);
+            _utilityEngine = new BotUtilityDecisionEngine(seed ^ 0x2D31);
+            var strategyConfig = _effectiveBotConfigProvider.BotStrategyConfig;
+            _utilityProfile = strategyConfig ? strategyConfig.ToProfile() : CreateFallbackProfile();
 
             _stateSub = _gameStateService.State
                 .Where(s => s != GameState.Playing)
@@ -109,7 +108,8 @@ namespace Project.Scripts.Services.Bot
         {
             while (false == ct.IsCancellationRequested)
             {
-                var interval = _botConfig.MatchEnergyTickInterval / _battleEconomyModifier.AutoEnergyIntervalMultiplier;
+                var interval = _botStrengthConfig.MatchEnergyTickInterval /
+                               _battleEconomyModifier.AutoEnergyIntervalMultiplier;
                 var cancelled = await UniTask
                     .Delay(TimeSpan.FromSeconds(interval), cancellationToken: ct)
                     .SuppressCancellationThrow();
@@ -136,25 +136,27 @@ namespace Project.Scripts.Services.Bot
         private float RollCascadeMultiplier()
         {
             var roll = UnityEngine.Random.value;
-            if (roll < _botConfig.GreatCascadeChance)
-                return _botConfig.GreatCascadeMultiplier;
-            if (roll < _botConfig.GoodCascadeChance)
-                return _botConfig.GoodCascadeMultiplier;
+            if (roll < _botStrengthConfig.GreatCascadeChance)
+                return _botStrengthConfig.GreatCascadeMultiplier;
+            if (roll < _botStrengthConfig.GoodCascadeChance)
+                return _botStrengthConfig.GoodCascadeMultiplier;
             
             return 1f;
         }
 
         private int GenerateSimulatedMatchEnergy()
         {
-            var variation = 1f + UnityEngine.Random.Range(-_botConfig.CascadeVariation, _botConfig.CascadeVariation);
-            var baseEnergy = _botConfig.BaseMatchEnergyPerTick * variation * RollCascadeMultiplier();
+            var variation = 1f + UnityEngine.Random.Range(-_botStrengthConfig.CascadeVariation,
+                _botStrengthConfig.CascadeVariation);
+            var baseEnergy = _botStrengthConfig.BaseMatchEnergyPerTick * variation * RollCascadeMultiplier();
             
             return Mathf.Max(1, Mathf.RoundToInt(baseEnergy));
         }
 
         private async UniTaskVoid ScheduleDischarge(CancellationToken ct)
         {
-            var delay = _engine.GenerateAvatarActivationDelay();
+            var delay = GenerateDelay(_botStrengthConfig.MinAvatarActivationDelay,
+                _botStrengthConfig.MaxAvatarActivationDelay);
 
             var cancelled = await UniTask
                 .Delay(TimeSpan.FromSeconds(delay), cancellationToken: ct)
@@ -168,73 +170,11 @@ namespace Project.Scripts.Services.Bot
             if (_battleFlowService.Snapshot.Phase != BattlePhaseKind.Hero)
                 return;
 
-            if (false == TryPreviewEnemyAvatar(out var preview))
+            if (false == TryPreviewEnemyAvatar(out _))
                 return;
 
-            if (preview.ActionType == UnitActionType.DealDamage)
-            {
-                if (false == _groupDefense.IsExposed(BattleSide.Player))
-                {
-                    var playerSlots = _heroService.GetSlots(BattleSide.Player);
-                    var targetIdx = _engine.PickGroupBreakTarget(
-                        playerSlots,
-                        _slotLayoutConfig.Group1SlotIndices,
-                        _slotLayoutConfig.Group2SlotIndices);
-
-                    if (targetIdx < 0)
-                        return;
-
-                    ExecuteEnemyAvatarAbility(UnitDescriptor.Hero(BattleSide.Player, targetIdx));
-                }
-                else
-                {
-                    ExecuteEnemyAvatarAbility(UnitDescriptor.Avatar(BattleSide.Player));
-                }
-            }
-            else if (preview.ActionType == UnitActionType.ResurrectAlly)
-                DischargeAvatarResurrect();
-            else
-                DischargeAvatarHeal(preview);
-        }
-
-        private void DischargeAvatarResurrect()
-        {
-            var enemySlots = _heroService.GetSlots(BattleSide.Enemy);
-            var targetIdx = PickDeadHero(enemySlots);
-            if (targetIdx < 0)
-                return;
-
-            ExecuteEnemyAvatarAbility(UnitDescriptor.Hero(BattleSide.Enemy, targetIdx));
-        }
-
-        private void DischargeAvatarHeal(UnitAbilityActivationState preview)
-        {
-            if (false == _groupDefense.IsExposed(BattleSide.Enemy))
-            {
-                var enemySlots = _heroService.GetSlots(BattleSide.Enemy);
-                var targetIdx = _engine.PickWeakestGroupHero(
-                    enemySlots,
-                    _slotLayoutConfig.Group1SlotIndices,
-                    _slotLayoutConfig.Group2SlotIndices);
-
-                if (targetIdx < 0)
-                    return;
-
-                ExecuteEnemyAvatarAbility(UnitDescriptor.Hero(BattleSide.Enemy, targetIdx));
-            }
-            else if (false == _avatarService.IsHpFull(BattleSide.Enemy))
-            {
-                ExecuteEnemyAvatarAbility(UnitDescriptor.Avatar(BattleSide.Enemy));
-            }
-            else
-            {
-                var enemySlots = _heroService.GetSlots(BattleSide.Enemy);
-                var targetIdx = _engine.PickMostWoundedHero(enemySlots);
-                if (targetIdx < 0)
-                    return;
-
-                ExecuteEnemyAvatarAbility(UnitDescriptor.Hero(BattleSide.Enemy, targetIdx));
-            }
+            if (TryChooseAction(UnitDescriptor.Avatar(BattleSide.Enemy), out var decision))
+                _abilityExecutionService.Execute(decision.Source, decision.Target);
         }
 
         private bool TryPreviewEnemyAvatar(out UnitAbilityActivationState preview)
@@ -243,16 +183,12 @@ namespace Project.Scripts.Services.Bot
                 UnitDescriptor.Avatar(BattleSide.Enemy), out preview);
         }
 
-        private void ExecuteEnemyAvatarAbility(UnitDescriptor target)
-        {
-            _abilityExecutionService.Execute(UnitDescriptor.Avatar(BattleSide.Enemy), target);
-        }
-
         private async UniTaskVoid RunHeroEnergyLoop(CancellationToken ct)
         {
             while (false == ct.IsCancellationRequested)
             {
-                var interval = _botConfig.HeroActivationCheckInterval / _battleEconomyModifier.AutoEnergyIntervalMultiplier;
+                var interval = _botStrengthConfig.HeroActivationCheckInterval /
+                               _battleEconomyModifier.AutoEnergyIntervalMultiplier;
                 var cancelled = await UniTask
                     .Delay(TimeSpan.FromSeconds(interval), cancellationToken: ct)
                     .SuppressCancellationThrow();
@@ -263,8 +199,7 @@ namespace Project.Scripts.Services.Bot
                 if (_battleFlowService.Snapshot.Phase != BattlePhaseKind.Hero)
                     continue;
 
-                var currentEnemySlots = _heroService.GetSlots(BattleSide.Enemy);
-                var pickedIndex = PickReadyHeroActivationIndex(currentEnemySlots);
+                var pickedIndex = PickReadyHeroActivationIndex();
 
                 if (pickedIndex < 0)
                     continue;
@@ -274,60 +209,28 @@ namespace Project.Scripts.Services.Bot
             }
         }
 
-        private int PickReadyHeroActivationIndex(IReadOnlyList<HeroSlotState> slots)
+        private int PickReadyHeroActivationIndex()
         {
-            var candidates = new List<int>(slots.Count);
-            for (var i = 0; i < slots.Count; i++)
+            var candidates = new List<BotActionCandidate>();
+            for (var i = 0; i < _heroActivationPending.Length; i++)
             {
                 if (_heroActivationPending[i])
                     continue;
 
                 var source = UnitDescriptor.Hero(BattleSide.Enemy, i);
-                if (false == _unitAbilityActivationService.TryPreview(source, out _))
-                    continue;
-
-                if (false == HasViableHeroActivationTarget(i, slots))
-                    continue;
-
-                candidates.Add(i);
+                AddCandidatesForSource(source, candidates);
             }
 
-            return _engine.PickRandomIndex(candidates);
-        }
-
-        private bool HasViableHeroActivationTarget(int slotIndex, IReadOnlyList<HeroSlotState> slots)
-        {
-            var actionType = slots[slotIndex].ActionType;
-            if (actionType == UnitActionType.HealAlly)
-                return HasHeroHealTarget(slotIndex, slots);
-
-            if (actionType == UnitActionType.ResurrectAlly)
-                return PickDeadHero(slots, slotIndex) >= 0;
-
-            return true;
-        }
-
-        private bool HasHeroHealTarget(int slotIndex, IReadOnlyList<HeroSlotState> slots)
-        {
-            if (false == _groupDefense.IsExposed(BattleSide.Enemy))
-            {
-                var targetIndex = _engine.PickWeakestGroupHero(
-                    slots,
-                    _slotLayoutConfig.Group1SlotIndices,
-                    _slotLayoutConfig.Group2SlotIndices);
-                return targetIndex >= 0 && targetIndex != slotIndex;
-            }
-
-            var mostWoundedIndex = _engine.PickMostWoundedHero(slots);
-            return false == _avatarService.IsHpFull(BattleSide.Enemy)
-                   || (mostWoundedIndex >= 0 && mostWoundedIndex != slotIndex);
+            return TryChooseAction(candidates, out var decision)
+                ? decision.Source.SlotIndex
+                : -1;
         }
 
         private async UniTaskVoid ActivateWithDelay(int slotIndex, CancellationToken ct)
         {
-            var delay = _engine.GenerateDelay(
-                _botConfig.MinHeroActivationDelay,
-                _botConfig.MaxHeroActivationDelay);
+            var delay = GenerateDelay(
+                _botStrengthConfig.MinHeroActivationDelay,
+                _botStrengthConfig.MaxHeroActivationDelay);
 
             var cancelled = await UniTask
                 .Delay(TimeSpan.FromSeconds(delay), cancellationToken: ct)
@@ -341,114 +244,38 @@ namespace Project.Scripts.Services.Bot
             if (_battleFlowService.Snapshot.Phase != BattlePhaseKind.Hero)
                 return;
 
-            var enemySlots = _heroService.GetSlots(BattleSide.Enemy);
-            var slot = enemySlots[slotIndex];
-
             var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
             if (false == _unitAbilityActivationService.TryPreview(source, out _))
                 return;
 
-            if (slot.ActionType == UnitActionType.DealDamage)
-                ActivateHeroDamage(slotIndex, enemySlots);
-            else if (slot.ActionType == UnitActionType.SupportAlly)
-                ActivateHeroSupport(slotIndex);
-            else if (slot.ActionType == UnitActionType.ResurrectAlly)
-                ActivateHeroResurrect(slotIndex, enemySlots);
-            else
-                ActivateHeroHeal(slotIndex, enemySlots);
+            if (TryChooseAction(source, out var decision))
+                _abilityExecutionService.Execute(decision.Source, decision.Target);
         }
 
-        private void ActivateHeroSupport(int slotIndex)
+        private bool TryChooseAction(UnitDescriptor source, out BotDecision decision)
         {
-            var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
-            _abilityExecutionService.Execute(source, source);
+            var candidates = new List<BotActionCandidate>();
+            AddCandidatesForSource(source, candidates);
+            
+            return TryChooseAction(candidates, out decision);
         }
 
-        private void ActivateHeroDamage(int slotIndex, IReadOnlyList<HeroSlotState> enemySlots)
+        private bool TryChooseAction(IReadOnlyList<BotActionCandidate> candidates, out BotDecision decision)
         {
-            if (false == _groupDefense.IsExposed(BattleSide.Player))
-            {
-                var playerSlots = _heroService.GetSlots(BattleSide.Player);
-                var targetIdx = _engine.PickGroupBreakTarget(
-                    playerSlots,
-                    _slotLayoutConfig.Group1SlotIndices,
-                    _slotLayoutConfig.Group2SlotIndices);
-
-                if (targetIdx < 0)
-                    return;
-
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
-                var target = UnitDescriptor.Hero(BattleSide.Player, targetIdx);
-                _abilityExecutionService.Execute(source, target);
-            }
-            else
-            {
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
-                var target = UnitDescriptor.Avatar(BattleSide.Player);
-                _abilityExecutionService.Execute(source, target);
-            }
+            var request = new BotDecisionRequest(candidates, _utilityProfile,
+                _botStrengthConfig.ToDecisionQualitySettings());
+            
+            return _utilityEngine.TryChoose(request, out decision);
         }
 
-        private void ActivateHeroHeal(int slotIndex, IReadOnlyList<HeroSlotState> enemySlots)
+        private void AddCandidatesForSource(UnitDescriptor source, List<BotActionCandidate> result)
         {
-            if (false == _groupDefense.IsExposed(BattleSide.Enemy))
-            {
-                var targetIdx = _engine.PickWeakestGroupHero(
-                    enemySlots,
-                    _slotLayoutConfig.Group1SlotIndices,
-                    _slotLayoutConfig.Group2SlotIndices);
-
-                if (targetIdx < 0 || targetIdx == slotIndex)
-                    return;
-
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
-                var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx);
-                _abilityExecutionService.Execute(source, target);
-            }
-            else if (false == _avatarService.IsHpFull(BattleSide.Enemy))
-            {
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
-                var target = UnitDescriptor.Avatar(BattleSide.Enemy);
-                _abilityExecutionService.Execute(source, target);
-            }
-            else
-            {
-                var targetIdx = _engine.PickMostWoundedHero(enemySlots);
-                if (targetIdx < 0 || targetIdx == slotIndex)
-                    return;
-
-                var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
-                var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx);
-                _abilityExecutionService.Execute(source, target);
-            }
+            _candidateBuilder.AddCandidatesForSource(source, result);
         }
 
-        private void ActivateHeroResurrect(int slotIndex, IReadOnlyList<HeroSlotState> enemySlots)
+        private float GenerateDelay(float min, float max)
         {
-            var targetIdx = PickDeadHero(enemySlots, slotIndex);
-            if (targetIdx < 0)
-                return;
-
-            var source = UnitDescriptor.Hero(BattleSide.Enemy, slotIndex);
-            var target = UnitDescriptor.Hero(BattleSide.Enemy, targetIdx);
-            _abilityExecutionService.Execute(source, target);
-        }
-
-        private static int PickDeadHero(IReadOnlyList<HeroSlotState> slots, int excludedIndex = -1)
-        {
-            if (null == slots)
-                return -1;
-
-            for (var i = 0; i < slots.Count; i++)
-            {
-                if (i == excludedIndex)
-                    continue;
-
-                if (slots[i].IsAssigned && false == slots[i].IsAlive)
-                    return i;
-            }
-
-            return -1;
+            return (float)(_delayRandom.NextDouble() * (max - min) + min);
         }
 
         private void StopLoops()
@@ -490,6 +317,11 @@ namespace Project.Scripts.Services.Bot
         {
             Array.Clear(_heroActivationPending, 0, _heroActivationPending.Length);
             _dischargeScheduled = false;
+        }
+
+        private static BotUtilityProfile CreateFallbackProfile()
+        {
+            return new BotUtilityProfile(1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 0.5f);
         }
     }
 }

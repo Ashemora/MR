@@ -4,12 +4,14 @@ namespace Project.Scripts.Gameplay.Battle
 {
     public sealed class EffectiveBotConfigProvider
     {
-        public EffectiveBotConfigProvider(BotConfig botConfig)
+        public EffectiveBotConfigProvider(BotStrengthConfig botStrengthConfig, BotStrategyConfig botStrategyConfig)
         {
-            BotConfig = botConfig;
+            BotStrengthConfig = botStrengthConfig;
+            BotStrategyConfig = botStrategyConfig;
         }
 
 
-        public BotConfig BotConfig { get; }
+        public BotStrengthConfig BotStrengthConfig { get; }
+        public BotStrategyConfig BotStrategyConfig { get; }
     }
 }

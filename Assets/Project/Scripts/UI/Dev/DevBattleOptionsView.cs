@@ -42,6 +42,10 @@ namespace Project.Scripts.UI.Dev
         [SerializeField] private Button _strengthButton;
         [SerializeField] private TMP_Text _strengthButtonText;
 
+        [Header("Bot strategy")]
+        [SerializeField] private Button _strategyButton;
+        [SerializeField] private TMP_Text _strategyButtonText;
+
         [Header("Skip phase")]
         [SerializeField] private IconToggleView _skipEnergyToggle;
 
@@ -65,9 +69,10 @@ namespace Project.Scripts.UI.Dev
         protected override UniTask OnBindViewModel()
         {
             DisableLegacyDropdowns();
-            BuildDeckLists();
+            BuildSelectionLists();
             BindModeButtons();
             BindStrengthButton();
+            BindStrategyButton();
             BindSeedInputs();
             BindSkipEnergyToggle();
 
@@ -90,8 +95,11 @@ namespace Project.Scripts.UI.Dev
                     UpdateModeLabel(_opponentModeButtonText, modeIndex);
                 })
                 .AddTo(Disposables);
-            ViewModel.StrengthIndex
+            ViewModel.StrengthSelectionIndex
                 .Subscribe(_ => UpdateStrengthLabel())
+                .AddTo(Disposables);
+            ViewModel.StrategySelectionIndex
+                .Subscribe(_ => UpdateStrategyLabel())
                 .AddTo(Disposables);
             ViewModel.PlayerDeckIndex
                 .Subscribe(index => RefreshDeckSelection(_playerDeckItems, index))
@@ -144,6 +152,8 @@ namespace Project.Scripts.UI.Dev
                 _opponentModeButton.onClick.RemoveListener(CycleOpponentMode);
             if (_strengthButton)
                 _strengthButton.onClick.RemoveListener(CycleStrength);
+            if (_strategyButton)
+                _strategyButton.onClick.RemoveListener(CycleStrategy);
             if (_playerSeedInput)
                 _playerSeedInput.onValueChanged.RemoveListener(ViewModel.SetPlayerSeedText);
             if (_opponentSeedInput)
@@ -174,9 +184,19 @@ namespace Project.Scripts.UI.Dev
             if (!_strengthButton)
                 return;
 
-            _strengthButton.interactable = ViewModel.StrengthCount > 0;
+            _strengthButton.interactable = ViewModel.StrengthSelectionCount > 0;
             _strengthButton.onClick.AddListener(CycleStrength);
             UpdateStrengthLabel();
+        }
+
+        private void BindStrategyButton()
+        {
+            if (!_strategyButton)
+                return;
+
+            _strategyButton.interactable = ViewModel.StrategySelectionCount > 0;
+            _strategyButton.onClick.AddListener(CycleStrategy);
+            UpdateStrategyLabel();
         }
 
         private void BindSeedInputs()
@@ -206,7 +226,7 @@ namespace Project.Scripts.UI.Dev
                 .AddTo(Disposables);
         }
 
-        private void BuildDeckLists()
+        private void BuildSelectionLists()
         {
             _playerDeckItems = SpawnDeckList(_playerDeckListContent, ViewModel.SetPlayerDeckIndex);
             _opponentDeckItems = SpawnDeckList(_opponentDeckListContent, ViewModel.SetOpponentDeckIndex);
@@ -260,10 +280,20 @@ namespace Project.Scripts.UI.Dev
 
         private void CycleStrength()
         {
-            if (ViewModel.StrengthCount <= 0)
+            if (ViewModel.StrengthSelectionCount <= 0)
                 return;
 
-            ViewModel.SetStrengthIndex((ViewModel.StrengthIndex.CurrentValue + 1) % ViewModel.StrengthCount);
+            ViewModel.SetStrengthSelectionIndex(
+                (ViewModel.StrengthSelectionIndex.CurrentValue + 1) % ViewModel.StrengthSelectionCount);
+        }
+
+        private void CycleStrategy()
+        {
+            if (ViewModel.StrategySelectionCount <= 0)
+                return;
+
+            ViewModel.SetStrategySelectionIndex(
+                (ViewModel.StrategySelectionIndex.CurrentValue + 1) % ViewModel.StrategySelectionCount);
         }
 
         private static void UpdateModeLabel(TMP_Text label, int modeIndex)
@@ -271,7 +301,7 @@ namespace Project.Scripts.UI.Dev
             if (!label)
                 return;
 
-            label.text = modeIndex == 0 ? "PickDeck" : "Random";
+            label.text = modeIndex == 0 ? "Select Deck" : "Random";
         }
 
         private void UpdateStrengthLabel()
@@ -279,8 +309,21 @@ namespace Project.Scripts.UI.Dev
             if (!_strengthButtonText)
                 return;
 
-            var index = ViewModel.StrengthIndex.CurrentValue;
-            _strengthButtonText.text = ViewModel.StrengthCount > 0 ? ViewModel.GetStrengthDisplayName(index) : "-";
+            var index = ViewModel.StrengthSelectionIndex.CurrentValue;
+            _strengthButtonText.text = ViewModel.StrengthSelectionCount > 0
+                ? ViewModel.GetStrengthSelectionDisplayName(index)
+                : "-";
+        }
+
+        private void UpdateStrategyLabel()
+        {
+            if (!_strategyButtonText)
+                return;
+
+            var index = ViewModel.StrategySelectionIndex.CurrentValue;
+            _strategyButtonText.text = ViewModel.StrategySelectionCount > 0
+                ? ViewModel.GetStrategySelectionDisplayName(index)
+                : "-";
         }
 
         private void DisableLegacyDropdowns()

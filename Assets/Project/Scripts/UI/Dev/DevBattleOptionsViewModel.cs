@@ -13,10 +13,14 @@ namespace Project.Scripts.UI.Dev
         public ReactiveProperty<int> OpponentModeIndex { get; } = new();
         public ReactiveProperty<int> OpponentDeckIndex { get; } = new();
         public ReactiveProperty<string> OpponentSeedText { get; } = new(string.Empty);
-        public ReactiveProperty<int> StrengthIndex { get; } = new();
+        public ReactiveProperty<int> StrengthSelectionIndex { get; } = new();
+        public ReactiveProperty<int> StrategySelectionIndex { get; } = new();
         public ReactiveProperty<bool> SkipFillsBotEnergy { get; } = new();
         public Observable<Unit> CloseRequested => _closeRequested;
         public int StrengthCount => _override.StrengthCount;
+        public int StrengthSelectionCount => GetSelectionCount(StrengthCount);
+        public int StrategyCount => _override.StrategyCount;
+        public int StrategySelectionCount => GetSelectionCount(StrategyCount);
         public int DeckCount => _override.DeckCount;
 
 
@@ -33,7 +37,10 @@ namespace Project.Scripts.UI.Dev
             OpponentModeIndex.Value = (int)_override.OpponentMode;
             OpponentDeckIndex.Value = _override.OpponentDeckIndex;
             OpponentSeedText.Value = SeedToText(_override.OpponentSeedOverride);
-            StrengthIndex.Value = _override.StrengthIndex;
+            StrengthSelectionIndex.Value = ToSelectionIndex(_override.StrengthMode, _override.StrengthIndex,
+                StrengthCount);
+            StrategySelectionIndex.Value = ToSelectionIndex(_override.StrategyMode, _override.StrategyIndex,
+                StrategyCount);
             SkipFillsBotEnergy.Value = _override.SkipFillsBotEnergy;
 
             PlayerModeIndex.AddTo(Disposables);
@@ -42,7 +49,8 @@ namespace Project.Scripts.UI.Dev
             OpponentModeIndex.AddTo(Disposables);
             OpponentDeckIndex.AddTo(Disposables);
             OpponentSeedText.AddTo(Disposables);
-            StrengthIndex.AddTo(Disposables);
+            StrengthSelectionIndex.AddTo(Disposables);
+            StrategySelectionIndex.AddTo(Disposables);
             SkipFillsBotEnergy.AddTo(Disposables);
         }
 
@@ -52,9 +60,24 @@ namespace Project.Scripts.UI.Dev
             return _override.GetStrengthDisplayName(index);
         }
 
+        public string GetStrengthSelectionDisplayName(int index)
+        {
+            return IsRandomSelection(index, StrengthCount) ? "Random" : _override.GetStrengthDisplayName(index);
+        }
+
         public string GetDeckDisplayName(int index)
         {
             return _override.GetDeckDisplayName(index);
+        }
+
+        public string GetStrategyDisplayName(int index)
+        {
+            return _override.GetStrategyDisplayName(index);
+        }
+
+        public string GetStrategySelectionDisplayName(int index)
+        {
+            return IsRandomSelection(index, StrategyCount) ? "Random" : _override.GetStrategyDisplayName(index);
         }
 
         public void SetPlayerModeIndex(int index)
@@ -87,11 +110,15 @@ namespace Project.Scripts.UI.Dev
             OpponentSeedText.Value = text ?? string.Empty;
         }
 
-        public void SetStrengthIndex(int index)
+        public void SetStrengthSelectionIndex(int index)
         {
-            StrengthIndex.Value = index;
+            StrengthSelectionIndex.Value = ClampSelectionIndex(index, StrengthCount);
         }
 
+        public void SetStrategySelectionIndex(int index)
+        {
+            StrategySelectionIndex.Value = ClampSelectionIndex(index, StrategyCount);
+        }
         public void SetSkipFillsBotEnergy(bool value)
         {
             SkipFillsBotEnergy.Value = value;
@@ -112,7 +139,8 @@ namespace Project.Scripts.UI.Dev
             _override.SetOpponentSeedOverride(opponentMode == DevSideMode.Random
                 ? ParseSeed(OpponentSeedText.CurrentValue)
                 : null);
-            _override.SetStrengthIndex(StrengthIndex.CurrentValue);
+            ApplyStrengthSelection();
+            ApplyStrategySelection();
             _override.SetSkipFillsBotEnergy(SkipFillsBotEnergy.CurrentValue);
             _override.Save();
             _closeRequested.OnNext(Unit.Default);
@@ -136,6 +164,60 @@ namespace Project.Scripts.UI.Dev
         private static string SeedToText(int? seed)
         {
             return seed.HasValue ? seed.Value.ToString() : string.Empty;
+        }
+
+        private void ApplyStrengthSelection()
+        {
+            if (IsRandomSelection(StrengthSelectionIndex.CurrentValue, StrengthCount))
+            {
+                _override.SetStrengthMode(DevBotSelectionMode.Random);
+                return;
+            }
+
+            _override.SetStrengthMode(DevBotSelectionMode.Pick);
+            _override.SetStrengthIndex(StrengthSelectionIndex.CurrentValue);
+        }
+
+        private void ApplyStrategySelection()
+        {
+            if (IsRandomSelection(StrategySelectionIndex.CurrentValue, StrategyCount))
+            {
+                _override.SetStrategyMode(DevBotSelectionMode.Random);
+                return;
+            }
+
+            _override.SetStrategyMode(DevBotSelectionMode.Pick);
+            _override.SetStrategyIndex(StrategySelectionIndex.CurrentValue);
+        }
+
+        private static int ToSelectionIndex(DevBotSelectionMode mode, int pickedIndex, int count)
+        {
+            if (count <= 0)
+                return 0;
+
+            return mode == DevBotSelectionMode.Random ? count : ClampSelectionIndex(pickedIndex, count);
+        }
+
+        private static int ClampSelectionIndex(int index, int count)
+        {
+            var selectionCount = GetSelectionCount(count);
+            if (selectionCount <= 0)
+                return 0;
+
+            if (index < 0)
+                return 0;
+
+            return index >= selectionCount ? selectionCount - 1 : index;
+        }
+
+        private static int GetSelectionCount(int count)
+        {
+            return count > 0 ? count + 1 : 0;
+        }
+
+        private static bool IsRandomSelection(int index, int count)
+        {
+            return count > 0 && index == count;
         }
     }
 }
