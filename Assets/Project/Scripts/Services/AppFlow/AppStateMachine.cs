@@ -1,3 +1,4 @@
+using System;
 using Cysharp.Threading.Tasks;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Constants;
@@ -5,6 +6,7 @@ using Project.Scripts.Gameplay.UI.Loading;
 using Project.Scripts.Services.SceneLoading;
 using Project.Scripts.Services.UISystem;
 using Project.Scripts.Shared.Match;
+using R3;
 using UnityEngine;
 #if DEV
 using Project.Scripts.Dev;
@@ -12,15 +14,16 @@ using Project.Scripts.Dev;
 
 namespace Project.Scripts.Services.AppFlow
 {
-    public class AppStateMachine : IAppStateMachine
+    public class AppStateMachine : IAppStateMachine, IDisposable
     {
-        public AppState Current { get; private set; } = AppState.Boot;
+        public ReadOnlyReactiveProperty<AppState> State => _state;
 
 
         private readonly ISceneLoadingService _sceneLoadingService;
         private readonly IBattleSessionProvider _battleSessionProvider;
         private readonly UIService _uiService;
         private readonly UIConfig _uiConfig;
+        private readonly ReactiveProperty<AppState> _state = new(AppState.Boot);
 #if DEV
         private readonly IDevMatchOverrideService _devMatchOverride;
 #endif
@@ -42,9 +45,14 @@ namespace Project.Scripts.Services.AppFlow
 #endif
         }
 
+        public void Dispose()
+        {
+            _state.Dispose();
+        }
+
         public async UniTask EnterLobbyAsync(ILoadingPresenter loadingPresenter = null, int activationDelayMilliseconds = 0)
         {
-            Current = AppState.Lobby;
+            _state.Value = AppState.Lobby;
             _battleSessionProvider.Clear();
             _uiService.CloseAll();
 #if DEV
@@ -55,14 +63,14 @@ namespace Project.Scripts.Services.AppFlow
 
         public async UniTask StartBattleAsync()
         {
-            Current = AppState.LoadingGameplay;
+            _state.Value = AppState.LoadingGameplay;
             _uiService.CloseAll();
 #if DEV
             _uiService.CleanupDevGameplayButtons();
 #endif
 
-            var playerSeed = Random.Range(int.MinValue, int.MaxValue);
-            var opponentSeed = Random.Range(int.MinValue, int.MaxValue);
+            var playerSeed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            var opponentSeed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 #if DEV
             if (_devMatchOverride.PlayerSeedOverride.HasValue)
                 playerSeed = _devMatchOverride.PlayerSeedOverride.Value;
@@ -80,13 +88,13 @@ namespace Project.Scripts.Services.AppFlow
                 new GameplayLoadingViewModel());
 
             await _sceneLoadingService.LoadSceneAsync(SceneNames.GamePlay, loadingView);
-            Current = AppState.Gameplay;
+            _state.Value = AppState.Gameplay;
             _uiService.Close<GameplayLoadingView>();
         }
 
         public async UniTask ReturnToLobbyAsync()
         {
-            Current = AppState.Lobby;
+            _state.Value = AppState.Lobby;
             _battleSessionProvider.Clear();
             _uiService.CloseAll();
 #if DEV

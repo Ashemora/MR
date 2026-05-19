@@ -56,11 +56,6 @@ namespace Project.Scripts.Services.Audio
             }).AddTo(_disposables);
         }
 
-        public void StartMusic()
-        {
-            _audioService.PlayGroup(AudioTags.Group_MainMusic);
-        }
-
         public void Dispose()
         {
             _disposables.Dispose();

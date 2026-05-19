@@ -19,14 +19,14 @@ namespace Project.Scripts.Services.Audio.AudioSystem
         private readonly AudioManager _audioManager;
         private readonly Dictionary<string, AudioSource> _activeSources = new();
         private readonly Dictionary<string, CancellationTokenSource> _groupCancellationTokens = new();
+        private readonly Dictionary<string, CancellationTokenSource> _groupFadeOutTokens = new();
         private readonly Dictionary<string, CancellationTokenSource> _sfxCancellationTokens = new();
         private readonly Dictionary<string, bool> _groupPaused = new();
         private readonly Dictionary<string, string> _currentPlayingGroups = new();
         private readonly Dictionary<string, List<AudioSource>> _dynamicGroupSources = new();
         
         
-        public AudioService(AudioMusicConfig audioMusicConfig, 
-            AudioSFXConfig audioSFXConfig,
+        public AudioService(AudioMusicConfig audioMusicConfig, AudioSFXConfig audioSFXConfig,
             AudioManager audioManager)
         {
             _audioMusicConfig = audioMusicConfig;
@@ -43,6 +43,13 @@ namespace Project.Scripts.Services.Audio.AudioSystem
             }
             _groupCancellationTokens.Clear();
 
+            foreach (var cts in _groupFadeOutTokens.Values)
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+            _groupFadeOutTokens.Clear();
+
             foreach (var cts in _sfxCancellationTokens.Values)
             {
                 cts.Cancel();
@@ -58,6 +65,7 @@ namespace Project.Scripts.Services.Audio.AudioSystem
         
         public void PlayGroup(string groupTag, bool shuffle = false, float fade = 0f)
         {
+            CancelFadeOut(groupTag);
             StopGroup(groupTag);
             var group = FindGroupConfig(groupTag);
             if (null == group)
@@ -139,9 +147,23 @@ namespace Project.Scripts.Services.Audio.AudioSystem
                 
                 currentSource.clip = firstClip.Clip;
                 currentTargetVolume = firstClip.DefaultVolume;
-                currentSource.volume = currentTargetVolume;
+                currentSource.volume = 0f;
                 currentSource.Play();
                 SoundPlayStarted?.Invoke(groupTag, firstClip.Tag);
+                _activeSources[groupTag] = currentSource;
+                _currentPlayingGroups[groupTag] = firstClip.Tag;
+
+                var fadeInStart = Time.time;
+                while (Time.time - fadeInStart < fade)
+                {
+                    var t = (Time.time - fadeInStart) / fade;
+                    currentSource.volume = Mathf.Lerp(0f, currentTargetVolume, t);
+                    await UniTask.Yield(PlayerLoopTiming.Update);
+
+                    if (token.IsCancellationRequested)
+                        return;
+                }
+                currentSource.volume = currentTargetVolume;
                 
                 for (var i = 1; i < currentClips.Count; i++)
                 {
@@ -181,6 +203,7 @@ namespace Project.Scripts.Services.Audio.AudioSystem
                     currentSource.Stop();
                     (currentSource, nextSource) = (nextSource, currentSource);
                     currentTargetVolume = nextTargetVolume;
+                    _activeSources[groupTag] = currentSource;
                 }
                 
                 if (loop)
@@ -216,6 +239,7 @@ namespace Project.Scripts.Services.Audio.AudioSystem
                     currentSource.Stop();
                     (currentSource, nextSource) = (nextSource, currentSource);
                     currentTargetVolume = nextTargetVolume;
+                    _activeSources[groupTag] = currentSource;
                 }
             } while (loop && !token.IsCancellationRequested);
         }
@@ -284,7 +308,7 @@ namespace Project.Scripts.Services.Audio.AudioSystem
             }
         }
 
-        public void StopGroup(string groupTag)
+        public void StopGroup(string groupTag, float fade = 0f)
         {
             if (_groupCancellationTokens.TryGetValue(groupTag, out var cts))
             {
@@ -293,10 +317,84 @@ namespace Project.Scripts.Services.Audio.AudioSystem
                 _groupCancellationTokens.Remove(groupTag);
             }
 
+            if (fade <= 0f)
+            {
+                CancelFadeOut(groupTag);
+                FinalizeGroupStop(groupTag);
+                return;
+            }
+
+            CancelFadeOut(groupTag);
+            var fadeCts = new CancellationTokenSource();
+            _groupFadeOutTokens[groupTag] = fadeCts;
+            FadeOutAndFinalize(groupTag, fade, fadeCts.Token).Forget();
+        }
+
+        private async UniTaskVoid FadeOutAndFinalize(string groupTag, float fade, CancellationToken token)
+        {
+            var sources = new List<AudioSource>();
+            if (_activeSources.TryGetValue(groupTag, out var activeSource) && activeSource)
+                sources.Add(activeSource);
+            if (_dynamicGroupSources.TryGetValue(groupTag, out var dynamicSources))
+            {
+                for (var i = 0; i < dynamicSources.Count; i++)
+                {
+                    var s = dynamicSources[i];
+                    if (s && false == sources.Contains(s))
+                        sources.Add(s);
+                }
+            }
+
+            if (sources.Count == 0)
+            {
+                FinalizeGroupStop(groupTag);
+                _groupFadeOutTokens.Remove(groupTag);
+                return;
+            }
+
+            var startVolumes = new float[sources.Count];
+            for (var i = 0; i < sources.Count; i++)
+                startVolumes[i] = sources[i].volume;
+
+            var startTime = Time.time;
+            try
+            {
+                while (Time.time - startTime < fade)
+                {
+                    var t = (Time.time - startTime) / fade;
+                    for (var i = 0; i < sources.Count; i++)
+                    {
+                        if (sources[i])
+                            sources[i].volume = Mathf.Lerp(startVolumes[i], 0f, t);
+                    }
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            for (var i = 0; i < sources.Count; i++)
+            {
+                if (sources[i])
+                    sources[i].volume = 0f;
+            }
+
+            FinalizeGroupStop(groupTag);
+            if (_groupFadeOutTokens.TryGetValue(groupTag, out var stored) && stored != null)
+            {
+                stored.Dispose();
+                _groupFadeOutTokens.Remove(groupTag);
+            }
+        }
+
+        private void FinalizeGroupStop(string groupTag)
+        {
             if (_dynamicGroupSources.TryGetValue(groupTag, out var sources))
             {
-                foreach (var dynamicSource in sources)
-                    UnityEngine.Object.Destroy(dynamicSource);
+                for (var i = 0; i < sources.Count; i++)
+                    UnityEngine.Object.Destroy(sources[i]);
                 _dynamicGroupSources.Remove(groupTag);
             }
             if (_activeSources.TryGetValue(groupTag, out var source))
@@ -306,11 +404,21 @@ namespace Project.Scripts.Services.Audio.AudioSystem
                     source.Stop();
                     source.pitch = 1f;
                 }
-                
+
                 _activeSources.Remove(groupTag);
                 _currentPlayingGroups.Remove(groupTag);
                 SoundPlayStopped?.Invoke(groupTag, "");
             }
+        }
+
+        private void CancelFadeOut(string groupTag)
+        {
+            if (false == _groupFadeOutTokens.TryGetValue(groupTag, out var cts))
+                return;
+
+            cts.Cancel();
+            cts.Dispose();
+            _groupFadeOutTokens.Remove(groupTag);
         }
 
         public void Stop(string groupTag, string soundTag)

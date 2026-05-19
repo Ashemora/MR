@@ -168,7 +168,6 @@ namespace Project.Scripts.Gameplay
                 _buffService, _palette);
 
             var gameAudioController = new GameAudioController(_audioService, _eventBus, _gameStateService);
-            gameAudioController.StartMusic();
 
             var burndownStartedSubscription = _eventBus.Subscribe<BurndownStartedEvent>(_ =>
             {

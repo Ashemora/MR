@@ -1,4 +1,5 @@
 using Project.Scripts.Configs;
+using Project.Scripts.Services.Audio;
 using Project.Scripts.Services.Audio.AudioSystem;
 using Project.Scripts.Services.Audio.Settings;
 using Project.Scripts.Services.AppFlow;
@@ -57,6 +58,7 @@ namespace Project.Scripts.DI
             builder.Register<ISceneLoadingService, SceneLoadingService>(Lifetime.Singleton);
             builder.Register<IBattleSessionProvider, BattleSessionProvider>(Lifetime.Singleton);
             builder.Register<IAppStateMachine, AppStateMachine>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<MusicCoordinator>(Lifetime.Singleton).AsSelf();
 #if DEV
             builder.RegisterInstance(_mainConfig.DevUnitCatalogConfig);
             builder.Register<IDevMatchOverrideService, DevMatchOverrideService>(Lifetime.Singleton);
