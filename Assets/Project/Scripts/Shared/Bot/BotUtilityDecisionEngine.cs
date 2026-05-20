@@ -83,15 +83,17 @@ namespace Project.Scripts.Shared.Bot
             if (candidate.WouldBreakDefense)
                 score += profile.BreakDefenseWeight;
 
-            if (candidate.TargetMaxHP > 0 && candidate.TargetCurrentHP > 0)
+            var effectiveCurrent = candidate.TargetCurrentHP + candidate.TargetCurrentShield;
+            var effectiveMax = candidate.TargetMaxHP + candidate.TargetShieldCapacity;
+            if (effectiveMax > 0 && effectiveCurrent > 0)
             {
-                var missingFraction = 1f - (float)candidate.TargetCurrentHP / candidate.TargetMaxHP;
+                var missingFraction = 1f - (float)effectiveCurrent / effectiveMax;
                 score += missingFraction * profile.FinishEnemyWeight;
 
-                if (candidate.ActionValue >= candidate.TargetCurrentHP)
+                if (candidate.ActionValue >= effectiveCurrent)
                     score += profile.FinishEnemyWeight;
 
-                var overkill = candidate.ActionValue - candidate.TargetCurrentHP;
+                var overkill = candidate.ActionValue - effectiveCurrent;
                 if (overkill > 0 && candidate.ActionValue > 0)
                     score -= (float)overkill / candidate.ActionValue * profile.AvoidOverkillWeight;
             }
@@ -107,6 +109,14 @@ namespace Project.Scripts.Shared.Bot
                 var missingHp = candidate.TargetMaxHP - candidate.TargetCurrentHP;
                 var missingFraction = missingHp <= 0 ? 0f : (float)missingHp / candidate.TargetMaxHP;
                 score += missingFraction * profile.HealLowHpAllyWeight;
+
+                if (candidate.TargetCurrentShield > 0)
+                {
+                    var shieldFraction = (float)candidate.TargetCurrentShield / candidate.TargetMaxHP;
+                    if (shieldFraction > 1f)
+                        shieldFraction = 1f;
+                    score -= shieldFraction * profile.HealThroughShieldPenaltyWeight;
+                }
 
                 var overheal = candidate.ActionValue - missingHp;
                 if (overheal > 0 && candidate.ActionValue > 0)

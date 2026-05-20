@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Project.Scripts.Configs.Battle.Layout;
+using Project.Scripts.Services.Combat.Buffs;
 using Project.Scripts.Services.Combat.Units;
 using Project.Scripts.Shared.Abilities;
 using Project.Scripts.Shared.BattleSetup;
@@ -14,17 +15,19 @@ namespace Project.Scripts.Services.Bot
         private readonly IUnitAbilityActivationService _unitAbilityActivationService;
         private readonly IUnitStateService _unitStateService;
         private readonly IAvatarGroupDefenseService _groupDefense;
+        private readonly IShieldService _shieldService;
         private readonly BattleSetup _battleSetup;
         private readonly SlotLayoutConfig _slotLayoutConfig;
 
 
         public BotActionCandidateBuilder(IUnitAbilityActivationService unitAbilityActivationService,
-            IUnitStateService unitStateService, IAvatarGroupDefenseService groupDefense, BattleSetup battleSetup,
-            SlotLayoutConfig slotLayoutConfig)
+            IUnitStateService unitStateService, IAvatarGroupDefenseService groupDefense, IShieldService shieldService,
+            BattleSetup battleSetup, SlotLayoutConfig slotLayoutConfig)
         {
             _unitAbilityActivationService = unitAbilityActivationService;
             _unitStateService = unitStateService;
             _groupDefense = groupDefense;
+            _shieldService = shieldService;
             _battleSetup = battleSetup;
             _slotLayoutConfig = slotLayoutConfig;
         }
@@ -64,10 +67,12 @@ namespace Project.Scripts.Services.Bot
                     targetState.IsHpFull, targetIsExposed))
                 return;
 
+            var shield = _shieldService.GetShield(target);
             result.Add(new BotActionCandidate(source, target, preview.ActionType,
                 setup.ActiveAbility.DirectAction.Kind, setup.ActiveAbility.DirectAction.Value,
-                targetState.CurrentHP, targetState.MaxHP, targetState.IsAlive, targetIsExposed,
-                WouldBreakDefense(target, setup.ActiveAbility.DirectAction.Value)));
+                targetState.CurrentHP, targetState.MaxHP, shield.Current, shield.Capacity, targetState.IsAlive,
+                targetIsExposed,
+                WouldBreakDefense(target, setup.ActiveAbility.DirectAction.Value, shield.Current)));
         }
 
         private List<UnitTargetCandidate> CollectUnitTargetCandidates()
@@ -107,7 +112,7 @@ namespace Project.Scripts.Services.Bot
             return true;
         }
 
-        private bool WouldBreakDefense(UnitDescriptor target, int actionValue)
+        private bool WouldBreakDefense(UnitDescriptor target, int actionValue, int currentShield)
         {
             if (target.Side != BattleSide.Player || target.Kind != UnitKind.Hero || actionValue <= 0)
                 return false;
@@ -115,7 +120,7 @@ namespace Project.Scripts.Services.Bot
             if (false == _unitStateService.TryGetUnit(target, out var state) || false == state.IsAlive)
                 return false;
 
-            if (state.CurrentHP > actionValue)
+            if (state.CurrentHP + currentShield > actionValue)
                 return false;
 
             return IsLastAliveInGroup(target.SlotIndex, _slotLayoutConfig.Group1SlotIndices)

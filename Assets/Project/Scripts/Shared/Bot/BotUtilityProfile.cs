@@ -14,12 +14,14 @@ namespace Project.Scripts.Shared.Bot
         public readonly float ResurrectAllyWeight;
         public readonly float AvoidOverhealWeight;
         public readonly float AvoidOverkillWeight;
+        public readonly float HealThroughShieldPenaltyWeight;
 
 
         public BotUtilityProfile(float damagePreference, float healPreference, float resurrectPreference,
             float supportPreference, float finishEnemyWeight, float breakDefenseWeight,
             float attackExposedAvatarWeight, float protectOwnAvatarWeight, float healLowHpAllyWeight,
-            float resurrectAllyWeight, float avoidOverhealWeight, float avoidOverkillWeight)
+            float resurrectAllyWeight, float avoidOverhealWeight, float avoidOverkillWeight,
+            float healThroughShieldPenaltyWeight)
         {
             DamagePreference = ClampNonNegative(damagePreference);
             HealPreference = ClampNonNegative(healPreference);
@@ -33,6 +35,7 @@ namespace Project.Scripts.Shared.Bot
             ResurrectAllyWeight = ClampNonNegative(resurrectAllyWeight);
             AvoidOverhealWeight = ClampNonNegative(avoidOverhealWeight);
             AvoidOverkillWeight = ClampNonNegative(avoidOverkillWeight);
+            HealThroughShieldPenaltyWeight = ClampNonNegative(healThroughShieldPenaltyWeight);
         }
         
 

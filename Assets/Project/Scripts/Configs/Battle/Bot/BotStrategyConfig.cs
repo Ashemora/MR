@@ -49,6 +49,9 @@ namespace Project.Scripts.Configs.Battle.Bot
         [Tooltip("Штраф за урон сверх оставшегося HP цели")]
         [SerializeField] private float _avoidOverkillWeight = 0.5f;
 
+        [Tooltip("Штраф за лечение союзника, у которого висит щит (щит уже защищает от урона - лечение менее срочно)")]
+        [SerializeField] private float _healThroughShieldPenaltyWeight = 1f;
+
 
         public string DisplayName => _displayName;
 
@@ -58,7 +61,7 @@ namespace Project.Scripts.Configs.Battle.Bot
             return new BotUtilityProfile(_damagePreference, _healPreference, _resurrectPreference,
                 _supportPreference, _finishEnemyWeight, _breakDefenseWeight, _attackExposedAvatarWeight,
                 _protectOwnAvatarWeight, _healLowHpAllyWeight, _resurrectAllyWeight, _avoidOverhealWeight,
-                _avoidOverkillWeight);
+                _avoidOverkillWeight, _healThroughShieldPenaltyWeight);
         }
     }
 }

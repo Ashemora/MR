@@ -321,7 +321,7 @@ namespace Project.Scripts.Services.Bot
 
         private static BotUtilityProfile CreateFallbackProfile()
         {
-            return new BotUtilityProfile(1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 0.5f);
+            return new BotUtilityProfile(1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 0.5f, 1f);
         }
     }
 }

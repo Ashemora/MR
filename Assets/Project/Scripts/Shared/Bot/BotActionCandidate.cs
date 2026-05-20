@@ -12,6 +12,8 @@ namespace Project.Scripts.Shared.Bot
         public int ActionValue { get; }
         public int TargetCurrentHP { get; }
         public int TargetMaxHP { get; }
+        public int TargetCurrentShield { get; }
+        public int TargetShieldCapacity { get; }
         public bool TargetIsAlive { get; }
         public bool TargetIsExposed { get; }
         public bool WouldBreakDefense { get; }
@@ -19,7 +21,8 @@ namespace Project.Scripts.Shared.Bot
 
         public BotActionCandidate(UnitDescriptor source, UnitDescriptor target, UnitActionType actionType,
             DirectActionKind directActionKind, int actionValue, int targetCurrentHP, int targetMaxHP,
-            bool targetIsAlive, bool targetIsExposed, bool wouldBreakDefense)
+            int targetCurrentShield, int targetShieldCapacity, bool targetIsAlive, bool targetIsExposed,
+            bool wouldBreakDefense)
         {
             Source = source;
             Target = target;
@@ -28,6 +31,8 @@ namespace Project.Scripts.Shared.Bot
             ActionValue = actionValue < 0 ? 0 : actionValue;
             TargetCurrentHP = targetCurrentHP < 0 ? 0 : targetCurrentHP;
             TargetMaxHP = targetMaxHP < 0 ? 0 : targetMaxHP;
+            TargetCurrentShield = targetCurrentShield < 0 ? 0 : targetCurrentShield;
+            TargetShieldCapacity = targetShieldCapacity < 0 ? 0 : targetShieldCapacity;
             TargetIsAlive = targetIsAlive;
             TargetIsExposed = targetIsExposed;
             WouldBreakDefense = wouldBreakDefense;

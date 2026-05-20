@@ -25,3 +25,4 @@ MonoBehaviour:
   _resurrectAllyWeight: 0.8
   _avoidOverhealWeight: 0.8
   _avoidOverkillWeight: 0.35
+  _healThroughShieldPenaltyWeight: 1.2
