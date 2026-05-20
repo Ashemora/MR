@@ -137,9 +137,6 @@ namespace Project.Scripts.Services.Combat.Abilities
 
         private bool CanApplyBuffApplication(BuffDefinition buff, UnitDescriptor target)
         {
-            if (buff.Kind != BuffKind.Shield)
-                return true;
-
             return TryGetTargetState(target, true, out var isAlive, out _, out _) && isAlive;
         }
 

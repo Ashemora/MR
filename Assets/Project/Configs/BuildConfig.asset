@@ -20,7 +20,7 @@ MonoBehaviour:
   _productionDefine: PRODUCTION
   _devOutputDir: Builds/Dev
   _prodOutputDir: Builds/Prod
-  _devUseDevelopmentFlag: 1
+  _devUseDevelopmentFlag: 0
   _confirmProduction: 1
   _revealOutputAfterBuild: 1
   _buildDevButton: 0
@@ -28,8 +28,8 @@ MonoBehaviour:
   _lastBuildResult: Succeeded
   _lastBuildKind: Dev
   _lastBuildTarget: Android
-  _lastBuildTime: 2026-05-19 21:46:35
-  _lastBuildDuration: 1m 53s
-  _lastBuildSize: 1,09 GB
+  _lastBuildTime: 2026-05-19 22:34:18
+  _lastBuildDuration: 7m 16s
+  _lastBuildSize: 1004,0 MB
   _lastBuildPath: Builds/Dev/Matchrift_0.2.1_dev.12.apk
   _openLastBuildFolderButton: 0

@@ -27,9 +27,16 @@ namespace Project.Scripts.Services.UISystem.Components
         [SerializeField] private bool _applyRight = true;
 
 
+        private const DrivenTransformProperties DrivenProps =
+            DrivenTransformProperties.Anchors
+            | DrivenTransformProperties.AnchoredPosition
+            | DrivenTransformProperties.SizeDelta;
+
+
         private RectTransform _rectTransform;
         private ISafeAreaService _safeArea;
         private IDisposable _subscription;
+        private DrivenRectTransformTracker _tracker;
         private bool _didWarnAboutLayout;
 #if UNITY_EDITOR
         private Rect _lastEditorSafeArea;
@@ -61,6 +68,8 @@ namespace Project.Scripts.Services.UISystem.Components
         private void OnEnable()
         {
             EnsureRectTransform();
+            _tracker.Clear();
+            _tracker.Add(this, _rectTransform, DrivenProps);
             ResubscribeIfActive();
             ApplyCurrentOrScreenSafeArea();
             SubscribeEditorPoll();
@@ -68,6 +77,7 @@ namespace Project.Scripts.Services.UISystem.Components
 
         private void OnDisable()
         {
+            _tracker.Clear();
             _subscription?.Dispose();
             _subscription = null;
             UnsubscribeEditorPoll();
@@ -76,6 +86,8 @@ namespace Project.Scripts.Services.UISystem.Components
         private void OnValidate()
         {
             EnsureRectTransform();
+            _tracker.Clear();
+            _tracker.Add(this, _rectTransform, DrivenProps);
             ApplyEditorPreviewSafeArea();
         }
 
@@ -159,15 +171,6 @@ namespace Project.Scripts.Services.UISystem.Components
             _rectTransform.anchorMax = max;
             _rectTransform.offsetMin = Vector2.zero;
             _rectTransform.offsetMax = Vector2.zero;
-
-#if UNITY_EDITOR
-            if (false == Application.isPlaying)
-            {
-                EditorUtility.SetDirty(_rectTransform);
-                if (gameObject.scene.IsValid())
-                    EditorSceneManager.MarkSceneDirty(gameObject.scene);
-            }
-#endif
         }
 
         private void EnsureRectTransform()
