@@ -289,8 +289,8 @@ namespace Project.Scripts.Gameplay.Battle.HUD
 
         private void BindSlots()
         {
-            _playerAvatarSlot?.Bind(ViewModel.PlayerAvatar, ViewModel.GroupDefense, ViewModel.DeathConfig);
-            _enemyAvatarSlot?.Bind(ViewModel.EnemyAvatar, ViewModel.GroupDefense, ViewModel.DeathConfig);
+            _playerAvatarSlot?.Bind(ViewModel.PlayerAvatar, ViewModel.DeathConfig);
+            _enemyAvatarSlot?.Bind(ViewModel.EnemyAvatar, ViewModel.DeathConfig);
 
             BindHeroRow(_playerHeroSlots, ViewModel.PlayerHeroSlots);
             BindHeroRow(_enemyHeroSlots, ViewModel.EnemyHeroSlots);
@@ -373,6 +373,7 @@ namespace Project.Scripts.Gameplay.Battle.HUD
                 ViewModel.AbilityExecution,
                 ViewModel.GameStateService,
                 ViewModel.BattleActionRuntime,
+                ViewModel.GroupDefense,
                 Camera.main);
         }
 

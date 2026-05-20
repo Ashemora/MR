@@ -145,34 +145,6 @@ namespace Project.Scripts.Gameplay.Battle.Units
             BindAbilityPowerLabel(viewModel);
         }
 
-        public bool IsValidTarget(UnitDescriptor source, UnitActionType sourceActionType)
-        {
-            if (null == _viewModel || false == _viewModel.IsAssigned)
-                return false;
-
-            if (sourceActionType == UnitActionType.ResurrectAlly)
-                return _viewModel.IsDefeated.CurrentValue && _viewModel.Side == source.Side;
-
-            if (_viewModel.IsDefeated.CurrentValue)
-                return false;
-
-            if (sourceActionType == UnitActionType.DealDamage && _viewModel.Side != source.Side)
-                return true;
-
-            if (sourceActionType == UnitActionType.HealAlly && _viewModel.Side == source.Side)
-            {
-                if (source.Kind == UnitKind.Hero && source.SlotIndex == _viewModel.SlotIndex)
-                    return false;
-
-                return _viewModel.HPFill.CurrentValue < 1f;
-            }
-
-            if (sourceActionType == UnitActionType.SupportAlly && _viewModel.Side == source.Side)
-                return true;
-
-            return false;
-        }
-
         public void SetSourceHighlight(bool active)
         {
             if (false == _glow)

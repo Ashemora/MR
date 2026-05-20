@@ -35,7 +35,7 @@ MonoBehaviour:
         _scope: 1
         _relation: 0
         _unitKind: 0
-        _includeOwner: 0
+        _includeOwner: 1
         _selectionMode: 0
         _filters: []
       _buffApplications:

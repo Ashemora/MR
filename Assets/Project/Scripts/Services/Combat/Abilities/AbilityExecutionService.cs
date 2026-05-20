@@ -66,6 +66,35 @@ namespace Project.Scripts.Services.Combat.Abilities
                 PublishAbilityExecutionResultEvents(result);
         }
 
+        public bool CanTarget(UnitDescriptor source, UnitDescriptor target)
+        {
+            return TryValidateTarget(source, target, out _, out _, out _);
+        }
+
+        private bool TryValidateTarget(UnitDescriptor source, UnitDescriptor target,
+            out UnitAbilityActivationState sourceState, out DirectActionDefinition directAction,
+            out IReadOnlyList<BuffEntryDefinition> buffEntries)
+        {
+            sourceState = default;
+            directAction = default;
+            buffEntries = System.Array.Empty<BuffEntryDefinition>();
+
+            if (false == _unitAbilityActivationService.TryPreview(source, out sourceState))
+                return false;
+
+            directAction = GetDirectAction(source);
+            buffEntries = GetBuffEntries(source);
+            if (sourceState.ActionType != UnitActionType.SupportAlly && false == directAction.IsConfigured)
+                return false;
+
+            if (false == TryGetTargetState(target, out var isTargetAlive, out var isTargetHpFull,
+                    out var isTargetExposed))
+                return false;
+
+            return AbilityTargetRules.IsTargetValidForEffect(source, target, directAction, buffEntries,
+                CollectUnitTargetCandidates(), sourceState.IsAlive, isTargetAlive, isTargetHpFull, isTargetExposed);
+        }
+
         public bool TryExecute(UnitDescriptor source, UnitDescriptor target, out AbilityExecutionResult result)
         {
             result = default;
@@ -75,19 +104,8 @@ namespace Project.Scripts.Services.Combat.Abilities
             if (false == _battleActionRuntimeService.Evaluate(BattleActionKind.AbilityCommit).IsAllowed)
                 return false;
 
-            if (false == _unitAbilityActivationService.TryPreview(source, out var sourceState))
-                return false;
-
-            var directAction = GetDirectAction(source);
-            var buffEntries = GetBuffEntries(source);
-            if (sourceState.ActionType != UnitActionType.SupportAlly && false == directAction.IsConfigured)
-                return false;
-
-            if (false == TryGetTargetState(target, out var isTargetAlive, out var isTargetHpFull, out var isTargetExposed))
-                return false;
-
-            if (false == AbilityTargetRules.IsTargetValidForEffect(source, target, directAction, buffEntries,
-                    CollectUnitTargetCandidates(), sourceState.IsAlive, isTargetAlive, isTargetHpFull, isTargetExposed))
+            if (false == TryValidateTarget(source, target, out var sourceState, out var directAction,
+                    out var buffEntries))
                 return false;
 
             var additionalTargets = SelectAdditionalTargets(source, target, sourceState.ActionType,

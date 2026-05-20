@@ -6,5 +6,6 @@ namespace Project.Scripts.Services.Combat.Abilities
     {
         void Execute(UnitDescriptor source, UnitDescriptor target);
         bool TryExecute(UnitDescriptor source, UnitDescriptor target, out AbilityExecutionResult result);
+        bool CanTarget(UnitDescriptor source, UnitDescriptor target);
     }
 }

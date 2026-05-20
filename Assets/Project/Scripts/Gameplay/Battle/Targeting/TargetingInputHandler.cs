@@ -1,5 +1,6 @@
 using System;
 using Project.Scripts.Services.Combat.Abilities;
+using Project.Scripts.Services.Combat.Units;
 using Project.Scripts.Services.Game;
 using Project.Scripts.Services.Input;
 using R3;
@@ -12,6 +13,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
     public class TargetingInputHandler : MonoBehaviour
     {
         private const float OffsetPx = 20f;
+        private const float SelfTargetThresholdPx = 25f;
 
 
         public ReadOnlyReactiveProperty<bool> IsHoveringBlockedAvatar => _isHoveringBlockedAvatar;
@@ -22,10 +24,13 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
         private IAbilityExecutionService _abilityExecution;
         private IGameStateService _gameStateService;
         private IBattleActionRuntimeService _battleActionRuntimeService;
+        private IAvatarGroupDefenseService _groupDefense;
         private Camera _cam;
         private ITargetable _source;
         private ITargetable _target;
         private Vector2 _currentScreenPos;
+        private Vector2 _dragStartScreenPos;
+        private bool _selfTargetArmed;
         private int _actionSessionVersion = -1;
         private IDisposable _runtimeStateSubscription;
         private IDisposable _gameStateSubscription;
@@ -42,7 +47,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
 
         public void Init(IInputService input, TargetingRegistry registry, IAbilityExecutionService abilityExecution,
             IGameStateService gameStateService, IBattleActionRuntimeService battleActionRuntimeService,
-            Camera cam)
+            IAvatarGroupDefenseService groupDefense, Camera cam)
         {
             Unsubscribe();
             _input = input;
@@ -50,6 +55,7 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
             _abilityExecution = abilityExecution;
             _gameStateService = gameStateService;
             _battleActionRuntimeService = battleActionRuntimeService;
+            _groupDefense = groupDefense;
             _cam = cam;
 
             _input.OnDragStarted += HandleDragStarted;
@@ -74,6 +80,8 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
 
             _actionSessionVersion = _battleActionRuntimeService.CaptureVersion();
             _source = unit;
+            _dragStartScreenPos = screenPos;
+            _selfTargetArmed = false;
             _source.SetSourceHighlight(true);
         }
 
@@ -90,28 +98,47 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
 
             _currentScreenPos += screenDelta;
 
-            var candidate = _registry.FindAtPosition(_currentScreenPos, _cam, OffsetPx);
-            var valid = null != candidate
-                        && candidate != _source
-                        && candidate.IsValidTarget(_source.Descriptor, _source.ActionType);
+            if (false == _selfTargetArmed
+                && (_currentScreenPos - _dragStartScreenPos).sqrMagnitude
+                    >= SelfTargetThresholdPx * SelfTargetThresholdPx)
+                _selfTargetArmed = true;
 
-            if (null != _target && _target != candidate)
+            var candidate = _registry.FindAtPosition(_currentScreenPos, _cam, OffsetPx);
+            var isSelfCandidate = null != candidate && candidate == _source;
+            var passesSelfGate = false == isSelfCandidate || _selfTargetArmed;
+            var valid = null != candidate
+                        && passesSelfGate
+                        && _abilityExecution.CanTarget(_source.Descriptor, candidate.Descriptor);
+
+            ApplyHighlights(valid ? candidate : null);
+
+            _isHoveringBlockedAvatar.Value = null != candidate
+                && candidate.Descriptor.Kind == UnitKind.Avatar
+                && candidate.Descriptor.Side == BattleSide.Enemy
+                && _source.ActionType == UnitActionType.DealDamage
+                && null != _groupDefense
+                && false == _groupDefense.IsExposed(candidate.Descriptor.Side);
+        }
+
+        private void ApplyHighlights(ITargetable newTarget)
+        {
+            if (null != _target && _target != newTarget)
             {
                 _target.SetTargetHighlight(false, default);
                 _target = null;
             }
 
-            if (valid)
+            _target = newTarget;
+
+            if (null != _target)
             {
-                _target = candidate;
                 _target.SetTargetHighlight(true, _source.ActionType);
+
+                if (_target == _source)
+                    return;
             }
 
-            _isHoveringBlockedAvatar.Value = null != candidate
-                && false == valid
-                && candidate.Descriptor.Kind == UnitKind.Avatar
-                && candidate.Descriptor.Side == BattleSide.Enemy
-                && _source.ActionType == UnitActionType.DealDamage;
+            _source?.SetSourceHighlight(true);
         }
 
         private void HandleDragCanceled()
@@ -198,6 +225,8 @@ namespace Project.Scripts.Gameplay.Battle.Targeting
             _source = null;
             _target = null;
             _actionSessionVersion = -1;
+            _dragStartScreenPos = default;
+            _selfTargetArmed = false;
             _isHoveringBlockedAvatar.Value = false;
         }
     }

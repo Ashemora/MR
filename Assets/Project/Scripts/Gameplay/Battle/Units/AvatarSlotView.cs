@@ -5,7 +5,6 @@ using Project.Scripts.Configs.Battle.Visuals;
 using Project.Scripts.Configs.UI;
 using Project.Scripts.Gameplay.Battle.Targeting;
 using Project.Scripts.Gameplay.UI;
-using Project.Scripts.Services.Combat.Units;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -94,7 +93,6 @@ namespace Project.Scripts.Gameplay.Battle.Units
 
 
         private AvatarSlotViewModel _viewModel;
-        private IAvatarGroupDefenseService _groupDefense;
         private BattleAnimationConfig _config;
         private UnitDeathConfig _deathConfig;
         private CompositeDisposable _disposables;
@@ -122,10 +120,9 @@ namespace Project.Scripts.Gameplay.Battle.Units
         }
 
 
-        public void Bind(AvatarSlotViewModel viewModel, IAvatarGroupDefenseService groupDefense, UnitDeathConfig deathConfig)
+        public void Bind(AvatarSlotViewModel viewModel, UnitDeathConfig deathConfig)
         {
             _viewModel = viewModel;
-            _groupDefense = groupDefense;
             _config = viewModel.AnimConfig;
             _deathConfig = deathConfig;
             _disposables?.Dispose();
@@ -179,33 +176,6 @@ namespace Project.Scripts.Gameplay.Battle.Units
                 });
 
             await _resultPulseTween.ToUniTask();
-        }
-
-        public bool IsValidTarget(UnitDescriptor source, UnitActionType sourceActionType)
-        {
-            if (null == _viewModel || _viewModel.IsDefeated.CurrentValue)
-                return false;
-
-            if (sourceActionType == UnitActionType.DealDamage && _viewModel.Side == BattleSide.Enemy)
-            {
-                if (null != _groupDefense && false == _groupDefense.IsExposed(BattleSide.Enemy))
-                    return false;
-
-                return true;
-            }
-
-            if (sourceActionType == UnitActionType.HealAlly && _viewModel.Side == BattleSide.Player)
-            {
-                if (source.Kind == UnitKind.Avatar)
-                    return false;
-
-                return _viewModel.HPFill.CurrentValue < 1f;
-            }
-
-            if (sourceActionType == UnitActionType.SupportAlly && _viewModel.Side == BattleSide.Player)
-                return true;
-
-            return false;
         }
 
         public void SetSourceHighlight(bool active)
